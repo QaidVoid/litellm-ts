@@ -211,6 +211,28 @@ export type {
 } from "./src/api/admin/users.ts";
 
 export type {
+  CalculateSpendRequest,
+  CalculateSpendResponse,
+  SpendLog,
+  SpendLogsQuery,
+  SpendLogsResponse,
+  SpendNamespace,
+  SpendTagBucket,
+  SpendTagsQuery,
+  SpendTagsResponse,
+} from "./src/api/admin/spend.ts";
+
+export type {
+  Budget,
+  BudgetsNamespace,
+  CreateBudgetRequest,
+  DeleteBudgetRequest,
+  ListBudgetsResponse,
+  ModelBudget,
+  UpdateBudgetRequest,
+} from "./src/api/admin/budgets.ts";
+
+export type {
   MessagesContentBlock,
   MessagesImageBlock,
   MessagesMessage,

@@ -2,6 +2,8 @@ import { createHealth, type HealthNamespace } from "./api/admin/health.ts";
 import { createKeys, type KeysNamespace } from "./api/admin/keys.ts";
 import { createProxyModels, type ProxyModelsNamespace } from "./api/admin/models.ts";
 import { createTeams, type TeamsNamespace } from "./api/admin/teams.ts";
+import { type BudgetsNamespace, createBudgets } from "./api/admin/budgets.ts";
+import { createSpend, type SpendNamespace } from "./api/admin/spend.ts";
 import { createUsers, type UsersNamespace } from "./api/admin/users.ts";
 import { type AudioNamespace, createAudio } from "./api/audio.ts";
 import { type ChatNamespace, createChat } from "./api/chat.ts";
@@ -48,6 +50,10 @@ export interface Client {
   readonly teams: TeamsNamespace;
   /** Internal user administration. */
   readonly users: UsersNamespace;
+  /** Spend analytics endpoints (calculate, tags, logs). */
+  readonly spend: SpendNamespace;
+  /** Budget administration. */
+  readonly budgets: BudgetsNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -67,5 +73,7 @@ export const createClient = (config: TransportConfig): Client => {
     proxyModels: createProxyModels(transport),
     teams: createTeams(transport),
     users: createUsers(transport),
+    spend: createSpend(transport),
+    budgets: createBudgets(transport),
   };
 };
