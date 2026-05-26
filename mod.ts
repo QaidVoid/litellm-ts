@@ -342,6 +342,18 @@ export type {
   ListGuardrailsResponse,
 } from "./src/api/admin/guardrails.ts";
 
+export type {
+  CacheDeleteRequest,
+  CacheNamespace,
+  CachePingResponse,
+} from "./src/api/admin/cache.ts";
+
+export type {
+  ConfigNamespace,
+  ProxyConfigSnapshot,
+  UpdateConfigRequest,
+} from "./src/api/admin/config.ts";
+
 export type { PassthroughNamespace } from "./src/api/passthrough.ts";
 
 export type {
