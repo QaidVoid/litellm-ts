@@ -96,8 +96,10 @@ export type {
 
 export type {
   ImageDatum,
+  ImageEditRequest,
   ImageGenerationRequest,
   ImageGenerationResponse,
+  ImageInput,
   ImageResponseFormat,
   ImagesNamespace,
 } from "./src/api/images.ts";
