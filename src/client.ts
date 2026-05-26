@@ -4,6 +4,8 @@ import { createOrganizations, type OrganizationsNamespace } from "./api/admin/or
 import { createProxyModels, type ProxyModelsNamespace } from "./api/admin/models.ts";
 import { createTeams, type TeamsNamespace } from "./api/admin/teams.ts";
 import { type BudgetsNamespace, createBudgets } from "./api/admin/budgets.ts";
+import { type CallbacksNamespace, createCallbacks } from "./api/admin/callbacks.ts";
+import { createGuardrails, type GuardrailsNamespace } from "./api/admin/guardrails.ts";
 import { createSpend, type SpendNamespace } from "./api/admin/spend.ts";
 import { createUsers, type UsersNamespace } from "./api/admin/users.ts";
 import { type AudioNamespace, createAudio } from "./api/audio.ts";
@@ -73,6 +75,10 @@ export interface Client {
   readonly budgets: BudgetsNamespace;
   /** Organization administration. */
   readonly organizations: OrganizationsNamespace;
+  /** Logging callback configuration. */
+  readonly callbacks: CallbacksNamespace;
+  /** Configured guardrails listing. */
+  readonly guardrails: GuardrailsNamespace;
   /** Native-shape passthrough to Anthropic via the LiteLLM proxy. */
   readonly anthropic: PassthroughNamespace;
   /** Native-shape passthrough to OpenAI. */
@@ -118,6 +124,8 @@ export const createClient = (config: TransportConfig): Client => {
     spend: createSpend(transport),
     budgets: createBudgets(transport),
     organizations: createOrganizations(transport),
+    callbacks: createCallbacks(transport),
+    guardrails: createGuardrails(transport),
     anthropic: createPassthrough(transport, "/anthropic"),
     openai: createPassthrough(transport, "/openai"),
     gemini: createPassthrough(transport, "/gemini"),

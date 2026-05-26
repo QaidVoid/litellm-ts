@@ -326,6 +326,22 @@ export type {
   UpdateOrganizationRequest,
 } from "./src/api/admin/organizations.ts";
 
+export type {
+  CallbackHealthResponse,
+  CallbackInfo,
+  CallbacksNamespace,
+  CallbackStatus,
+  ListCallbacksResponse,
+  UpdateCallbacksRequest,
+} from "./src/api/admin/callbacks.ts";
+
+export type {
+  GuardrailInfo,
+  GuardrailMode,
+  GuardrailsNamespace,
+  ListGuardrailsResponse,
+} from "./src/api/admin/guardrails.ts";
+
 export type { PassthroughNamespace } from "./src/api/passthrough.ts";
 
 export type {
