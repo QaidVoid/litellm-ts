@@ -121,6 +121,16 @@ export type {
 } from "./src/api/rerank.ts";
 
 export type {
+  ModerationCategoryFlags,
+  ModerationCategoryScores,
+  ModerationInput,
+  ModerationNamespace,
+  ModerationRequest,
+  ModerationResponse,
+  ModerationResult,
+} from "./src/api/moderation.ts";
+
+export type {
   MessagesContentBlock,
   MessagesImageBlock,
   MessagesMessage,

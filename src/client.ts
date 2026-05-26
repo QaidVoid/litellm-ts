@@ -3,6 +3,7 @@ import { type ChatNamespace, createChat } from "./api/chat.ts";
 import { createEmbeddings, type EmbeddingsNamespace } from "./api/embeddings.ts";
 import { createImages, type ImagesNamespace } from "./api/images.ts";
 import { createMessages, type MessagesNamespace } from "./api/messages.ts";
+import { createModeration, type ModerationNamespace } from "./api/moderation.ts";
 import { createRerank, type RerankNamespace } from "./api/rerank.ts";
 import { createTransport, type TransportConfig } from "./transport.ts";
 
@@ -20,6 +21,8 @@ export interface Client {
   readonly audio: AudioNamespace;
   /** Rerank endpoint. */
   readonly rerank: RerankNamespace;
+  /** Content moderation endpoint. */
+  readonly moderation: ModerationNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -32,5 +35,6 @@ export const createClient = (config: TransportConfig): Client => {
     images: createImages(transport),
     audio: createAudio(transport),
     rerank: createRerank(transport),
+    moderation: createModeration(transport),
   };
 };
