@@ -124,15 +124,17 @@ await client.embeddings.create({ model: "gpt-4o", input: "hi" });
 
 ## Endpoints
 
-| Namespace           | Endpoint                   | Notes                                                  |
-| ------------------- | -------------------------- | ------------------------------------------------------ |
-| `client.chat`       | `/v1/chat/completions`     | OpenAI shape. `create` + `createStream`. Tool-gated.   |
-| `client.messages`   | `/v1/messages`             | Anthropic shape. `create` + `createStream`. Any model. |
-| `client.embeddings` | `/v1/embeddings`           | Mode-gated to embedding models.                        |
-| `client.images`     | `/v1/images/generations`   | Mode-gated to image-generation models.                 |
-| `client.audio`      | `/v1/audio/transcriptions` | `transcribe`. Multipart. Mode-gated.                   |
-| `client.audio`      | `/v1/audio/speech`         | `speak`. Returns raw audio bytes.                      |
-| `client.rerank`     | `/v1/rerank`               | Cohere shape. Mode-gated to rerank models.             |
+| Namespace           | Endpoint                      | Notes                                                          |
+| ------------------- | ----------------------------- | -------------------------------------------------------------- |
+| `client.chat`       | `/v1/chat/completions`        | OpenAI shape. `create` + `createStream`. Tool-gated.           |
+| `client.messages`   | `/v1/messages`                | Anthropic shape. `create` + `createStream`. Any model.         |
+| `client.embeddings` | `/v1/embeddings`              | Mode-gated to embedding models.                                |
+| `client.images`     | `/v1/images/generations`      | Mode-gated to image-generation models.                         |
+| `client.audio`      | `/v1/audio/transcriptions`    | `transcribe`. Multipart. Mode-gated.                           |
+| `client.audio`      | `/v1/audio/speech`            | `speak`. Returns raw audio bytes.                              |
+| `client.rerank`     | `/v1/rerank`                  | Cohere shape. Mode-gated to rerank models.                     |
+| `client.moderation` | `/v1/moderations`             | Mode-gated to moderation models.                               |
+| `client.files`      | `/v1/files`, `/v1/files/{id}` | `create` (multipart), `list`, `retrieve`, `delete`, `content`. |
 
 ## Lower layers
 
