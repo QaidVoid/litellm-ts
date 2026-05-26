@@ -273,6 +273,8 @@ export type {
   UpdateBudgetRequest,
 } from "./src/api/admin/budgets.ts";
 
+export type { PassthroughNamespace } from "./src/api/passthrough.ts";
+
 export type {
   MessagesContentBlock,
   MessagesImageBlock,

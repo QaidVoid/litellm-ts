@@ -15,6 +15,7 @@ import { createFiles, type FilesNamespace } from "./api/files.ts";
 import { createImages, type ImagesNamespace } from "./api/images.ts";
 import { createMessages, type MessagesNamespace } from "./api/messages.ts";
 import { createModeration, type ModerationNamespace } from "./api/moderation.ts";
+import { createPassthrough, type PassthroughNamespace } from "./api/passthrough.ts";
 import { createRerank, type RerankNamespace } from "./api/rerank.ts";
 import { createTransport, type TransportConfig } from "./transport.ts";
 
@@ -63,6 +64,24 @@ export interface Client {
   readonly spend: SpendNamespace;
   /** Budget administration. */
   readonly budgets: BudgetsNamespace;
+  /** Native-shape passthrough to Anthropic via the LiteLLM proxy. */
+  readonly anthropic: PassthroughNamespace;
+  /** Native-shape passthrough to OpenAI. */
+  readonly openai: PassthroughNamespace;
+  /** Native-shape passthrough to Google Gemini. */
+  readonly gemini: PassthroughNamespace;
+  /** Native-shape passthrough to Google Vertex AI. */
+  readonly vertexAi: PassthroughNamespace;
+  /** Native-shape passthrough to Cohere. */
+  readonly cohere: PassthroughNamespace;
+  /** Native-shape passthrough to Mistral. */
+  readonly mistral: PassthroughNamespace;
+  /** Native-shape passthrough to AssemblyAI. */
+  readonly assemblyai: PassthroughNamespace;
+  /** Native-shape passthrough to Azure OpenAI. */
+  readonly azure: PassthroughNamespace;
+  /** Native-shape passthrough to AWS Bedrock. */
+  readonly bedrock: PassthroughNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -87,5 +106,14 @@ export const createClient = (config: TransportConfig): Client => {
     users: createUsers(transport),
     spend: createSpend(transport),
     budgets: createBudgets(transport),
+    anthropic: createPassthrough(transport, "/anthropic"),
+    openai: createPassthrough(transport, "/openai"),
+    gemini: createPassthrough(transport, "/gemini"),
+    vertexAi: createPassthrough(transport, "/vertex-ai"),
+    cohere: createPassthrough(transport, "/cohere"),
+    mistral: createPassthrough(transport, "/mistral"),
+    assemblyai: createPassthrough(transport, "/assemblyai"),
+    azure: createPassthrough(transport, "/azure"),
+    bedrock: createPassthrough(transport, "/bedrock"),
   };
 };
