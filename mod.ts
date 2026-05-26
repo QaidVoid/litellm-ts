@@ -94,5 +94,13 @@ export type {
   EmbeddingsUsage,
 } from "./src/api/embeddings.ts";
 
+export type {
+  ImageDatum,
+  ImageGenerationRequest,
+  ImageGenerationResponse,
+  ImageResponseFormat,
+  ImagesNamespace,
+} from "./src/api/images.ts";
+
 export type { Client } from "./src/client.ts";
 export { createClient } from "./src/client.ts";
