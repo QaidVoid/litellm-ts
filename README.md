@@ -124,17 +124,49 @@ await client.embeddings.create({ model: "gpt-4o", input: "hi" });
 
 ## Endpoints
 
-| Namespace           | Endpoint                      | Notes                                                          |
-| ------------------- | ----------------------------- | -------------------------------------------------------------- |
-| `client.chat`       | `/v1/chat/completions`        | OpenAI shape. `create` + `createStream`. Tool-gated.           |
-| `client.messages`   | `/v1/messages`                | Anthropic shape. `create` + `createStream`. Any model.         |
-| `client.embeddings` | `/v1/embeddings`              | Mode-gated to embedding models.                                |
-| `client.images`     | `/v1/images/generations`      | Mode-gated to image-generation models.                         |
-| `client.audio`      | `/v1/audio/transcriptions`    | `transcribe`. Multipart. Mode-gated.                           |
-| `client.audio`      | `/v1/audio/speech`            | `speak`. Returns raw audio bytes.                              |
-| `client.rerank`     | `/v1/rerank`                  | Cohere shape. Mode-gated to rerank models.                     |
-| `client.moderation` | `/v1/moderations`             | Mode-gated to moderation models.                               |
-| `client.files`      | `/v1/files`, `/v1/files/{id}` | `create` (multipart), `list`, `retrieve`, `delete`, `content`. |
+### LLM and content endpoints
+
+| Namespace             | Endpoint                      | Notes                                                                  |
+| --------------------- | ----------------------------- | ---------------------------------------------------------------------- |
+| `client.chat`         | `/v1/chat/completions`        | OpenAI shape. `create` + `createStream`. Tool- and vision-gated.       |
+| `client.messages`     | `/v1/messages`                | Anthropic shape. `create` + `createStream`. Any model.                 |
+| `client.responses`    | `/v1/responses`               | OpenAI Responses API. `create` + `createStream` + retrieve/cancel/etc. |
+| `client.completions`  | `/v1/completions`             | Legacy text completion. `create` + `createStream`.                     |
+| `client.embeddings`   | `/v1/embeddings`              | Mode-gated to embedding models.                                        |
+| `client.images`       | `/v1/images/*`                | `generate`, `edit` (multipart). Mode-gated.                            |
+| `client.audio`        | `/v1/audio/*`                 | `transcribe` (multipart), `speak` (binary). Mode-gated.                |
+| `client.rerank`       | `/v1/rerank`                  | Cohere shape. Mode-gated to rerank models.                             |
+| `client.moderation`   | `/v1/moderations`             | Mode-gated to moderation models.                                       |
+| `client.files`        | `/v1/files`, `/v1/files/{id}` | `create` (multipart), `list`, `retrieve`, `delete`, `content`.         |
+| `client.batches`      | `/v1/batches`                 | `create`, `retrieve`, `list`, `cancel`.                                |
+| `client.fineTuning`   | `/v1/fine_tuning/jobs`        | `create`, `retrieve`, `list`, `cancel`, `events`.                      |
+| `client.vectorStores` | `/v1/vector_stores`           | CRUD plus file attach / list / retrieve / delete.                      |
+
+### Proxy administration
+
+| Namespace            | Endpoints   | Notes                                                                |
+| -------------------- | ----------- | -------------------------------------------------------------------- |
+| `client.health`      | `/health/*` | `liveliness`, `readiness`, `readinessDetails`, `testConnection`.     |
+| `client.keys`        | `/key/*`    | Virtual key CRUD plus `block` / `unblock` / `regenerate` / `health`. |
+| `client.proxyModels` | `/model/*`  | Live registry: register, retrieve, list, update, delete.             |
+| `client.teams`       | `/team/*`   | Team CRUD plus member and model management.                          |
+| `client.users`       | `/user/*`   | Internal user CRUD.                                                  |
+| `client.spend`       | `/spend/*`  | `calculate`, `tags`, `logs`.                                         |
+| `client.budgets`     | `/budget/*` | Budget CRUD.                                                         |
+
+### Provider passthroughs (native upstream shape)
+
+| Namespace           | Prefix        |
+| ------------------- | ------------- |
+| `client.anthropic`  | `/anthropic`  |
+| `client.openai`     | `/openai`     |
+| `client.gemini`     | `/gemini`     |
+| `client.vertexAi`   | `/vertex-ai`  |
+| `client.cohere`     | `/cohere`     |
+| `client.mistral`    | `/mistral`    |
+| `client.assemblyai` | `/assemblyai` |
+| `client.azure`      | `/azure`      |
+| `client.bedrock`    | `/bedrock`    |
 
 ## Lower layers
 
