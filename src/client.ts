@@ -1,3 +1,4 @@
+import { type AudioNamespace, createAudio } from "./api/audio.ts";
 import { type ChatNamespace, createChat } from "./api/chat.ts";
 import { createEmbeddings, type EmbeddingsNamespace } from "./api/embeddings.ts";
 import { createImages, type ImagesNamespace } from "./api/images.ts";
@@ -11,6 +12,8 @@ export interface Client {
   readonly embeddings: EmbeddingsNamespace;
   /** Image generation endpoint. */
   readonly images: ImagesNamespace;
+  /** Audio transcription and speech endpoints. */
+  readonly audio: AudioNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -20,5 +23,6 @@ export const createClient = (config: TransportConfig): Client => {
     chat: createChat(transport),
     embeddings: createEmbeddings(transport),
     images: createImages(transport),
+    audio: createAudio(transport),
   };
 };

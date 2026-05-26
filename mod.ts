@@ -102,5 +102,15 @@ export type {
   ImagesNamespace,
 } from "./src/api/images.ts";
 
+export type {
+  AudioInput,
+  AudioNamespace,
+  SpeechFormat,
+  SpeechRequest,
+  TranscriptionFormat,
+  TranscriptionRequest,
+  TranscriptionResponse,
+} from "./src/api/audio.ts";
+
 export type { Client } from "./src/client.ts";
 export { createClient } from "./src/client.ts";
