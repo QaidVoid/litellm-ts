@@ -17,6 +17,7 @@ import { createMessages, type MessagesNamespace } from "./api/messages.ts";
 import { createModeration, type ModerationNamespace } from "./api/moderation.ts";
 import { createPassthrough, type PassthroughNamespace } from "./api/passthrough.ts";
 import { createRerank, type RerankNamespace } from "./api/rerank.ts";
+import { createResponses, type ResponsesNamespace } from "./api/responses.ts";
 import { createTransport, type TransportConfig } from "./transport.ts";
 
 /** The top-level SDK surface. Construct via `createClient`. */
@@ -27,6 +28,8 @@ export interface Client {
   readonly messages: MessagesNamespace;
   /** Legacy `/v1/completions` text endpoint. */
   readonly completions: CompletionsNamespace;
+  /** OpenAI Responses API (`/v1/responses`). */
+  readonly responses: ResponsesNamespace;
   /** Embeddings endpoint. */
   readonly embeddings: EmbeddingsNamespace;
   /** Image generation endpoint. */
@@ -91,6 +94,7 @@ export const createClient = (config: TransportConfig): Client => {
     chat: createChat(transport),
     messages: createMessages(transport),
     completions: createCompletions(transport),
+    responses: createResponses(transport),
     embeddings: createEmbeddings(transport),
     images: createImages(transport),
     audio: createAudio(transport),

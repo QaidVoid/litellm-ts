@@ -100,6 +100,24 @@ export type {
 } from "./src/api/completions.ts";
 
 export type {
+  DeleteResponseResponse,
+  ListResponsesQuery,
+  ListResponsesResponse,
+  ResponsesContentPart,
+  ResponsesCreateRequest,
+  ResponsesInput,
+  ResponsesInputMessage,
+  ResponsesNamespace,
+  ResponsesOutputItem,
+  ResponsesReasoning,
+  ResponsesResponse,
+  ResponsesStreamEvent,
+  ResponsesTool,
+  ResponsesToolChoice,
+  ResponsesUsage,
+} from "./src/api/responses.ts";
+
+export type {
   EmbeddingsDatum,
   EmbeddingsEncoding,
   EmbeddingsInput,
