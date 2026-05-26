@@ -112,5 +112,13 @@ export type {
   TranscriptionResponse,
 } from "./src/api/audio.ts";
 
+export type {
+  RerankMeta,
+  RerankNamespace,
+  RerankRequest,
+  RerankResponse,
+  RerankResult,
+} from "./src/api/rerank.ts";
+
 export type { Client } from "./src/client.ts";
 export { createClient } from "./src/client.ts";
