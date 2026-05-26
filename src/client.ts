@@ -1,5 +1,6 @@
 import { createHealth, type HealthNamespace } from "./api/admin/health.ts";
 import { createKeys, type KeysNamespace } from "./api/admin/keys.ts";
+import { createProxyModels, type ProxyModelsNamespace } from "./api/admin/models.ts";
 import { type AudioNamespace, createAudio } from "./api/audio.ts";
 import { type ChatNamespace, createChat } from "./api/chat.ts";
 import { createEmbeddings, type EmbeddingsNamespace } from "./api/embeddings.ts";
@@ -32,6 +33,15 @@ export interface Client {
   readonly health: HealthNamespace;
   /** Virtual key administration. */
   readonly keys: KeysNamespace;
+  /**
+   * Proxy-side model administration (register, list, update, delete).
+   *
+   * Distinct from the static `MODELS` registry: this namespace operates on
+   * the live set of models the running proxy knows about, while `MODELS` is
+   * a build-time literal of every model declared in LiteLLM's upstream
+   * pricing table.
+   */
+  readonly proxyModels: ProxyModelsNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -48,5 +58,6 @@ export const createClient = (config: TransportConfig): Client => {
     files: createFiles(transport),
     health: createHealth(transport),
     keys: createKeys(transport),
+    proxyModels: createProxyModels(transport),
   };
 };

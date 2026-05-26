@@ -169,6 +169,18 @@ export type {
 } from "./src/api/admin/keys.ts";
 
 export type {
+  DeleteModelRequest,
+  DeleteModelResponse,
+  ListModelsResponse,
+  LiteLLMParams,
+  ProxyModel,
+  ProxyModelInfo,
+  ProxyModelsNamespace,
+  RegisterModelRequest,
+  UpdateModelRequest,
+} from "./src/api/admin/models.ts";
+
+export type {
   MessagesContentBlock,
   MessagesImageBlock,
   MessagesMessage,
