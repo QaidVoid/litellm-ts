@@ -144,15 +144,20 @@ await client.embeddings.create({ model: "gpt-4o", input: "hi" });
 
 ### Proxy administration
 
-| Namespace            | Endpoints   | Notes                                                                |
-| -------------------- | ----------- | -------------------------------------------------------------------- |
-| `client.health`      | `/health/*` | `liveliness`, `readiness`, `readinessDetails`, `testConnection`.     |
-| `client.keys`        | `/key/*`    | Virtual key CRUD plus `block` / `unblock` / `regenerate` / `health`. |
-| `client.proxyModels` | `/model/*`  | Live registry: register, retrieve, list, update, delete.             |
-| `client.teams`       | `/team/*`   | Team CRUD plus member and model management.                          |
-| `client.users`       | `/user/*`   | Internal user CRUD.                                                  |
-| `client.spend`       | `/spend/*`  | `calculate`, `tags`, `logs`.                                         |
-| `client.budgets`     | `/budget/*` | Budget CRUD.                                                         |
+| Namespace              | Endpoints         | Notes                                                                |
+| ---------------------- | ----------------- | -------------------------------------------------------------------- |
+| `client.health`        | `/health/*`       | `liveliness`, `readiness`, `readinessDetails`, `testConnection`.     |
+| `client.keys`          | `/key/*`          | Virtual key CRUD plus `block` / `unblock` / `regenerate` / `health`. |
+| `client.proxyModels`   | `/model/*`        | Live registry: register, retrieve, list, update, delete.             |
+| `client.teams`         | `/team/*`         | Team CRUD plus member and model management.                          |
+| `client.users`         | `/user/*`         | Internal user CRUD.                                                  |
+| `client.organizations` | `/organization/*` | Organization CRUD plus member management.                            |
+| `client.spend`         | `/spend/*`        | `calculate`, `tags`, `logs`.                                         |
+| `client.budgets`       | `/budget/*`       | Budget CRUD.                                                         |
+| `client.callbacks`     | `/callbacks/*`    | List, update, health for logging callback configuration.             |
+| `client.guardrails`    | `/guardrails/*`   | List configured guardrails.                                          |
+| `client.cache`         | `/cache/*`        | `ping`, `flushAll`, `delete` for the proxy cache backend.            |
+| `client.config`        | `/config/*`       | `get` and `update` for the proxy's runtime configuration.            |
 
 ### Provider passthroughs (native upstream shape)
 
