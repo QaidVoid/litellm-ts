@@ -143,6 +143,19 @@ export type {
 } from "./src/api/files.ts";
 
 export type {
+  Batch,
+  BatchCompletionWindow,
+  BatchCreateRequest,
+  BatchEndpoint,
+  BatchErrorObject,
+  BatchesNamespace,
+  BatchRequestCounts,
+  BatchStatus,
+  ListBatchesQuery,
+  ListBatchesResponse,
+} from "./src/api/batches.ts";
+
+export type {
   DatabaseStatus,
   HealthNamespace,
   ReadinessDetailsResponse,
