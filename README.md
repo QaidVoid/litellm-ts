@@ -141,6 +141,7 @@ await client.embeddings.create({ model: "gpt-4o", input: "hi" });
 | `client.batches`      | `/v1/batches`                 | `create`, `retrieve`, `list`, `cancel`.                                |
 | `client.fineTuning`   | `/v1/fine_tuning/jobs`        | `create`, `retrieve`, `list`, `cancel`, `events`.                      |
 | `client.vectorStores` | `/v1/vector_stores`           | CRUD plus file attach / list / retrieve / delete.                      |
+| `client.realtime`     | `wss:.../v1/realtime`         | WebSocket session. `connect` opens, yields typed server events.        |
 
 ### Proxy administration
 
