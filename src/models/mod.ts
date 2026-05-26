@@ -4,7 +4,9 @@ export type {
   ModelEntry,
   ModelId,
   ModelsByCapability,
+  ModelsByMode,
   ModelsWithCapability,
+  ModelsWithMode,
   Provider,
 } from "./registry.ts";
 

@@ -136,10 +136,31 @@ const renderModelsByCapability = (
       lines.push(`  ${quote(cap)}: never;`);
     } else {
       lines.push(`  ${quote(cap)}:`);
-      const unionLines = models.map((m, i) => {
-        const prefix = i === 0 ? "    | " : "    | ";
-        return `${prefix}${quote(m)}`;
-      });
+      const unionLines = models.map((m) => `    | ${quote(m)}`);
+      lines.push(unionLines.join("\n") + ";");
+    }
+  }
+  lines.push("}");
+  return lines.join("\n") + "\n";
+};
+
+const renderModelsByMode = (
+  entries: readonly Entry[],
+  modes: readonly string[],
+): string => {
+  const byMode = new Map<string, string[]>();
+  for (const m of modes) byMode.set(m, []);
+  for (const e of entries) {
+    if (e.mode !== null) byMode.get(e.mode)?.push(e.id);
+  }
+  const lines: string[] = ["export interface ModelsByMode {"];
+  for (const mode of modes) {
+    const models = byMode.get(mode) ?? [];
+    if (models.length === 0) {
+      lines.push(`  ${quote(mode)}: never;`);
+    } else {
+      lines.push(`  ${quote(mode)}:`);
+      const unionLines = models.map((m) => `    | ${quote(m)}`);
       lines.push(unionLines.join("\n") + ";");
     }
   }
@@ -193,6 +214,12 @@ const main = async (): Promise<void> => {
     "",
   ].join("\n");
 
+  const modeHelper = [
+    "/** Resolve the literal union of model IDs declared with mode `M`. */",
+    "export type ModelsWithMode<M extends Mode> = ModelsByMode[M];",
+    "",
+  ].join("\n");
+
   const sections = [
     header,
     renderUnion("Provider", providers),
@@ -209,6 +236,9 @@ const main = async (): Promise<void> => {
     renderModelsByCapability(entries, capabilities),
     "",
     capabilityHelper,
+    renderModelsByMode(entries, modes),
+    "",
+    modeHelper,
   ];
 
   await Deno.writeTextFile(OUTPUT_PATH, sections.join("\n"));

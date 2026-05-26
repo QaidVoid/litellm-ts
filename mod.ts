@@ -42,7 +42,9 @@ export type {
   ModelEntry,
   ModelId,
   ModelsByCapability,
+  ModelsByMode,
   ModelsWithCapability,
+  ModelsWithMode,
   Provider,
 } from "./src/models/mod.ts";
 
