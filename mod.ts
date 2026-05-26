@@ -59,7 +59,10 @@ export { parseSSE } from "./src/sse.ts";
 export type {
   ChatAssistantMessage,
   ChatChoice,
+  ChatChunkChoice,
+  ChatChunkToolCall,
   ChatCompletion,
+  ChatCompletionChunk,
   ChatCompletionRequest,
   ChatFinishReason,
   ChatImageUrlPart,

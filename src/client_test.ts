@@ -1,6 +1,8 @@
 import { assertEquals, assertStrictEquals } from "@std/assert";
-import type { ChatCompletion } from "./api/chat.ts";
+import type { ChatCompletion, ChatCompletionChunk } from "./api/chat.ts";
 import { createClient } from "./client.ts";
+import { isErr, isOk, type Result } from "./result.ts";
+import type { ApiError } from "./error.ts";
 
 type FetchCall = {
   readonly input: string | URL | Request;
@@ -175,4 +177,155 @@ Deno.test("client.chat.create accepts a tool call round-trip", async () => {
   const body = JSON.parse(calls[0]?.init?.body as string);
   assertStrictEquals(body.tools[0].function.name, "get_weather");
   assertStrictEquals(body.tool_choice, "auto");
+});
+
+const streamBody = (frames: readonly string[]): string =>
+  frames.map((f) => `data: ${f}\n\n`).join("");
+
+const collectStream = async <T, E>(
+  iter: AsyncIterable<Result<T, E>>,
+): Promise<Array<Result<T, E>>> => {
+  const out: Array<Result<T, E>> = [];
+  for await (const v of iter) out.push(v);
+  return out;
+};
+
+Deno.test("client.chat.createStream yields one Result per SSE frame and stops on [DONE]", async () => {
+  const chunk = (content: string): ChatCompletionChunk => ({
+    id: "chatcmpl-x",
+    object: "chat.completion.chunk",
+    created: 1,
+    model: "gpt-4o",
+    choices: [{ index: 0, delta: { content }, finish_reason: null }],
+  });
+  const body = streamBody([
+    JSON.stringify(chunk("hel")),
+    JSON.stringify(chunk("lo")),
+    "[DONE]",
+  ]);
+  const { fetch, calls } = recordingFetch([
+    () =>
+      new Response(body, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      }),
+  ]);
+  const client = createClient({
+    baseUrl: "https://api.test",
+    apiKey: "test",
+    maxRetries: 0,
+    fetch,
+  });
+  const results = await collectStream(
+    client.chat.createStream({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: "say hi" }],
+    }),
+  );
+  assertStrictEquals(results.length, 2);
+  assertStrictEquals(isOk(results[0]!), true);
+  assertStrictEquals(isOk(results[1]!), true);
+  const sent = JSON.parse(calls[0]?.init?.body as string);
+  assertStrictEquals(sent.stream, true);
+  const headers = new Headers(calls[0]?.init?.headers);
+  assertStrictEquals(headers.get("accept"), "text/event-stream");
+});
+
+Deno.test("client.chat.createStream surfaces malformed JSON as a per-frame stream error and continues", async () => {
+  const goodFrame = JSON.stringify({
+    id: "x",
+    object: "chat.completion.chunk",
+    created: 1,
+    model: "gpt-4o",
+    choices: [{ index: 0, delta: { content: "ok" }, finish_reason: null }],
+  });
+  const body = streamBody(["not json", goodFrame, "[DONE]"]);
+  const { fetch } = recordingFetch([
+    () =>
+      new Response(body, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      }),
+  ]);
+  const client = createClient({
+    baseUrl: "https://api.test",
+    apiKey: "test",
+    maxRetries: 0,
+    fetch,
+  });
+  const results = await collectStream(
+    client.chat.createStream({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: "x" }],
+    }),
+  );
+  assertStrictEquals(results.length, 2);
+  const first = results[0] as Result<ChatCompletionChunk, ApiError>;
+  assertStrictEquals(isErr(first), true);
+  if (!first.ok) {
+    assertStrictEquals(first.error.kind, "stream");
+  }
+  assertStrictEquals(isOk(results[1]!), true);
+});
+
+Deno.test("client.chat.createStream terminates on a server-side error frame", async () => {
+  const body = streamBody([
+    JSON.stringify({ error: { message: "upstream blew up", code: "server_error" } }),
+    JSON.stringify({
+      id: "x",
+      object: "chat.completion.chunk",
+      created: 1,
+      model: "gpt-4o",
+      choices: [{ index: 0, delta: { content: "never" }, finish_reason: null }],
+    }),
+  ]);
+  const { fetch } = recordingFetch([
+    () =>
+      new Response(body, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      }),
+  ]);
+  const client = createClient({
+    baseUrl: "https://api.test",
+    apiKey: "test",
+    maxRetries: 0,
+    fetch,
+  });
+  const results = await collectStream(
+    client.chat.createStream({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: "x" }],
+    }),
+  );
+  assertStrictEquals(results.length, 1);
+  const only = results[0] as Result<ChatCompletionChunk, ApiError>;
+  assertStrictEquals(isErr(only), true);
+  if (!only.ok) {
+    assertStrictEquals(only.error.kind, "http");
+  }
+});
+
+Deno.test("client.chat.createStream surfaces the upstream HTTP error as a single Result on connection failure", async () => {
+  const { fetch } = recordingFetch([
+    () => new Response("denied", { status: 403, statusText: "Forbidden" }),
+  ]);
+  const client = createClient({
+    baseUrl: "https://api.test",
+    apiKey: "test",
+    maxRetries: 0,
+    fetch,
+  });
+  const results = await collectStream(
+    client.chat.createStream({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: "x" }],
+    }),
+  );
+  assertStrictEquals(results.length, 1);
+  const only = results[0] as Result<ChatCompletionChunk, ApiError>;
+  assertStrictEquals(isErr(only), true);
+  if (!only.ok) {
+    assertStrictEquals(only.error.kind, "auth");
+  }
 });
