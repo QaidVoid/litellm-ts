@@ -3,15 +3,18 @@
   "name": "@qaidvoid/litellm",
   "version": "0.0.0",
   "exports": "./mod.ts",
+  "license": "MIT",
   "tasks": {
     "fmt": "deno fmt",
     "lint": "deno lint",
     "typecheck": "deno check .",
     "test": "deno test",
     "check": "deno fmt && deno lint && deno check . && deno test",
-    "gen:models": "deno run --allow-read --allow-write --allow-env --allow-net scripts/generate-models.ts"
+    "gen:models": "deno run --allow-read --allow-write --allow-env --allow-net scripts/generate-models.ts",
+    "build:npm": "deno run --allow-read --allow-write --allow-env --allow-net --allow-run scripts/build-npm.ts"
   },
   "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.41",
     "@std/assert": "jsr:@std/assert@1",
     "@std/testing": "jsr:@std/testing@1"
   },
