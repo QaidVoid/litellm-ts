@@ -9,6 +9,7 @@ import { type AudioNamespace, createAudio } from "./api/audio.ts";
 import { type BatchesNamespace, createBatches } from "./api/batches.ts";
 import { createFineTuning, type FineTuningNamespace } from "./api/fine_tuning.ts";
 import { type ChatNamespace, createChat } from "./api/chat.ts";
+import { type CompletionsNamespace, createCompletions } from "./api/completions.ts";
 import { createEmbeddings, type EmbeddingsNamespace } from "./api/embeddings.ts";
 import { createFiles, type FilesNamespace } from "./api/files.ts";
 import { createImages, type ImagesNamespace } from "./api/images.ts";
@@ -23,6 +24,8 @@ export interface Client {
   readonly chat: ChatNamespace;
   /** Anthropic-shape `/v1/messages` endpoint. */
   readonly messages: MessagesNamespace;
+  /** Legacy `/v1/completions` text endpoint. */
+  readonly completions: CompletionsNamespace;
   /** Embeddings endpoint. */
   readonly embeddings: EmbeddingsNamespace;
   /** Image generation endpoint. */
@@ -68,6 +71,7 @@ export const createClient = (config: TransportConfig): Client => {
   return {
     chat: createChat(transport),
     messages: createMessages(transport),
+    completions: createCompletions(transport),
     embeddings: createEmbeddings(transport),
     images: createImages(transport),
     audio: createAudio(transport),

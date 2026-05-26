@@ -85,6 +85,17 @@ export type {
 } from "./src/api/chat.ts";
 
 export type {
+  CompletionChoice,
+  CompletionChunk,
+  CompletionFinishReason,
+  CompletionLogProbs,
+  CompletionRequest,
+  CompletionResponse,
+  CompletionsNamespace,
+  CompletionUsage,
+} from "./src/api/completions.ts";
+
+export type {
   EmbeddingsDatum,
   EmbeddingsEncoding,
   EmbeddingsInput,
