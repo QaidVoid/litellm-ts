@@ -21,6 +21,7 @@ import { createImages, type ImagesNamespace } from "./api/images.ts";
 import { createMessages, type MessagesNamespace } from "./api/messages.ts";
 import { createModeration, type ModerationNamespace } from "./api/moderation.ts";
 import { createPassthrough, type PassthroughNamespace } from "./api/passthrough.ts";
+import { createRealtime, type RealtimeNamespace } from "./api/realtime.ts";
 import { createRerank, type RerankNamespace } from "./api/rerank.ts";
 import { createResponses, type ResponsesNamespace } from "./api/responses.ts";
 import { createVectorStores, type VectorStoresNamespace } from "./api/vector_stores.ts";
@@ -38,6 +39,8 @@ export interface Client {
   readonly responses: ResponsesNamespace;
   /** Vector stores endpoint (CRUD + file attachments). */
   readonly vectorStores: VectorStoresNamespace;
+  /** Realtime WebSocket API. */
+  readonly realtime: RealtimeNamespace;
   /** Embeddings endpoint. */
   readonly embeddings: EmbeddingsNamespace;
   /** Image generation endpoint. */
@@ -114,6 +117,7 @@ export const createClient = (config: TransportConfig): Client => {
     completions: createCompletions(transport),
     responses: createResponses(transport),
     vectorStores: createVectorStores(transport),
+    realtime: createRealtime(config),
     embeddings: createEmbeddings(transport),
     images: createImages(transport),
     audio: createAudio(transport),

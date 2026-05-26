@@ -118,6 +118,14 @@ export type {
 } from "./src/api/responses.ts";
 
 export type {
+  RealtimeClientEvent,
+  RealtimeConnectOptions,
+  RealtimeNamespace,
+  RealtimeServerEvent,
+  RealtimeSession,
+} from "./src/api/realtime.ts";
+
+export type {
   AttachVectorStoreFileRequest,
   CreateVectorStoreRequest,
   DeleteVectorStoreFileResponse,
