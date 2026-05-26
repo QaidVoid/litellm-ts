@@ -153,6 +153,22 @@ export type {
 } from "./src/api/admin/health.ts";
 
 export type {
+  DeleteKeysRequest,
+  DeleteKeysResponse,
+  GenerateKeyRequest,
+  KeyHealthResponse,
+  KeyMetadata,
+  KeysNamespace,
+  KeyTokenRequest,
+  KeyType,
+  LimitType,
+  ListKeysQuery,
+  ListKeysResponse,
+  RegenerateKeyRequest,
+  UpdateKeyRequest,
+} from "./src/api/admin/keys.ts";
+
+export type {
   MessagesContentBlock,
   MessagesImageBlock,
   MessagesMessage,

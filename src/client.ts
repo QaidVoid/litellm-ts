@@ -1,4 +1,5 @@
 import { createHealth, type HealthNamespace } from "./api/admin/health.ts";
+import { createKeys, type KeysNamespace } from "./api/admin/keys.ts";
 import { type AudioNamespace, createAudio } from "./api/audio.ts";
 import { type ChatNamespace, createChat } from "./api/chat.ts";
 import { createEmbeddings, type EmbeddingsNamespace } from "./api/embeddings.ts";
@@ -29,6 +30,8 @@ export interface Client {
   readonly files: FilesNamespace;
   /** Proxy health probes (liveliness, readiness, test_connection). */
   readonly health: HealthNamespace;
+  /** Virtual key administration. */
+  readonly keys: KeysNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -44,5 +47,6 @@ export const createClient = (config: TransportConfig): Client => {
     moderation: createModeration(transport),
     files: createFiles(transport),
     health: createHealth(transport),
+    keys: createKeys(transport),
   };
 };
