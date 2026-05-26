@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json",
+  "name": "@qaidvoid/litellm",
+  "version": "0.0.0",
+  "exports": "./mod.ts",
+  "tasks": {
+    "fmt": "deno fmt",
+    "lint": "deno lint",
+    "typecheck": "deno check .",
+    "test": "deno test",
+    "check": "deno fmt && deno lint && deno check . && deno test"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1"
+  },
+  "fmt": {
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "useTabs": false,
+    "singleQuote": false,
+    "semiColons": true,
+    "proseWrap": "preserve"
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ],
+      "include": [
+        "no-await-in-loop",
+        "no-console",
+        "no-eval",
+        "no-external-import",
+        "no-self-compare",
+        "no-sync-fn-in-async-fn",
+        "no-throw-literal",
+        "no-useless-rename",
+        "single-var-declarator",
+        "verbatim-module-syntax"
+      ]
+    }
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}
