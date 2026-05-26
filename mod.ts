@@ -312,6 +312,20 @@ export type {
   UpdateBudgetRequest,
 } from "./src/api/admin/budgets.ts";
 
+export type {
+  AddOrganizationMemberRequest,
+  CreateOrganizationRequest,
+  DeleteOrganizationMemberRequest,
+  DeleteOrganizationsRequest,
+  ListOrganizationsResponse,
+  Organization,
+  OrganizationMemberRole,
+  OrganizationMemberSpec,
+  OrganizationsNamespace,
+  UpdateOrganizationMemberRequest,
+  UpdateOrganizationRequest,
+} from "./src/api/admin/organizations.ts";
+
 export type { PassthroughNamespace } from "./src/api/passthrough.ts";
 
 export type {

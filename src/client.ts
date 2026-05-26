@@ -1,5 +1,6 @@
 import { createHealth, type HealthNamespace } from "./api/admin/health.ts";
 import { createKeys, type KeysNamespace } from "./api/admin/keys.ts";
+import { createOrganizations, type OrganizationsNamespace } from "./api/admin/organizations.ts";
 import { createProxyModels, type ProxyModelsNamespace } from "./api/admin/models.ts";
 import { createTeams, type TeamsNamespace } from "./api/admin/teams.ts";
 import { type BudgetsNamespace, createBudgets } from "./api/admin/budgets.ts";
@@ -70,6 +71,8 @@ export interface Client {
   readonly spend: SpendNamespace;
   /** Budget administration. */
   readonly budgets: BudgetsNamespace;
+  /** Organization administration. */
+  readonly organizations: OrganizationsNamespace;
   /** Native-shape passthrough to Anthropic via the LiteLLM proxy. */
   readonly anthropic: PassthroughNamespace;
   /** Native-shape passthrough to OpenAI. */
@@ -114,6 +117,7 @@ export const createClient = (config: TransportConfig): Client => {
     users: createUsers(transport),
     spend: createSpend(transport),
     budgets: createBudgets(transport),
+    organizations: createOrganizations(transport),
     anthropic: createPassthrough(transport, "/anthropic"),
     openai: createPassthrough(transport, "/openai"),
     gemini: createPassthrough(transport, "/gemini"),
