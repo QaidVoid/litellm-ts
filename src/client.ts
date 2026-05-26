@@ -18,6 +18,7 @@ import { createModeration, type ModerationNamespace } from "./api/moderation.ts"
 import { createPassthrough, type PassthroughNamespace } from "./api/passthrough.ts";
 import { createRerank, type RerankNamespace } from "./api/rerank.ts";
 import { createResponses, type ResponsesNamespace } from "./api/responses.ts";
+import { createVectorStores, type VectorStoresNamespace } from "./api/vector_stores.ts";
 import { createTransport, type TransportConfig } from "./transport.ts";
 
 /** The top-level SDK surface. Construct via `createClient`. */
@@ -30,6 +31,8 @@ export interface Client {
   readonly completions: CompletionsNamespace;
   /** OpenAI Responses API (`/v1/responses`). */
   readonly responses: ResponsesNamespace;
+  /** Vector stores endpoint (CRUD + file attachments). */
+  readonly vectorStores: VectorStoresNamespace;
   /** Embeddings endpoint. */
   readonly embeddings: EmbeddingsNamespace;
   /** Image generation endpoint. */
@@ -95,6 +98,7 @@ export const createClient = (config: TransportConfig): Client => {
     messages: createMessages(transport),
     completions: createCompletions(transport),
     responses: createResponses(transport),
+    vectorStores: createVectorStores(transport),
     embeddings: createEmbeddings(transport),
     images: createImages(transport),
     audio: createAudio(transport),

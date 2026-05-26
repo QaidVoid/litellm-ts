@@ -118,6 +118,23 @@ export type {
 } from "./src/api/responses.ts";
 
 export type {
+  AttachVectorStoreFileRequest,
+  CreateVectorStoreRequest,
+  DeleteVectorStoreFileResponse,
+  DeleteVectorStoreResponse,
+  ListVectorStoreFilesResponse,
+  ListVectorStoresQuery,
+  ListVectorStoresResponse,
+  UpdateVectorStoreRequest,
+  VectorStore,
+  VectorStoreChunkingStrategy,
+  VectorStoreExpiration,
+  VectorStoreFile,
+  VectorStoreFileCounts,
+  VectorStoresNamespace,
+} from "./src/api/vector_stores.ts";
+
+export type {
   EmbeddingsDatum,
   EmbeddingsEncoding,
   EmbeddingsInput,
