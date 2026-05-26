@@ -55,3 +55,27 @@ export { createTransport } from "./src/transport.ts";
 export type { SSEEvent } from "./src/sse.ts";
 
 export { parseSSE } from "./src/sse.ts";
+
+export type {
+  ChatAssistantMessage,
+  ChatChoice,
+  ChatCompletion,
+  ChatCompletionRequest,
+  ChatFinishReason,
+  ChatImageUrlPart,
+  ChatMessage,
+  ChatNamespace,
+  ChatResponseFormat,
+  ChatSystemMessage,
+  ChatTextPart,
+  ChatTool,
+  ChatToolCall,
+  ChatToolChoice,
+  ChatToolMessage,
+  ChatUsage,
+  ChatUserContentPart,
+  ChatUserMessage,
+} from "./src/api/chat.ts";
+
+export type { Client } from "./src/client.ts";
+export { createClient } from "./src/client.ts";
