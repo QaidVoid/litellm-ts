@@ -237,3 +237,47 @@ Deno.test("stream returns the raw response body and sets accept header", async (
   const headers = new Headers(calls[0]?.init?.headers);
   assertStrictEquals(headers.get("accept"), "text/event-stream");
 });
+
+Deno.test("FormData body is passed through without JSON serialization or content-type", async () => {
+  const { fetch, calls } = recordingFetch([() => json({})]);
+  const t = createTransport(baseConfig({ fetch }));
+  const fd = new FormData();
+  fd.append("model", "whisper-1");
+  fd.append("file", new Blob([new Uint8Array([1, 2, 3])]), "clip.bin");
+  await t.request({ method: "POST", path: "/v1/audio/transcriptions", body: fd });
+  const init = calls[0]?.init;
+  assertEquals(init?.body instanceof FormData, true);
+  const headers = new Headers(init?.headers);
+  assertStrictEquals(headers.has("content-type"), false);
+});
+
+Deno.test("fetchRaw returns the raw Response without parsing", async () => {
+  const { fetch } = recordingFetch([
+    () =>
+      new Response(new Uint8Array([1, 2, 3, 4]), {
+        status: 200,
+        headers: { "content-type": "audio/mpeg" },
+      }),
+  ]);
+  const t = createTransport(baseConfig({ fetch }));
+  const result = await t.fetchRaw({
+    method: "POST",
+    path: "/v1/audio/speech",
+    body: { input: "hi" },
+  });
+  assertEquals(result.ok, true);
+  if (result.ok) {
+    const bytes = new Uint8Array(await result.value.arrayBuffer());
+    assertEquals([...bytes], [1, 2, 3, 4]);
+  }
+});
+
+Deno.test("fetchRaw still surfaces non-2xx as ApiError", async () => {
+  const { fetch } = recordingFetch([() => new Response("nope", { status: 404 })]);
+  const t = createTransport(baseConfig({ fetch }));
+  const result = await t.fetchRaw({ method: "GET", path: "/x" });
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertStrictEquals(result.error.kind, "http");
+  }
+});

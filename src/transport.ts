@@ -44,10 +44,17 @@ export interface Transport {
   /** Issue a request and parse the response body as JSON typed `TResp`. */
   request<TResp>(opts: RequestOptions): Promise<Result<TResp, ApiError>>;
   /**
-   * Issue a request and return the raw response body as a stream. No retry is
-   * attempted because streaming endpoints are not idempotent on resume.
+   * Issue a request and return the raw response body as a stream. Sets
+   * `accept: text/event-stream` and does not retry, because streaming
+   * endpoints are not idempotent on resume.
    */
   stream(opts: RequestOptions): Promise<Result<ReadableStream<Uint8Array>, ApiError>>;
+  /**
+   * Issue a request and return the raw `Response`. No retry, no body parsing,
+   * no extra headers beyond what the caller supplied (plus auth). Used by
+   * endpoints that need full control over how the body is consumed.
+   */
+  fetchRaw(opts: RequestOptions): Promise<Result<Response, ApiError>>;
 }
 
 const DEFAULT_TIMEOUT_MS = 60_000;
@@ -118,10 +125,13 @@ const mapResponseError = async (res: Response): Promise<ApiError> => {
   });
 };
 
+const isFormData = (v: unknown): v is FormData =>
+  typeof FormData !== "undefined" && v instanceof FormData;
+
 const buildHeaders = (
   config: TransportConfig,
   opts: RequestOptions,
-  hasBody: boolean,
+  hasJsonBody: boolean,
   overrides?: Readonly<Record<string, string>>,
 ): Headers => {
   const h = new Headers();
@@ -132,7 +142,7 @@ const buildHeaders = (
     for (const [k, v] of Object.entries(opts.headers)) h.set(k, v);
   }
   h.set("authorization", `Bearer ${config.apiKey}`);
-  if (hasBody) h.set("content-type", "application/json");
+  if (hasJsonBody) h.set("content-type", "application/json");
   if (overrides) {
     for (const [k, v] of Object.entries(overrides)) h.set(k, v);
   }
@@ -145,20 +155,25 @@ const buildRequestInit = (
   overrides?: Readonly<Record<string, string>>,
 ): Result<RequestInit, ApiError> => {
   const hasBody = opts.body !== undefined;
-  const headers = buildHeaders(config, opts, hasBody, overrides);
+  const formBody = hasBody && isFormData(opts.body);
+  const headers = buildHeaders(config, opts, hasBody && !formBody, overrides);
   const init: RequestInit = { method: opts.method, headers };
   if (hasBody) {
-    const serialized = trySync(() => JSON.stringify(opts.body));
-    if (!serialized.ok) {
-      return err(
-        validationError({
-          path: "$.body",
-          expected: "JSON-serializable value",
-          got: opts.body,
-        }),
-      );
+    if (formBody) {
+      init.body = opts.body as FormData;
+    } else {
+      const serialized = trySync(() => JSON.stringify(opts.body));
+      if (!serialized.ok) {
+        return err(
+          validationError({
+            path: "$.body",
+            expected: "JSON-serializable value",
+            got: opts.body,
+          }),
+        );
+      }
+      init.body = serialized.value;
     }
-    init.body = serialized.value;
   }
   return ok(init);
 };
@@ -264,6 +279,18 @@ export const createTransport = (config: TransportConfig): Transport => {
         return err(networkError(null, "response has no body"));
       }
       return ok(res.value.body);
+    },
+    async fetchRaw(opts: RequestOptions): Promise<Result<Response, ApiError>> {
+      const url = buildUrl(config.baseUrl, opts.path, opts.query);
+      const initResult = buildRequestInit(config, opts);
+      if (!initResult.ok) return initResult;
+      return await attemptFetch({
+        url,
+        init: initResult.value,
+        fetchFn,
+        timeoutMs,
+        userSignal: opts.signal,
+      });
     },
   };
 };
