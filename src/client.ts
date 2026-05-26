@@ -7,6 +7,7 @@ import { createSpend, type SpendNamespace } from "./api/admin/spend.ts";
 import { createUsers, type UsersNamespace } from "./api/admin/users.ts";
 import { type AudioNamespace, createAudio } from "./api/audio.ts";
 import { type BatchesNamespace, createBatches } from "./api/batches.ts";
+import { createFineTuning, type FineTuningNamespace } from "./api/fine_tuning.ts";
 import { type ChatNamespace, createChat } from "./api/chat.ts";
 import { createEmbeddings, type EmbeddingsNamespace } from "./api/embeddings.ts";
 import { createFiles, type FilesNamespace } from "./api/files.ts";
@@ -36,6 +37,8 @@ export interface Client {
   readonly files: FilesNamespace;
   /** Batches endpoint (submit and track bulk jobs). */
   readonly batches: BatchesNamespace;
+  /** Fine-tuning job endpoints. */
+  readonly fineTuning: FineTuningNamespace;
   /** Proxy health probes (liveliness, readiness, test_connection). */
   readonly health: HealthNamespace;
   /** Virtual key administration. */
@@ -72,6 +75,7 @@ export const createClient = (config: TransportConfig): Client => {
     moderation: createModeration(transport),
     files: createFiles(transport),
     batches: createBatches(transport),
+    fineTuning: createFineTuning(transport),
     health: createHealth(transport),
     keys: createKeys(transport),
     proxyModels: createProxyModels(transport),

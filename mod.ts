@@ -156,6 +156,21 @@ export type {
 } from "./src/api/batches.ts";
 
 export type {
+  FineTuningCreateRequest,
+  FineTuningError,
+  FineTuningHyperparameters,
+  FineTuningIntegration,
+  FineTuningJob,
+  FineTuningJobEvent,
+  FineTuningJobStatus,
+  FineTuningNamespace,
+  ListFineTuningEventsQuery,
+  ListFineTuningEventsResponse,
+  ListFineTuningJobsQuery,
+  ListFineTuningJobsResponse,
+} from "./src/api/fine_tuning.ts";
+
+export type {
   DatabaseStatus,
   HealthNamespace,
   ReadinessDetailsResponse,
