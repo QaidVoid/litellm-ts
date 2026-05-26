@@ -143,6 +143,16 @@ export type {
 } from "./src/api/files.ts";
 
 export type {
+  DatabaseStatus,
+  HealthNamespace,
+  ReadinessDetailsResponse,
+  ReadinessResponse,
+  ReadinessStatus,
+  TestConnectionRequest,
+  TestConnectionResponse,
+} from "./src/api/admin/health.ts";
+
+export type {
   MessagesContentBlock,
   MessagesImageBlock,
   MessagesMessage,
