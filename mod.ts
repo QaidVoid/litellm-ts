@@ -84,5 +84,15 @@ export type {
   ChatUserMessage,
 } from "./src/api/chat.ts";
 
+export type {
+  EmbeddingsDatum,
+  EmbeddingsEncoding,
+  EmbeddingsInput,
+  EmbeddingsNamespace,
+  EmbeddingsRequest,
+  EmbeddingsResponse,
+  EmbeddingsUsage,
+} from "./src/api/embeddings.ts";
+
 export type { Client } from "./src/client.ts";
 export { createClient } from "./src/client.ts";
