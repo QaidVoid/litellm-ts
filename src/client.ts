@@ -1,6 +1,7 @@
 import { type AudioNamespace, createAudio } from "./api/audio.ts";
 import { type ChatNamespace, createChat } from "./api/chat.ts";
 import { createEmbeddings, type EmbeddingsNamespace } from "./api/embeddings.ts";
+import { createFiles, type FilesNamespace } from "./api/files.ts";
 import { createImages, type ImagesNamespace } from "./api/images.ts";
 import { createMessages, type MessagesNamespace } from "./api/messages.ts";
 import { createModeration, type ModerationNamespace } from "./api/moderation.ts";
@@ -23,6 +24,8 @@ export interface Client {
   readonly rerank: RerankNamespace;
   /** Content moderation endpoint. */
   readonly moderation: ModerationNamespace;
+  /** Files endpoint (upload, list, retrieve, delete, content). */
+  readonly files: FilesNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -36,5 +39,6 @@ export const createClient = (config: TransportConfig): Client => {
     audio: createAudio(transport),
     rerank: createRerank(transport),
     moderation: createModeration(transport),
+    files: createFiles(transport),
   };
 };

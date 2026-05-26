@@ -131,6 +131,18 @@ export type {
 } from "./src/api/moderation.ts";
 
 export type {
+  FileCreateRequest,
+  FileDeleteResponse,
+  FileListQuery,
+  FileListResponse,
+  FileObject,
+  FilePurpose,
+  FilesNamespace,
+  FileStatus,
+  FileUpload,
+} from "./src/api/files.ts";
+
+export type {
   MessagesContentBlock,
   MessagesImageBlock,
   MessagesMessage,
