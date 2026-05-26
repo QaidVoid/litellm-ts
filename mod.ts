@@ -199,6 +199,18 @@ export type {
 } from "./src/api/admin/teams.ts";
 
 export type {
+  CreateUserRequest,
+  DeleteUsersRequest,
+  ListUsersQuery,
+  ListUsersResponse,
+  UpdateUserRequest,
+  User,
+  UserRole,
+  UsersNamespace,
+  UserTeamMembership,
+} from "./src/api/admin/users.ts";
+
+export type {
   MessagesContentBlock,
   MessagesImageBlock,
   MessagesMessage,

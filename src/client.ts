@@ -2,6 +2,7 @@ import { createHealth, type HealthNamespace } from "./api/admin/health.ts";
 import { createKeys, type KeysNamespace } from "./api/admin/keys.ts";
 import { createProxyModels, type ProxyModelsNamespace } from "./api/admin/models.ts";
 import { createTeams, type TeamsNamespace } from "./api/admin/teams.ts";
+import { createUsers, type UsersNamespace } from "./api/admin/users.ts";
 import { type AudioNamespace, createAudio } from "./api/audio.ts";
 import { type ChatNamespace, createChat } from "./api/chat.ts";
 import { createEmbeddings, type EmbeddingsNamespace } from "./api/embeddings.ts";
@@ -45,6 +46,8 @@ export interface Client {
   readonly proxyModels: ProxyModelsNamespace;
   /** Team administration. */
   readonly teams: TeamsNamespace;
+  /** Internal user administration. */
+  readonly users: UsersNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -63,5 +66,6 @@ export const createClient = (config: TransportConfig): Client => {
     keys: createKeys(transport),
     proxyModels: createProxyModels(transport),
     teams: createTeams(transport),
+    users: createUsers(transport),
   };
 };
