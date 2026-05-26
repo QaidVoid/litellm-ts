@@ -35,3 +35,15 @@ export {
   trySync,
   unwrapOr,
 } from "./src/result.ts";
+
+export type {
+  Capability,
+  Mode,
+  ModelEntry,
+  ModelId,
+  ModelsByCapability,
+  ModelsWithCapability,
+  Provider,
+} from "./src/models/mod.ts";
+
+export { MODELS } from "./src/models/mod.ts";
