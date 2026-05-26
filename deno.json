@@ -24,6 +24,9 @@
     "proseWrap": "preserve"
   },
   "lint": {
+    "exclude": [
+      "examples/"
+    ],
     "rules": {
       "tags": [
         "recommended"
