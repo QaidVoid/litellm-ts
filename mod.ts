@@ -120,5 +120,23 @@ export type {
   RerankResult,
 } from "./src/api/rerank.ts";
 
+export type {
+  MessagesContentBlock,
+  MessagesImageBlock,
+  MessagesMessage,
+  MessagesNamespace,
+  MessagesRequest,
+  MessagesResponse,
+  MessagesStopReason,
+  MessagesStreamEvent,
+  MessagesTextBlock,
+  MessagesThinkingBlock,
+  MessagesTool,
+  MessagesToolChoice,
+  MessagesToolResultBlock,
+  MessagesToolUseBlock,
+  MessagesUsage,
+} from "./src/api/messages.ts";
+
 export type { Client } from "./src/client.ts";
 export { createClient } from "./src/client.ts";
