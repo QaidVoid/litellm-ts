@@ -65,6 +65,14 @@ Deno.test("streamError includes cause when provided", () => {
   assertStrictEquals(e.cause, cause);
 });
 
+Deno.test("authError accepts forbidden reason for 403 responses", () => {
+  assertEquals(authError({ reason: "forbidden", status: 403 }), {
+    kind: "auth",
+    reason: "forbidden",
+    status: 403,
+  });
+});
+
 Deno.test("authError omits status when not provided", () => {
   assertEquals(authError({ reason: "missing" }), {
     kind: "auth",

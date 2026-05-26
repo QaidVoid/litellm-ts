@@ -12,7 +12,8 @@
     "gen:models": "deno run --allow-read --allow-write --allow-env --allow-net scripts/generate-models.ts"
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@1"
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/testing": "jsr:@std/testing@1"
   },
   "fmt": {
     "lineWidth": 100,
@@ -28,7 +29,6 @@
         "recommended"
       ],
       "include": [
-        "no-await-in-loop",
         "no-console",
         "no-eval",
         "no-external-import",

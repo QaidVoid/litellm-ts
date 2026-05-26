@@ -47,3 +47,7 @@ export type {
 } from "./src/models/mod.ts";
 
 export { MODELS } from "./src/models/mod.ts";
+
+export type { HttpMethod, RequestOptions, Transport, TransportConfig } from "./src/transport.ts";
+
+export { createTransport } from "./src/transport.ts";

@@ -49,7 +49,7 @@ export type StreamError = {
 /** An authentication or authorization failure. */
 export type AuthError = {
   readonly kind: "auth";
-  readonly reason: "missing" | "invalid" | "expired";
+  readonly reason: "missing" | "invalid" | "expired" | "forbidden";
   readonly status?: number;
 };
 
