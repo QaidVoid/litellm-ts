@@ -18,44 +18,58 @@ export type ApiErrorKind = ApiError["kind"];
 /** A `fetch`-level failure: DNS, TCP, TLS, or the runtime threw before a response landed. */
 export type NetworkError = {
   readonly kind: "network";
+  /** Original thrown value from the runtime. Inspect with `instanceof` or tag checks. */
   readonly cause: unknown;
+  /** Short human-readable summary suitable for logs. */
   readonly message: string;
 };
 
-/** A non-2xx HTTP response. `body` is the raw parsed payload. */
+/** A non-2xx HTTP response. */
 export type HttpError = {
   readonly kind: "http";
+  /** HTTP status code (4xx or 5xx). */
   readonly status: number;
+  /** Reason phrase from the response line. */
   readonly statusText: string;
+  /** Parsed JSON body, or the raw text when the body is not JSON. */
   readonly body: unknown;
+  /** Server-assigned request identifier (from `x-request-id` or `x-litellm-call-id`). */
   readonly requestId?: string;
 };
 
 /** A response that did not match the expected shape. */
 export type ValidationError = {
   readonly kind: "validation";
+  /** JSON pointer or dotted path of the offending field. */
   readonly path: string;
+  /** Human-readable description of the expected type. */
   readonly expected: string;
+  /** The value as received. */
   readonly got: unknown;
 };
 
 /** A streaming-mode failure. `reason` distinguishes parse, abort, and connection loss. */
 export type StreamError = {
   readonly kind: "stream";
+  /** What went wrong while consuming the stream. */
   readonly reason: "parse" | "abort" | "connection";
+  /** Optional underlying error for debugging. */
   readonly cause?: unknown;
 };
 
 /** An authentication or authorization failure. */
 export type AuthError = {
   readonly kind: "auth";
+  /** Why the request was rejected. `missing` is client-side; the rest mirror server responses. */
   readonly reason: "missing" | "invalid" | "expired" | "forbidden";
+  /** HTTP status (401 for `invalid`/`expired`, 403 for `forbidden`). Absent for `missing`. */
   readonly status?: number;
 };
 
 /** A request that exceeded its time budget. */
 export type TimeoutError = {
   readonly kind: "timeout";
+  /** Configured timeout in milliseconds. */
   readonly ms: number;
 };
 
@@ -63,6 +77,7 @@ export type TimeoutError = {
 export type RateLimitedError = {
   readonly kind: "rate-limited";
   readonly status: 429;
+  /** Milliseconds the upstream asks the caller to wait before retrying. */
   readonly retryAfterMs?: number;
 };
 

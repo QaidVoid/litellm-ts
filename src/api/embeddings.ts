@@ -16,29 +16,39 @@ export type EmbeddingsEncoding = "float" | "base64";
 /** Embeddings request body. `model` is constrained to embedding-mode models. */
 export interface EmbeddingsRequest {
   readonly model: ModelsWithMode<"embedding">;
+  /** Input to embed. May be one string, an array of strings, or token-id arrays. */
   readonly input: EmbeddingsInput;
+  /** Wire format the upstream encodes the vectors in. Defaults to `"float"`. */
   readonly encoding_format?: EmbeddingsEncoding;
+  /** Reduce the vector dimensionality (Matryoshka-style). Provider support varies. */
   readonly dimensions?: number;
+  /** Opaque caller identifier forwarded to upstream abuse-detection systems. */
   readonly user?: string;
 }
 
 /** A single embedding row in the response. */
 export interface EmbeddingsDatum {
   readonly object: "embedding";
+  /** The vector itself. A `string` when `encoding_format` is `"base64"`. */
   readonly embedding: readonly number[] | string;
+  /** Position of this embedding in the request input array. */
   readonly index: number;
 }
 
 /** Token usage reported for the embeddings request. */
 export interface EmbeddingsUsage {
+  /** Tokens consumed by the input. */
   readonly prompt_tokens: number;
+  /** Equal to `prompt_tokens` for embeddings; included for parity with chat. */
   readonly total_tokens: number;
 }
 
 /** A complete embeddings response. */
 export interface EmbeddingsResponse {
   readonly object: "list";
+  /** One entry per input, in the same order. */
   readonly data: readonly EmbeddingsDatum[];
+  /** Model that produced the embeddings. */
   readonly model: string;
   readonly usage: EmbeddingsUsage;
 }
