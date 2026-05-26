@@ -22,8 +22,11 @@ const describe = (e: ApiError): string => {
       return `validation at ${e.path}: expected ${e.expected}`;
     case "stream":
       return `stream ${e.reason}`;
-    case "auth":
-      return `auth ${e.reason}${e.status === undefined ? "" : ` (${e.status})`}`;
+    case "auth": {
+      const status = e.status === undefined ? "" : ` (${e.status})`;
+      const detail = e.body === undefined ? "" : `: ${JSON.stringify(e.body)}`;
+      return `auth ${e.reason}${status}${detail}`;
+    }
     case "timeout":
       return `timeout after ${e.ms}ms`;
     case "rate-limited":

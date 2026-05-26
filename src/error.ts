@@ -64,6 +64,12 @@ export type AuthError = {
   readonly reason: "missing" | "invalid" | "expired" | "forbidden";
   /** HTTP status (401 for `invalid`/`expired`, 403 for `forbidden`). Absent for `missing`. */
   readonly status?: number;
+  /**
+   * Parsed response body when available. Useful for distinguishing a proxy
+   * rejecting the SDK key from an upstream provider rejecting the proxy's
+   * key, since LiteLLM forwards upstream 401s verbatim.
+   */
+  readonly body?: unknown;
 };
 
 /** A request that exceeded its time budget. */
@@ -129,9 +135,12 @@ export const streamError = (opts: {
 export const authError = (opts: {
   reason: AuthError["reason"];
   status?: number;
+  body?: unknown;
 }): AuthError => {
-  const base: AuthError = { kind: "auth", reason: opts.reason };
-  return opts.status === undefined ? base : { ...base, status: opts.status };
+  let e: AuthError = { kind: "auth", reason: opts.reason };
+  if (opts.status !== undefined) e = { ...e, status: opts.status };
+  if (opts.body !== undefined) e = { ...e, body: opts.body };
+  return e;
 };
 
 /** Construct a `TimeoutError`. */

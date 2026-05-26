@@ -89,27 +89,59 @@ Deno.test("request encodes query string entries, skipping undefined", async () =
   assertStrictEquals(url.searchParams.has("d"), false);
 });
 
-Deno.test("401 maps to auth error with reason 'invalid'", async () => {
+Deno.test("401 maps to auth error with reason 'invalid' and preserves the body", async () => {
   const { fetch } = recordingFetch([
-    () => new Response("", { status: 401, statusText: "Unauthorized" }),
+    () =>
+      new Response(JSON.stringify({ error: { message: "Incorrect API key" } }), {
+        status: 401,
+        statusText: "Unauthorized",
+        headers: { "content-type": "application/json" },
+      }),
   ]);
   const t = createTransport(baseConfig({ fetch }));
   const result = await t.request({ method: "GET", path: "/x" });
   assertEquals(result.ok, false);
   if (!result.ok) {
-    assertEquals(result.error, { kind: "auth", reason: "invalid", status: 401 });
+    assertEquals(result.error, {
+      kind: "auth",
+      reason: "invalid",
+      status: 401,
+      body: { error: { message: "Incorrect API key" } },
+    });
   }
 });
 
-Deno.test("403 maps to auth error with reason 'forbidden'", async () => {
+Deno.test("403 maps to auth error with reason 'forbidden' and preserves the body", async () => {
   const { fetch } = recordingFetch([
-    () => new Response("", { status: 403, statusText: "Forbidden" }),
+    () =>
+      new Response(JSON.stringify({ error: "not allowed" }), {
+        status: 403,
+        statusText: "Forbidden",
+        headers: { "content-type": "application/json" },
+      }),
   ]);
   const t = createTransport(baseConfig({ fetch }));
   const result = await t.request({ method: "GET", path: "/x" });
   assertEquals(result.ok, false);
   if (!result.ok) {
-    assertEquals(result.error, { kind: "auth", reason: "forbidden", status: 403 });
+    assertEquals(result.error, {
+      kind: "auth",
+      reason: "forbidden",
+      status: 403,
+      body: { error: "not allowed" },
+    });
+  }
+});
+
+Deno.test("401 body falls back to the raw text when the response is not JSON", async () => {
+  const { fetch } = recordingFetch([
+    () => new Response("plain unauthorized", { status: 401 }),
+  ]);
+  const t = createTransport(baseConfig({ fetch }));
+  const result = await t.request({ method: "GET", path: "/x" });
+  assertEquals(result.ok, false);
+  if (!result.ok && result.error.kind === "auth") {
+    assertEquals(result.error.body, "plain unauthorized");
   }
 });
 

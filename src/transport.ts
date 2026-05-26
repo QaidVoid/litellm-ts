@@ -111,8 +111,8 @@ const mapResponseError = async (res: Response): Promise<ApiError> => {
   } catch {
     // keep raw text as body
   }
-  if (res.status === 401) return authError({ reason: "invalid", status: 401 });
-  if (res.status === 403) return authError({ reason: "forbidden", status: 403 });
+  if (res.status === 401) return authError({ reason: "invalid", status: 401, body });
+  if (res.status === 403) return authError({ reason: "forbidden", status: 403, body });
   if (res.status === 429) {
     const retryAfterMs = parseRetryAfterMs(res.headers.get("retry-after"));
     return rateLimitedError(retryAfterMs === undefined ? {} : { retryAfterMs });
