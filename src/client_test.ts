@@ -179,6 +179,45 @@ Deno.test("client.chat.create accepts a tool call round-trip", async () => {
   assertStrictEquals(body.tool_choice, "auto");
 });
 
+Deno.test({
+  name: "type-level: chat.create model is constrained by tool capability",
+  ignore: true,
+  fn: () => {
+    const client = createClient({ baseUrl: "https://x", apiKey: "k" });
+
+    void client.chat.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: "x" }],
+      tools: [{ type: "function", function: { name: "foo" } }],
+    });
+
+    void client.chat.create({
+      model: "text-embedding-3-small",
+      messages: [{ role: "user", content: "x" }],
+    });
+
+    void client.chat.create({
+      model: "text-embedding-3-small",
+      messages: [{ role: "user", content: "x" }],
+      // @ts-expect-error tools is gated behind the function_calling capability
+      tools: [{ type: "function", function: { name: "foo" } }],
+    });
+
+    void client.chat.createStream({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: "x" }],
+      tools: [{ type: "function", function: { name: "foo" } }],
+    });
+
+    void client.chat.createStream({
+      model: "text-embedding-3-small",
+      messages: [{ role: "user", content: "x" }],
+      // @ts-expect-error tools is gated behind the function_calling capability
+      tools: [{ type: "function", function: { name: "foo" } }],
+    });
+  },
+});
+
 const streamBody = (frames: readonly string[]): string =>
   frames.map((f) => `data: ${f}\n\n`).join("");
 

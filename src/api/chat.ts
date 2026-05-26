@@ -1,6 +1,6 @@
 import type { ApiError } from "../error.ts";
 import { httpError, streamError } from "../error.ts";
-import type { ModelId } from "../models/mod.ts";
+import type { ModelId, ModelsWithCapability } from "../models/mod.ts";
 import type { Result } from "../result.ts";
 import { err, ok, trySync } from "../result.ts";
 import { parseSSE } from "../sse.ts";
@@ -96,9 +96,8 @@ export type ChatResponseFormat =
   | { readonly type: "text" }
   | { readonly type: "json_object" };
 
-/** A chat completion request body. Field names match the OpenAI-compatible wire format. */
-export interface ChatCompletionRequest {
-  readonly model: ModelId;
+/** Fields that apply to every chat completion request regardless of model. */
+export interface ChatRequestBase {
   readonly messages: readonly ChatMessage[];
   readonly temperature?: number;
   readonly top_p?: number;
@@ -109,12 +108,31 @@ export interface ChatCompletionRequest {
   readonly presence_penalty?: number;
   readonly frequency_penalty?: number;
   readonly user?: string;
-  readonly tools?: readonly ChatTool[];
-  readonly tool_choice?: ChatToolChoice;
   readonly response_format?: ChatResponseFormat;
   readonly seed?: number;
+}
+
+/**
+ * Fields permitted only when the chosen model declares the `function_calling`
+ * capability. Adding any of these to a request keyed on a non-function-calling
+ * model is a type error at the call site.
+ */
+export interface ChatToolFields {
+  readonly tools?: readonly ChatTool[];
+  readonly tool_choice?: ChatToolChoice;
   readonly parallel_tool_calls?: boolean;
 }
+
+/**
+ * A chat completion request body. Parameterized by the model literal so the
+ * shape drops capability-gated fields (currently `tools`, `tool_choice`,
+ * `parallel_tool_calls`) when the chosen model does not declare
+ * `function_calling`. Field names match the OpenAI-compatible wire format.
+ */
+export type ChatCompletionRequest<M extends ModelId = ModelId> =
+  & ChatRequestBase
+  & { readonly model: M }
+  & (M extends ModelsWithCapability<"function_calling"> ? ChatToolFields : Record<never, never>);
 
 /** Why the model stopped producing tokens. */
 export type ChatFinishReason =
@@ -189,15 +207,22 @@ export interface ChatCompletionChunk {
 
 /** Surface for chat endpoints on the `Client`. */
 export interface ChatNamespace {
-  /** Issue a non-streaming chat completion request. */
-  create(req: ChatCompletionRequest): Promise<Result<ChatCompletion, ApiError>>;
+  /**
+   * Issue a non-streaming chat completion request. The chosen `model`
+   * literal determines which capability-gated fields (e.g. `tools`) are
+   * allowed in the request type.
+   */
+  create<M extends ModelId>(
+    req: ChatCompletionRequest<M>,
+  ): Promise<Result<ChatCompletion, ApiError>>;
   /**
    * Issue a streaming chat completion request. The returned iterable yields
    * one `Result` per upstream SSE frame. A failed frame does not terminate
-   * the iteration; an error frame from the server does.
+   * the iteration; an error frame from the server does. Same model-based
+   * field gating applies as in `create`.
    */
-  createStream(
-    req: ChatCompletionRequest,
+  createStream<M extends ModelId>(
+    req: ChatCompletionRequest<M>,
   ): AsyncIterable<Result<ChatCompletionChunk, ApiError>>;
 }
 
@@ -248,6 +273,6 @@ export const createChat = (transport: Transport): ChatNamespace => ({
     });
   },
   createStream(req) {
-    return streamChunks(transport, req);
+    return streamChunks(transport, req as ChatCompletionRequest);
   },
 });
