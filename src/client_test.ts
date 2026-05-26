@@ -218,6 +218,57 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name: "type-level: chat.create message content is constrained by vision capability",
+  ignore: true,
+  fn: () => {
+    const client = createClient({ baseUrl: "https://x", apiKey: "k" });
+
+    // OK: gpt-4o supports vision.
+    void client.chat.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "describe" },
+            { type: "image_url", image_url: { url: "https://x/y.png" } },
+          ],
+        },
+      ],
+    });
+
+    // OK: text content on a non-vision model.
+    void client.chat.create({
+      model: "text-embedding-3-small",
+      messages: [{ role: "user", content: "x" }],
+    });
+
+    // OK: text content parts on a non-vision model.
+    void client.chat.create({
+      model: "text-embedding-3-small",
+      messages: [
+        { role: "user", content: [{ type: "text", text: "x" }] },
+      ],
+    });
+
+    // Type error: image_url content on a non-vision model.
+    void client.chat.create({
+      model: "text-embedding-3-small",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "describe" },
+            // @ts-expect-error image_url is gated behind the vision capability
+            { type: "image_url", image_url: { url: "https://x/y.png" } },
+          ],
+        },
+      ],
+    });
+  },
+});
+
 const streamBody = (frames: readonly string[]): string =>
   frames.map((f) => `data: ${f}\n\n`).join("");
 

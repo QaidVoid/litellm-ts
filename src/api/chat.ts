@@ -13,6 +13,16 @@ export type ChatMessage =
   | ChatAssistantMessage
   | ChatToolMessage;
 
+/**
+ * Message union for requests whose model does not declare `vision`. Identical
+ * to `ChatMessage` except user content cannot include image parts.
+ */
+export type ChatTextOnlyMessage =
+  | ChatSystemMessage
+  | ChatTextOnlyUserMessage
+  | ChatAssistantMessage
+  | ChatToolMessage;
+
 /** A system instruction message. */
 export interface ChatSystemMessage {
   readonly role: "system";
@@ -27,6 +37,19 @@ export interface ChatUserMessage {
   readonly role: "user";
   /** Plain text or an ordered array of content parts (text and image inputs). */
   readonly content: string | readonly ChatUserContentPart[];
+  /** Optional speaker name. Some providers expose it to the model. */
+  readonly name?: string;
+}
+
+/**
+ * Restricted user message used when the chosen model does not declare the
+ * `vision` capability. The compiler refuses image content parts on requests
+ * keyed by such a model.
+ */
+export interface ChatTextOnlyUserMessage {
+  readonly role: "user";
+  /** Plain text or an array of text-only content parts. */
+  readonly content: string | readonly ChatTextPart[];
   /** Optional speaker name. Some providers expose it to the model. */
   readonly name?: string;
 }
@@ -111,10 +134,8 @@ export type ChatResponseFormat =
   | { readonly type: "text" }
   | { readonly type: "json_object" };
 
-/** Fields that apply to every chat completion request regardless of model. */
-export interface ChatRequestBase {
-  /** Conversation history, oldest first. */
-  readonly messages: readonly ChatMessage[];
+/** Fields that are valid on every chat completion request, excluding `messages`. */
+export interface ChatRequestBaseCore {
   /** Sampling temperature. Higher values produce more varied output. */
   readonly temperature?: number;
   /** Nucleus sampling cutoff. Typically used as an alternative to `temperature`. */
@@ -140,6 +161,24 @@ export interface ChatRequestBase {
 }
 
 /**
+ * Base fields for a vision-capable request. `messages` may contain image
+ * content parts.
+ */
+export interface ChatRequestBase extends ChatRequestBaseCore {
+  /** Conversation history, oldest first. */
+  readonly messages: readonly ChatMessage[];
+}
+
+/**
+ * Base fields when the chosen model does not declare `vision`. Image content
+ * parts are not part of the message type, so the compiler refuses them.
+ */
+export interface ChatRequestBaseTextOnly extends ChatRequestBaseCore {
+  /** Conversation history, oldest first. Image content is not allowed here. */
+  readonly messages: readonly ChatTextOnlyMessage[];
+}
+
+/**
  * Fields permitted only when the chosen model declares the `function_calling`
  * capability. Adding any of these to a request keyed on a non-function-calling
  * model is a type error at the call site.
@@ -155,13 +194,18 @@ export interface ChatToolFields {
 
 /**
  * A chat completion request body. Parameterized by the model literal so the
- * shape drops capability-gated fields (currently `tools`, `tool_choice`,
- * `parallel_tool_calls`) when the chosen model does not declare
- * `function_calling`. Field names match the OpenAI-compatible wire format.
+ * shape adapts to the model's declared capabilities:
+ *
+ * - `tools` / `tool_choice` / `parallel_tool_calls` appear only when the model
+ *   declares `function_calling`.
+ * - Message content parts may include `image_url` only when the model
+ *   declares `vision`; otherwise the user-message content type is text-only.
+ *
+ * Field names match the OpenAI-compatible wire format.
  */
 export type ChatCompletionRequest<M extends ModelId = ModelId> =
-  & ChatRequestBase
   & { readonly model: M }
+  & (M extends ModelsWithCapability<"vision"> ? ChatRequestBase : ChatRequestBaseTextOnly)
   & (M extends ModelsWithCapability<"function_calling"> ? ChatToolFields : Record<never, never>);
 
 /** Why the model stopped producing tokens. */
