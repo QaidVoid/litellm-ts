@@ -181,6 +181,24 @@ export type {
 } from "./src/api/admin/models.ts";
 
 export type {
+  AddTeamMemberRequest,
+  CreateTeamRequest,
+  DeleteTeamMemberRequest,
+  DeleteTeamsRequest,
+  ListTeamsResponse,
+  Team,
+  TeamBudgetLimit,
+  TeamIdRequest,
+  TeamMemberRole,
+  TeamMembership,
+  TeamMemberSpec,
+  TeamModelsRequest,
+  TeamsNamespace,
+  UpdateTeamMemberRequest,
+  UpdateTeamRequest,
+} from "./src/api/admin/teams.ts";
+
+export type {
   MessagesContentBlock,
   MessagesImageBlock,
   MessagesMessage,
