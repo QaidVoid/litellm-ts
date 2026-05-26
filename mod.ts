@@ -51,3 +51,7 @@ export { MODELS } from "./src/models/mod.ts";
 export type { HttpMethod, RequestOptions, Transport, TransportConfig } from "./src/transport.ts";
 
 export { createTransport } from "./src/transport.ts";
+
+export type { SSEEvent } from "./src/sse.ts";
+
+export { parseSSE } from "./src/sse.ts";
