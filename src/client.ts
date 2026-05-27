@@ -13,6 +13,7 @@ import { createCustomers, type CustomersNamespace } from "./api/admin/customers.
 import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.ts";
 import { createJwtMappings, type JwtMappingsNamespace } from "./api/admin/jwt_mappings.ts";
 import { createMcp, type McpNamespace } from "./api/admin/mcp.ts";
+import { createScim, type ScimNamespace } from "./api/admin/scim.ts";
 import { createRouter, type RouterNamespace } from "./api/admin/router.ts";
 import { createTags, type TagsNamespace } from "./api/admin/tags.ts";
 import { createTools, type ToolsNamespace } from "./api/admin/tools.ts";
@@ -110,6 +111,8 @@ export interface Client {
   readonly tools: ToolsNamespace;
   /** MCP server and toolset administration. */
   readonly mcp: McpNamespace;
+  /** SCIM v2 identity-provider integration (enterprise only). */
+  readonly scim: ScimNamespace;
   /** Logging callback configuration. */
   readonly callbacks: CallbacksNamespace;
   /** Configured guardrails listing. */
@@ -174,6 +177,7 @@ export const createClient = (config: TransportConfig): Client => {
     compliance: createCompliance(transport),
     tools: createTools(transport),
     mcp: createMcp(transport),
+    scim: createScim(transport),
     callbacks: createCallbacks(transport),
     guardrails: createGuardrails(transport),
     cache: createCache(transport),

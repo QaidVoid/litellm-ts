@@ -439,6 +439,28 @@ export type {
 } from "./src/api/admin/mcp.ts";
 
 export type {
+  ScimFeature,
+  ScimGroup,
+  ScimGroupsNamespace,
+  ScimListQuery,
+  ScimListResponse,
+  ScimMember,
+  ScimNamespace,
+  ScimPatchOp,
+  ScimPatchOperation,
+  ScimResource,
+  ScimResourceType,
+  ScimSchema,
+  ScimSchemaAttribute,
+  ScimServiceProviderConfig,
+  ScimUser,
+  ScimUserEmail,
+  ScimUserGroup,
+  ScimUserName,
+  ScimUsersNamespace,
+} from "./src/api/admin/scim.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,
