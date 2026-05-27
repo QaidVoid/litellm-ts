@@ -56,6 +56,8 @@ await build({
   compilerOptions: {
     lib: ["ES2022", "DOM"],
     target: "ES2022",
+    sourceMap: true,
+    inlineSources: true,
   },
   package: {
     name: denoConfig.name,
