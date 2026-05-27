@@ -18,7 +18,9 @@ interface DenoConfig {
   readonly license?: string;
 }
 
-const denoConfig: DenoConfig = JSON.parse(await Deno.readTextFile("./deno.json"));
+const denoConfig: DenoConfig = JSON.parse(
+  await Deno.readTextFile("./deno.json"),
+);
 
 const NPM_METADATA = {
   description: "Type-safe TypeScript SDK for LiteLLM.",
@@ -30,7 +32,15 @@ const NPM_METADATA = {
   bugs: {
     url: "https://github.com/qaidvoid/litellm-ts/issues",
   },
-  keywords: ["litellm", "llm", "openai", "anthropic", "sdk", "typescript", "deno"],
+  keywords: [
+    "litellm",
+    "llm",
+    "openai",
+    "anthropic",
+    "sdk",
+    "typescript",
+    "deno",
+  ],
 } as const;
 
 await emptyDir(OUT_DIR);
@@ -43,6 +53,10 @@ await build({
   },
   test: false,
   typeCheck: "both",
+  compilerOptions: {
+    lib: ["ES2022", "DOM"],
+    target: "ES2022",
+  },
   package: {
     name: denoConfig.name,
     version: denoConfig.version,
