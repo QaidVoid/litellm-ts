@@ -37,6 +37,7 @@ export interface RegisterModelRequest {
   readonly model_name: string;
   /** Where the proxy forwards the request. */
   readonly litellm_params: LiteLLMParams;
+  /** Auxiliary metadata stored with the model. */
   readonly model_info?: ProxyModelInfo;
 }
 
@@ -46,11 +47,17 @@ export interface ProxyModel {
   readonly model_id: string;
   /** Public name. */
   readonly model_name: string;
+  /** Stored LiteLLM routing parameters. */
   readonly litellm_params: LiteLLMParams;
+  /** Stored auxiliary metadata. */
   readonly model_info?: ProxyModelInfo;
+  /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
+  /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
+  /** Identifier of the creating user. */
   readonly created_by?: string;
+  /** Identifier of the last user to update. */
   readonly updated_by?: string;
 }
 
@@ -58,22 +65,27 @@ export interface ProxyModel {
 export interface UpdateModelRequest {
   /** Either of these may be replaced (partial update). */
   readonly litellm_params?: Partial<LiteLLMParams>;
+  /** Replace auxiliary metadata. */
   readonly model_info?: ProxyModelInfo;
 }
 
 /** Request body for `/model/delete`. */
 export interface DeleteModelRequest {
+  /** Id of the model to delete. */
   readonly id: string;
 }
 
 /** Response from `/model/delete`. */
 export interface DeleteModelResponse {
+  /** Status string, always `"success"`. */
   readonly status: "success";
 }
 
 /** Response from `/model/list`. */
 export interface ListModelsResponse {
+  /** Returned models. */
   readonly models: readonly ProxyModel[];
+  /** Total model count across all pages. */
   readonly total_count?: number;
 }
 

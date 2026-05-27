@@ -4,8 +4,11 @@ import type { Transport } from "../../transport.ts";
 
 /** Connection state for the proxy's cache backend (Redis, in-memory, etc.). */
 export interface CachePingResponse {
+  /** Overall health verdict. */
   readonly status: "healthy" | "unhealthy";
+  /** Configured cache backend (e.g. `"redis"`). */
   readonly cache_type?: string;
+  /** Diagnostic detail when `status` is `"unhealthy"`. */
   readonly details?: string;
 }
 

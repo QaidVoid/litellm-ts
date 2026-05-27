@@ -26,38 +26,55 @@ export interface CreateContainerRequest {
 export interface Container {
   /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"container"`. */
   readonly object: "container";
   /** Unix epoch seconds when the container was created. */
   readonly created_at: number;
+  /** Container name. */
   readonly name?: string;
+  /** Lifecycle status string. */
   readonly status?: string;
+  /** Expiration policy if one was set. */
   readonly expires_after?: ContainerExpiration;
   /** Unix epoch seconds when the container was last active. */
   readonly last_active_at?: number;
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, string>>;
 }
 
 /** Query parameters for `GET /v1/containers`. */
 export interface ListContainersQuery {
+  /** Maximum records per page. */
   readonly limit?: number;
+  /** Sort direction. */
   readonly order?: "asc" | "desc";
+  /** Cursor: return records after this id. */
   readonly after?: string;
+  /** Cursor: return records before this id. */
   readonly before?: string;
 }
 
 /** Response from `GET /v1/containers`. */
 export interface ListContainersResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
+  /** Containers on the current page. */
   readonly data: readonly Container[];
+  /** Id of the first record on the page. */
   readonly first_id?: string;
+  /** Id of the last record on the page. */
   readonly last_id?: string;
+  /** True when more pages remain. */
   readonly has_more: boolean;
 }
 
 /** Response from `DELETE /v1/containers/{id}`. */
 export interface DeleteContainerResponse {
+  /** Id of the deleted container. */
   readonly id: string;
+  /** Discriminator, always `"container.deleted"`. */
   readonly object: "container.deleted";
+  /** True when the delete succeeded. */
   readonly deleted: boolean;
 }
 

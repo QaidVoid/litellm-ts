@@ -25,15 +25,21 @@ export interface RealtimeConnectOptions {
  * event types. Discriminate on `type` and inspect the relevant fields.
  */
 export interface RealtimeClientEvent {
+  /** Event discriminator, e.g. `"input_audio_buffer.append"`. */
   readonly type: string;
+  /** Client-supplied event id for correlation. */
   readonly event_id?: string;
+  /** Event-specific payload fields. */
   readonly [key: string]: unknown;
 }
 
 /** An event received from the server. Same loose shape as the client event. */
 export interface RealtimeServerEvent {
+  /** Event discriminator. */
   readonly type: string;
+  /** Server-assigned event id. */
   readonly event_id?: string;
+  /** Event-specific payload fields. */
   readonly [key: string]: unknown;
 }
 

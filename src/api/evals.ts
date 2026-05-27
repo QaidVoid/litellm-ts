@@ -18,6 +18,7 @@ export type EvalDataSourceConfig =
   }
   | {
     readonly type: "stored_completions";
+    /** Optional metadata filter applied to stored completions. */
     readonly metadata?: Readonly<Record<string, unknown>>;
   };
 
@@ -37,57 +38,83 @@ export interface EvalGraderConfig {
 export interface CreateEvalRequest {
   /** Human-readable label. */
   readonly name?: string;
+  /** Data source the eval reads rows from. */
   readonly data_source_config: EvalDataSourceConfig;
   /** Ordered list of graders applied to each row. */
   readonly testing_criteria: readonly EvalGraderConfig[];
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
 }
 
 /** Request body for `POST /v1/evals/{eval_id}` (update). */
 export interface UpdateEvalRequest {
+  /** Rename the evaluation. */
   readonly name?: string;
+  /** Replace the metadata bag. */
   readonly metadata?: Readonly<Record<string, unknown>>;
 }
 
 /** A single evaluation record. */
 export interface Eval {
+  /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"eval"`. */
   readonly object: "eval";
+  /** Unix epoch seconds when the eval was created. */
   readonly created_at: number;
+  /** Unix epoch seconds when the eval was last updated. */
   readonly updated_at?: number;
+  /** Human-readable label. */
   readonly name?: string;
+  /** Stored data source configuration. */
   readonly data_source_config: Readonly<Record<string, unknown>>;
+  /** Stored grader configurations. */
   readonly testing_criteria: readonly Readonly<Record<string, unknown>>[];
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
 }
 
 /** Query parameters for `GET /v1/evals`. */
 export interface ListEvalsQuery {
+  /** Maximum records per page. */
   readonly limit?: number;
+  /** Sort direction. */
   readonly order?: "asc" | "desc";
+  /** Cursor: return records after this id. */
   readonly after?: string;
 }
 
 /** Response from `GET /v1/evals`. */
 export interface ListEvalsResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
+  /** Evaluations on the current page. */
   readonly data: readonly Eval[];
+  /** Id of the first record on the page. */
   readonly first_id?: string;
+  /** Id of the last record on the page. */
   readonly last_id?: string;
+  /** True when more pages remain. */
   readonly has_more: boolean;
 }
 
 /** Response from `DELETE /v1/evals/{eval_id}`. */
 export interface DeleteEvalResponse {
+  /** Id of the deleted evaluation. */
   readonly eval_id: string;
+  /** Discriminator, always `"eval.deleted"`. */
   readonly object: "eval.deleted";
+  /** True when the delete succeeded. */
   readonly deleted: boolean;
 }
 
 /** Response from `POST /v1/evals/{eval_id}/cancel`. */
 export interface CancelEvalResponse {
+  /** Id of the cancelled evaluation. */
   readonly id: string;
+  /** Discriminator, always `"eval"`. */
   readonly object: "eval";
+  /** Resulting status, always `"cancelled"`. */
   readonly status: "cancelled";
 }
 
@@ -100,74 +127,115 @@ export type EvalRunDataSource =
 
 /** Request body for `POST /v1/evals/{eval_id}/runs`. */
 export interface CreateEvalRunRequest {
+  /** Human-readable label for the run. */
   readonly name?: string;
+  /** Source of inputs for this run. */
   readonly data_source: EvalRunDataSource;
+  /** Model evaluated by this run, when applicable. */
   readonly model?: string;
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
 }
 
 /** Request body for `POST /v1/evals/{eval_id}/runs/{run_id}` (update). */
 export interface UpdateEvalRunRequest {
+  /** Rename the run. */
   readonly name?: string;
+  /** Replace the metadata bag. */
   readonly metadata?: Readonly<Record<string, unknown>>;
 }
 
 /** Per-criterion result counts on `Run.per_testing_criteria_results`. */
 export interface PerTestingCriteriaResult {
+  /** Identifier of the grader. */
   readonly testing_criteria: string;
+  /** Number of rows that passed this grader. */
   readonly passed?: number;
+  /** Number of rows that failed this grader. */
   readonly failed?: number;
 }
 
 /** A single evaluation run. */
 export interface EvalRun {
+  /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"eval.run"`. */
   readonly object: "eval.run";
+  /** Unix epoch seconds when the run was created. */
   readonly created_at: number;
+  /** Lifecycle status. */
   readonly status: "queued" | "running" | "completed" | "failed" | "cancelled";
+  /** Stored data source configuration. */
   readonly data_source: Readonly<Record<string, unknown>>;
+  /** Id of the parent evaluation. */
   readonly eval_id: string;
+  /** Run name. */
   readonly name?: string;
+  /** Unix epoch seconds when execution started. */
   readonly started_at?: number;
+  /** Unix epoch seconds when execution completed. */
   readonly completed_at?: number;
+  /** Model evaluated by this run, when applicable. */
   readonly model?: string;
+  /** Aggregated per-model usage statistics. */
   readonly per_model_usage?: unknown;
+  /** Per-grader pass/fail counts. */
   readonly per_testing_criteria_results?: readonly PerTestingCriteriaResult[];
+  /** URL to the rendered report, when available. */
   readonly report_url?: string;
+  /** Free-form aggregate counters keyed by name. */
   readonly result_counts?: Readonly<Record<string, number>>;
+  /** True when this run is shared with OpenAI for evaluation review. */
   readonly shared_with_openai?: boolean;
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
+  /** Error details when the run failed. */
   readonly error?: Readonly<Record<string, unknown>>;
 }
 
 /** Query parameters for `GET /v1/evals/{eval_id}/runs`. */
 export interface ListEvalRunsQuery {
+  /** Maximum records per page. */
   readonly limit?: number;
+  /** Sort direction. */
   readonly order?: "asc" | "desc";
+  /** Cursor: return records after this id. */
   readonly after?: string;
+  /** Filter by lifecycle status. */
   readonly status?: EvalRun["status"];
 }
 
 /** Response from `GET /v1/evals/{eval_id}/runs`. */
 export interface ListEvalRunsResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
+  /** Runs on the current page. */
   readonly data: readonly EvalRun[];
+  /** Id of the first record on the page. */
   readonly first_id?: string;
+  /** Id of the last record on the page. */
   readonly last_id?: string;
+  /** True when more pages remain. */
   readonly has_more: boolean;
 }
 
 /** Response from `POST /v1/evals/{eval_id}/runs/{run_id}/cancel` (via POST update). */
 export interface CancelEvalRunResponse {
+  /** Id of the cancelled run. */
   readonly id: string;
+  /** Discriminator, always `"eval.run"`. */
   readonly object: "eval.run";
+  /** Resulting status, always `"cancelled"`. */
   readonly status: "cancelled";
 }
 
 /** Response from `DELETE /v1/evals/{eval_id}/runs/{run_id}`. */
 export interface DeleteEvalRunResponse {
+  /** Id of the deleted run. */
   readonly run_id: string;
+  /** Discriminator returned by the proxy. */
   readonly object?: "eval.run.deleted";
+  /** True when the delete succeeded. */
   readonly deleted?: boolean;
 }
 
@@ -208,6 +276,7 @@ export interface EvalsNamespace {
   cancel(evalId: string): Promise<Result<CancelEvalResponse, ApiError>>;
   /** Delete an evaluation by id. */
   delete(evalId: string): Promise<Result<DeleteEvalResponse, ApiError>>;
+  /** Run-management sub-namespace (CRUD + cancel under `/v1/evals/{id}/runs`). */
   readonly runs: EvalRunsNamespace;
 }
 

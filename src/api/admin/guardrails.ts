@@ -7,14 +7,19 @@ export type GuardrailMode = "pre_call" | "during_call" | "post_call";
 
 /** A single configured guardrail. */
 export interface GuardrailInfo {
+  /** Guardrail identifier configured on the proxy. */
   readonly guardrail_name: string;
+  /** LiteLLM-side configuration for the guardrail. */
   readonly litellm_params?: Readonly<Record<string, unknown>>;
+  /** Free-form metadata returned alongside the guardrail. */
   readonly guardrail_info?: Readonly<Record<string, unknown>>;
+  /** Lifecycle phase the guardrail fires in. */
   readonly mode?: GuardrailMode;
 }
 
 /** Response from `GET /guardrails/list`. */
 export interface ListGuardrailsResponse {
+  /** Configured guardrails. */
   readonly guardrails: readonly GuardrailInfo[];
 }
 

@@ -11,6 +11,7 @@ export type ImageInput = Blob | Uint8Array;
 
 /** Request body for `/v1/images/generations`. */
 export interface ImageGenerationRequest {
+  /** Image-generation-capable model id. */
   readonly model: ModelsWithMode<"image_generation">;
   /** Free-form text description of the image to generate. */
   readonly prompt: string;
@@ -30,6 +31,7 @@ export interface ImageGenerationRequest {
 
 /** Request for `/v1/images/edits`. */
 export interface ImageEditRequest {
+  /** Image-edit (or generation) capable model id. */
   readonly model: ModelsWithMode<"image_edit"> | ModelsWithMode<"image_generation">;
   /** Source image. Use a `Blob`/`File` to preserve mime type. */
   readonly image: ImageInput;
@@ -41,9 +43,13 @@ export interface ImageEditRequest {
   readonly imageFilename?: string;
   /** Filename to attach to the mask. Defaults to `"mask.png"`. */
   readonly maskFilename?: string;
+  /** Number of images to generate. */
   readonly n?: number;
+  /** Provider-specific size string (e.g. `"1024x1024"`). */
   readonly size?: string;
+  /** Whether `data[i]` contains a `url` or a base64-encoded `b64_json` payload. */
   readonly response_format?: ImageResponseFormat;
+  /** Opaque caller identifier forwarded to upstream abuse-detection systems. */
   readonly user?: string;
 }
 

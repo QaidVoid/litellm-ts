@@ -15,106 +15,161 @@ export type VectorStoreChunkingStrategy =
 
 /** Expiration policy applied to the vector store. */
 export interface VectorStoreExpiration {
+  /** Anchor field the timer counts from. */
   readonly anchor: "last_active_at";
+  /** Days after the anchor when the store expires. */
   readonly days: number;
 }
 
 /** Counts of files in each lifecycle state. */
 export interface VectorStoreFileCounts {
+  /** Files still being processed. */
   readonly in_progress: number;
+  /** Files successfully indexed. */
   readonly completed: number;
+  /** Files that failed indexing. */
   readonly failed: number;
+  /** Files whose attachment was cancelled. */
   readonly cancelled: number;
+  /** Sum of all file counts. */
   readonly total: number;
 }
 
 /** Request body for `POST /v1/vector_stores`. */
 export interface CreateVectorStoreRequest {
+  /** Display name. */
   readonly name?: string;
+  /** Existing file ids to attach at creation time. */
   readonly file_ids?: readonly string[];
+  /** Expiration policy. */
   readonly expires_after?: VectorStoreExpiration;
+  /** Chunking strategy applied to attached files. */
   readonly chunking_strategy?: VectorStoreChunkingStrategy;
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, string>>;
 }
 
 /** Request body for `POST /v1/vector_stores/{id}`. */
 export interface UpdateVectorStoreRequest {
+  /** Rename the store. */
   readonly name?: string;
+  /** Replace or clear the expiration policy. */
   readonly expires_after?: VectorStoreExpiration | null;
+  /** Replace or clear the metadata bag. */
   readonly metadata?: Readonly<Record<string, string>> | null;
 }
 
 /** A single vector store record. */
 export interface VectorStore {
+  /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"vector_store"`. */
   readonly object: "vector_store";
+  /** Unix epoch seconds when the store was created. */
   readonly created_at: number;
+  /** Display name. */
   readonly name?: string;
+  /** Total stored bytes. */
   readonly bytes?: number;
+  /** Counts of files in each lifecycle state. */
   readonly file_counts: VectorStoreFileCounts;
+  /** Lifecycle status. */
   readonly status: "expired" | "in_progress" | "completed";
+  /** Expiration policy, when set. */
   readonly expires_after?: VectorStoreExpiration | null;
+  /** Unix epoch seconds when the store expires. */
   readonly expires_at?: number | null;
+  /** Unix epoch seconds when the store was last active. */
   readonly last_active_at?: number | null;
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, string>>;
 }
 
 /** Query parameters for `GET /v1/vector_stores`. */
 export interface ListVectorStoresQuery {
+  /** Maximum records per page. */
   readonly limit?: number;
+  /** Sort direction. */
   readonly order?: "asc" | "desc";
+  /** Cursor: return records after this id. */
   readonly after?: string;
+  /** Cursor: return records before this id. */
   readonly before?: string;
 }
 
 /** Response from `GET /v1/vector_stores`. */
 export interface ListVectorStoresResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
+  /** Stores on the current page. */
   readonly data: readonly VectorStore[];
+  /** Id of the first record on the page. */
   readonly first_id?: string;
+  /** Id of the last record on the page. */
   readonly last_id?: string;
+  /** True when more pages remain. */
   readonly has_more: boolean;
 }
 
 /** Response from `DELETE /v1/vector_stores/{id}`. */
 export interface DeleteVectorStoreResponse {
+  /** Id of the deleted store. */
   readonly id: string;
+  /** Discriminator, always `"vector_store.deleted"`. */
   readonly object: "vector_store.deleted";
+  /** True when the delete succeeded. */
   readonly deleted: boolean;
 }
 
 /** A single file attachment record. */
 export interface VectorStoreFile {
+  /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"vector_store.file"`. */
   readonly object: "vector_store.file";
+  /** Unix epoch seconds when the file was attached. */
   readonly created_at: number;
+  /** Parent vector store id. */
   readonly vector_store_id: string;
+  /** Lifecycle status of the attachment. */
   readonly status: "in_progress" | "completed" | "cancelled" | "failed";
+  /** Last indexing error, when applicable. */
   readonly last_error?:
     | { readonly code: string; readonly message: string }
     | null;
+  /** Chunking strategy used for this file. */
   readonly chunking_strategy?: VectorStoreChunkingStrategy;
 }
 
 /** Request body for attaching a single file. */
 export interface AttachVectorStoreFileRequest {
+  /** Id of a previously uploaded file. */
   readonly file_id: string;
+  /** Chunking strategy override. */
   readonly chunking_strategy?: VectorStoreChunkingStrategy;
 }
 
 /** Response from `GET /v1/vector_stores/{vs_id}/files`. */
 export interface ListVectorStoreFilesResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
+  /** Attachments on the current page. */
   readonly data: readonly VectorStoreFile[];
+  /** Id of the first record on the page. */
   readonly first_id?: string;
+  /** Id of the last record on the page. */
   readonly last_id?: string;
+  /** True when more pages remain. */
   readonly has_more: boolean;
 }
 
 /** Response from `DELETE /v1/vector_stores/{vs_id}/files/{file_id}`. */
 export interface DeleteVectorStoreFileResponse {
+  /** Id of the detached file. */
   readonly id: string;
+  /** Discriminator, always `"vector_store.file.deleted"`. */
   readonly object: "vector_store.file.deleted";
+  /** True when the detach succeeded. */
   readonly deleted: boolean;
 }
 
@@ -128,10 +183,13 @@ export interface VectorStoreFileContentChunk {
 
 /** Response from `GET /v1/vector_stores/{vs_id}/files/{file_id}/content`. */
 export interface VectorStoreFileContentResponse {
+  /** Discriminator, always `"vector_store.file_content.page"`. */
   readonly object: "vector_store.file_content.page";
   /** Ordered list of chunks the proxy extracted from the file. */
   readonly data: readonly VectorStoreFileContentChunk[];
+  /** True when more pages remain. */
   readonly has_more: boolean;
+  /** Cursor token for the next page. */
   readonly next_page?: string | null;
 }
 

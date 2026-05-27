@@ -19,33 +19,47 @@ export interface CreateSkillRequest {
 
 /** Query parameters for `GET /v1/skills`. */
 export interface ListSkillsQuery {
+  /** Maximum records per page. */
   readonly limit?: number;
+  /** Cursor: return records after this id. */
   readonly after_id?: string;
+  /** Cursor: return records before this id. */
   readonly before_id?: string;
+  /** Opt into beta endpoint behavior. */
   readonly beta?: boolean;
 }
 
 /** A single skill record. */
 export interface Skill {
+  /** Server-assigned id. */
   readonly id: string;
+  /** ISO-8601 creation timestamp. */
   readonly created_at: string;
+  /** Display title shown in the console. */
   readonly display_title?: string;
+  /** Identifier of the most recently published version. */
   readonly latest_version?: string;
   /** Origin of the skill, e.g. `"custom"` or `"anthropic"`. */
   readonly source: string;
+  /** Discriminator, always `"skill"`. */
   readonly type: "skill";
 }
 
 /** Response from `GET /v1/skills`. */
 export interface ListSkillsResponse {
+  /** Skills on the current page. */
   readonly data: readonly Skill[];
+  /** Cursor token for the next page. */
   readonly next_page?: string;
+  /** True when more pages remain. */
   readonly has_more: boolean;
 }
 
 /** Response from `DELETE /v1/skills/{skill_id}`. */
 export interface DeleteSkillResponse {
+  /** Id of the deleted skill. */
   readonly id: string;
+  /** Discriminator, always `"skill_deleted"`. */
   readonly type: "skill_deleted";
 }
 

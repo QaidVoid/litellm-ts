@@ -18,6 +18,7 @@ export interface ReadinessResponse {
 
 /** Response from `/health/readiness/details` (authenticated). */
 export interface ReadinessDetailsResponse {
+  /** Overall health state. */
   readonly status: ReadinessStatus;
   /** Database connectivity details. */
   readonly db?: Readonly<Record<string, unknown>>;
@@ -33,9 +34,13 @@ export interface ReadinessDetailsResponse {
 export interface TestConnectionRequest {
   /** LiteLLM model parameters identifying the upstream model and credentials. */
   readonly litellm_params: {
+    /** Upstream model name (e.g. `"gpt-4o-mini"`). */
     readonly model: string;
+    /** Provider API key. */
     readonly api_key?: string;
+    /** Override the provider's API base URL. */
     readonly api_base?: string;
+    /** Override the provider's API version. */
     readonly api_version?: string;
   } & Readonly<Record<string, unknown>>;
   /** Connection-mode probe (chat, embedding, etc.). */

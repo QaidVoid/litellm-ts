@@ -6,9 +6,13 @@ import type { Transport } from "../transport.ts";
 export interface SearchToolLiteLLMParams {
   /** Provider id, e.g. `"perplexity"`, `"tavily"`. */
   readonly search_provider: string;
+  /** Provider API key. */
   readonly api_key?: string;
+  /** Override the provider's API base URL. */
   readonly api_base?: string;
+  /** Per-request timeout in seconds. */
   readonly timeout?: number;
+  /** Maximum number of upstream retries. */
   readonly max_retries?: number;
 }
 
@@ -18,10 +22,13 @@ export interface SearchTool {
   readonly search_tool_id?: string;
   /** Unique tool name used in the search URL path. */
   readonly search_tool_name: string;
+  /** LiteLLM-side configuration. */
   readonly litellm_params: SearchToolLiteLLMParams;
   /** Free-form metadata (e.g. description). */
   readonly search_tool_info?: Readonly<Record<string, unknown>>;
+  /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
+  /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
 }
 
@@ -33,32 +40,39 @@ export interface SearchToolInfo extends SearchTool {
 
 /** Response from `GET /search_tools/list`. */
 export interface ListSearchToolsResponse {
+  /** Configured search tools. */
   readonly search_tools: readonly SearchToolInfo[];
 }
 
 /** Request body for `POST /search_tools`. */
 export interface CreateSearchToolRequest {
+  /** Search tool configuration to create. */
   readonly search_tool: SearchTool;
 }
 
 /** Request body for `PUT /search_tools/{id}`. */
 export interface UpdateSearchToolRequest {
+  /** Search tool configuration to apply. */
   readonly search_tool: SearchTool;
 }
 
 /** Request body for `POST /search_tools/test_connection`. */
 export interface TestSearchToolConnectionRequest {
+  /** Tool configuration to probe. */
   readonly search_tool: SearchTool;
 }
 
 /** A single available provider in the discovery endpoint. */
 export interface AvailableSearchProvider {
+  /** Provider identifier used in `litellm_params.search_provider`. */
   readonly provider_name: string;
+  /** Provider name shown in the admin UI. */
   readonly ui_friendly_name: string;
 }
 
 /** Response from `GET /search_tools/ui/available_providers`. */
 export interface AvailableSearchProvidersResponse {
+  /** Providers available for use. */
   readonly providers: readonly AvailableSearchProvider[];
 }
 
@@ -115,6 +129,7 @@ export interface SearchNamespace {
   queryWith(searchToolName: string, req: SearchRequest): Promise<Result<SearchResponse, ApiError>>;
   /** Discovery endpoint that returns enabled search tools. */
   enabledTools(): Promise<Result<unknown, ApiError>>;
+  /** Search-tool administration sub-namespace (CRUD + connection test). */
   readonly tools: SearchToolsNamespace;
 }
 

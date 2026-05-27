@@ -7,14 +7,19 @@ export type CallbackStatus = "healthy" | "unhealthy" | "not_configured";
 
 /** A single configured callback. */
 export interface CallbackInfo {
+  /** Callback identifier (e.g. `"langfuse"`). */
   readonly callback_name: string;
+  /** Which events the callback fires on. */
   readonly callback_type?: "success" | "failure" | "success_and_failure";
+  /** Last health check verdict. */
   readonly status?: CallbackStatus;
+  /** Diagnostic detail when unhealthy. */
   readonly details?: string;
 }
 
 /** Response from `/callbacks/list` (and provider-specific variants). */
 export interface ListCallbacksResponse {
+  /** Configured callbacks. */
   readonly callbacks: readonly CallbackInfo[];
 }
 
@@ -30,6 +35,7 @@ export interface UpdateCallbacksRequest {
 
 /** Response from `/callback/health`. */
 export interface CallbackHealthResponse {
+  /** Probed callbacks with current verdicts. */
   readonly callbacks: readonly CallbackInfo[];
 }
 

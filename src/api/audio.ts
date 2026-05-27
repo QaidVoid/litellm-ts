@@ -13,6 +13,7 @@ export type TranscriptionFormat = "json" | "text" | "srt" | "verbose_json" | "vt
 
 /** Request body for `/v1/audio/transcriptions`. */
 export interface TranscriptionRequest {
+  /** Transcription-capable model id. */
   readonly model: ModelsWithMode<"audio_transcription">;
   /** The audio bytes. Use a `Blob`/`File` to preserve mime type; `Uint8Array` is wrapped. */
   readonly file: AudioInput;
@@ -39,6 +40,7 @@ export type SpeechFormat = "mp3" | "opus" | "aac" | "flac" | "wav" | "pcm";
 
 /** Request body for `/v1/audio/speech`. */
 export interface SpeechRequest {
+  /** Speech-synthesis-capable model id. */
   readonly model: ModelsWithMode<"audio_speech">;
   /** Text to synthesize. */
   readonly input: string;

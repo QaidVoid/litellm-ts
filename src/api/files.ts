@@ -23,6 +23,7 @@ export type FileStatus = "uploaded" | "processed" | "error";
 export interface FileObject {
   /** Server-assigned identifier (use to retrieve, delete, or fetch content). */
   readonly id: string;
+  /** Discriminator, always `"file"`. */
   readonly object: "file";
   /** Size in bytes. */
   readonly bytes: number;
@@ -59,6 +60,7 @@ export interface FileListQuery {
 
 /** A paginated list response from `files.list`. */
 export interface FileListResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
   /** One entry per matching file. */
   readonly data: readonly FileObject[];
@@ -66,7 +68,9 @@ export interface FileListResponse {
 
 /** Response from `files.delete`. */
 export interface FileDeleteResponse {
+  /** Id of the deleted file. */
   readonly id: string;
+  /** Discriminator, always `"file"`. */
   readonly object: "file";
   /** True when the file was deleted. */
   readonly deleted: boolean;

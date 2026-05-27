@@ -29,21 +29,27 @@ export interface UpdateCredentialRequest {
 
 /** A single credential record (values are masked when returned). */
 export interface Credential {
+  /** Unique credential name. */
   readonly credential_name: string;
   /** Masked when read from the API; cleartext only at create time. */
   readonly credential_values: Readonly<Record<string, unknown>>;
+  /** Free-form metadata. */
   readonly credential_info: Readonly<Record<string, unknown>>;
 }
 
 /** Response from `GET /credentials`. */
 export interface ListCredentialsResponse {
+  /** True when the call succeeded. */
   readonly success: boolean;
+  /** Stored credentials with values masked. */
   readonly credentials: readonly Credential[];
 }
 
 /** Generic `{ success, message }` envelope used by mutating credential ops. */
 export interface CredentialMutationResponse {
+  /** True when the mutation succeeded. */
   readonly success: boolean;
+  /** Human-readable status message. */
   readonly message: string;
 }
 

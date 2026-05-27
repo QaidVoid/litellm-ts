@@ -7,75 +7,112 @@ export type OrganizationMemberRole = "org_admin" | "org_user" | "internal_user";
 
 /** Member specification accepted when creating or updating an organization. */
 export interface OrganizationMemberSpec {
+  /** User identifier. */
   readonly user_id?: string;
+  /** User email; resolved to `user_id` when set. */
   readonly user_email?: string;
+  /** Role assigned within the organization. */
   readonly role: OrganizationMemberRole;
 }
 
 /** Request body for `/organization/new`. */
 export interface CreateOrganizationRequest {
+  /** Friendly alias shown in dashboards. */
   readonly organization_alias?: string;
+  /** Explicit organization id. Defaults to a server-generated UUID. */
   readonly organization_id?: string;
+  /** Model allowlist for the organization. */
   readonly models?: readonly string[];
+  /** Tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
+  /** Requests-per-minute ceiling. */
   readonly rpm_limit?: number;
+  /** Hard spend ceiling in USD. */
   readonly max_budget?: number;
+  /** Warning threshold below `max_budget`. */
   readonly soft_budget?: number;
+  /** Rolling window duration. */
   readonly budget_duration?: string;
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
+  /** Initial member roster. */
   readonly members?: readonly OrganizationMemberSpec[];
 }
 
 /** A single organization record. */
 export interface Organization {
+  /** Server-assigned id. */
   readonly organization_id: string;
+  /** Friendly alias. */
   readonly organization_alias?: string;
+  /** Model allowlist. */
   readonly models?: readonly string[];
+  /** Accumulated spend in USD. */
   readonly spend?: number;
+  /** Hard spend ceiling in USD. */
   readonly max_budget?: number;
+  /** Warning threshold below `max_budget`. */
   readonly soft_budget?: number;
+  /** Rolling window duration. */
   readonly budget_duration?: string;
+  /** Tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
+  /** Requests-per-minute ceiling. */
   readonly rpm_limit?: number;
+  /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
+  /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
+  /** Member roster. */
   readonly members?: readonly OrganizationMemberSpec[];
 }
 
 /** Request body for `/organization/update`. */
 export interface UpdateOrganizationRequest
   extends Partial<Omit<CreateOrganizationRequest, "organization_id">> {
+  /** Id of the organization to update. */
   readonly organization_id: string;
 }
 
 /** Request body for `/organization/delete`. */
 export interface DeleteOrganizationsRequest {
+  /** Organization ids to delete. */
   readonly organization_ids: readonly string[];
 }
 
 /** Request body for `/organization/member_add`. */
 export interface AddOrganizationMemberRequest {
+  /** Target organization. */
   readonly organization_id: string;
+  /** Member to add. */
   readonly member: OrganizationMemberSpec;
 }
 
 /** Request body for `/organization/member_delete`. */
 export interface DeleteOrganizationMemberRequest {
+  /** Target organization. */
   readonly organization_id: string;
+  /** User id to remove. */
   readonly user_id: string;
 }
 
 /** Request body for `/organization/member_update`. */
 export interface UpdateOrganizationMemberRequest {
+  /** Target organization. */
   readonly organization_id: string;
+  /** User id whose membership changes. */
   readonly user_id: string;
+  /** New role to assign. */
   readonly role?: OrganizationMemberRole;
 }
 
 /** Response from `/organization/list`. */
 export interface ListOrganizationsResponse {
+  /** Returned organizations. */
   readonly organizations: readonly Organization[];
+  /** Total organization count across all pages. */
   readonly total_count?: number;
 }
 

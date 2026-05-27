@@ -4,18 +4,29 @@ import type { Transport } from "../../transport.ts";
 
 /** Request body for `/tag/new`. */
 export interface CreateTagRequest {
+  /** Unique tag name. */
   readonly name: string;
+  /** Free-form description. */
   readonly description?: string;
+  /** Model allowlist tied to the tag. */
   readonly models?: readonly string[];
   /** Maps model_id to model_name. */
   readonly model_info?: Readonly<Record<string, string>>;
+  /** Existing budget record id to attach. */
   readonly budget_id?: string;
+  /** Hard spend ceiling in USD. */
   readonly max_budget?: number;
+  /** Warning threshold below `max_budget`. */
   readonly soft_budget?: number;
+  /** Maximum parallel in-flight requests. */
   readonly max_parallel_requests?: number;
+  /** Tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
+  /** Requests-per-minute ceiling. */
   readonly rpm_limit?: number;
+  /** Per-model budget map keyed by model name. */
   readonly model_max_budget?: Readonly<Record<string, unknown>>;
+  /** Rolling window duration. */
   readonly budget_duration?: string;
 }
 
@@ -24,23 +35,33 @@ export type UpdateTagRequest = CreateTagRequest;
 
 /** Request body for `/tag/info`. */
 export interface TagInfoRequest {
+  /** Tag names to fetch. */
   readonly names: readonly string[];
 }
 
 /** Request body for `/tag/delete`. */
 export interface DeleteTagRequest {
+  /** Tag name to delete. */
   readonly name: string;
 }
 
 /** A tag record returned by `/tag/list` and `/tag/info`. */
 export interface TagConfig {
+  /** Tag name. */
   readonly name: string;
+  /** Free-form description. */
   readonly description?: string;
+  /** Model allowlist tied to the tag. */
   readonly models?: readonly string[];
+  /** Maps model_id to model_name. */
   readonly model_info?: Readonly<Record<string, string>>;
+  /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
+  /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
+  /** Identifier of the creating user. */
   readonly created_by?: string;
+  /** Stored budget rollup row from the proxy database. */
   readonly litellm_budget_table?: Readonly<Record<string, unknown>>;
 }
 
@@ -48,6 +69,7 @@ export interface TagConfig {
 export interface ListTagsQuery {
   /** Restrict dynamic tags to those active in the window. */
   readonly start_date?: string;
+  /** ISO-8601 upper bound (inclusive). */
   readonly end_date?: string;
 }
 

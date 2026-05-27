@@ -17,23 +17,33 @@ export interface FallbackCreateRequest {
 
 /** Response from `POST /fallback`. */
 export interface FallbackResponse {
+  /** Primary model the fallbacks apply to. */
   readonly model: string;
+  /** Ordered fallback models. */
   readonly fallback_models: readonly string[];
+  /** Bucket the fallbacks were saved under. */
   readonly fallback_type: FallbackType;
+  /** Human-readable status message. */
   readonly message: string;
 }
 
 /** Response from `GET /fallback/{model}`. */
 export interface FallbackGetResponse {
+  /** Primary model. */
   readonly model: string;
+  /** Configured fallback chain. */
   readonly fallback_models: readonly string[];
+  /** Bucket the chain belongs to. */
   readonly fallback_type: FallbackType;
 }
 
 /** Response from `DELETE /fallback/{model}`. */
 export interface FallbackDeleteResponse {
+  /** Model whose fallbacks were removed. */
   readonly model: string;
+  /** Bucket that was cleared. */
   readonly fallback_type: FallbackType;
+  /** Human-readable status message. */
   readonly message: string;
 }
 

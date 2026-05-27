@@ -5,6 +5,7 @@ import type { Transport } from "../transport.ts";
 
 /** Request body for `/v1/rerank`. Cohere-shape across all backing providers. */
 export interface RerankRequest {
+  /** Rerank-capable model id. */
   readonly model: ModelsWithMode<"rerank">;
   /** Text the documents are scored against. */
   readonly query: string;
@@ -30,7 +31,9 @@ export interface RerankResult {
 
 /** Optional billing / version metadata block. */
 export interface RerankMeta {
+  /** Upstream API version block. */
   readonly api_version?: { readonly version: string };
+  /** Billing breakdown for the request. */
   readonly billed_units?: { readonly search_units: number };
 }
 
@@ -40,6 +43,7 @@ export interface RerankResponse {
   readonly id?: string;
   /** Documents in descending order of relevance. */
   readonly results: readonly RerankResult[];
+  /** Optional billing and version metadata. */
   readonly meta?: RerankMeta;
 }
 

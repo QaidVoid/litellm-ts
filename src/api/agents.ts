@@ -4,9 +4,13 @@ import type { Transport } from "../transport.ts";
 
 /** Optional capabilities an A2A agent advertises in its agent card. */
 export interface AgentCapabilities {
+  /** Agent can serve streaming responses. */
   readonly streaming?: boolean;
+  /** Agent can deliver push notifications to subscribed callers. */
   readonly pushNotifications?: boolean;
+  /** Agent retains task state transitions for retrieval. */
   readonly stateTransitionHistory?: boolean;
+  /** Vendor-specific capability extensions. */
   readonly extensions?: readonly Readonly<Record<string, unknown>>[];
 }
 
@@ -22,37 +26,61 @@ export interface AgentSkill {
   readonly tags: readonly string[];
   /** Sample prompts that exercise this skill. */
   readonly examples?: readonly string[];
+  /** Accepted input modes (e.g. `"text"`, `"image"`). */
   readonly inputModes?: readonly string[];
+  /** Produced output modes. */
   readonly outputModes?: readonly string[];
 }
 
 /** Self-describing manifest for an agent (A2A spec). */
 export interface AgentCard {
+  /** A2A protocol version the agent implements. */
   readonly protocolVersion: string;
+  /** Display name. */
   readonly name: string;
+  /** Long-form description used in catalogs. */
   readonly description: string;
+  /** Canonical URL where the agent is hosted. */
   readonly url: string;
+  /** Agent-author-defined version string. */
   readonly version: string;
+  /** Capabilities the agent supports. */
   readonly capabilities: AgentCapabilities;
+  /** Input modes accepted unless a skill overrides them. */
   readonly defaultInputModes: readonly string[];
+  /** Output modes produced unless a skill overrides them. */
   readonly defaultOutputModes: readonly string[];
+  /** Skills the agent exposes. */
   readonly skills: readonly AgentSkill[];
+  /** Preferred transport (e.g. `"http+json"`). */
   readonly preferredTransport?: string;
+  /** Alternative transports the agent also accepts. */
   readonly additionalInterfaces?: readonly Readonly<Record<string, unknown>>[];
+  /** Icon URL for UI rendering. */
   readonly iconUrl?: string;
+  /** Provider metadata block. */
   readonly provider?: Readonly<Record<string, unknown>>;
+  /** Link to documentation. */
   readonly documentationUrl?: string;
+  /** Declared security schemes. */
   readonly securitySchemes?: Readonly<Record<string, unknown>>;
+  /** Security requirements applied to all interactions. */
   readonly security?: readonly Readonly<Record<string, unknown>>[];
+  /** Whether the agent serves an authenticated extended card. */
   readonly supportsAuthenticatedExtendedCard?: boolean;
 }
 
 /** Object-level permissions controlling what an agent can access. */
 export interface AgentObjectPermission {
+  /** MCP servers the agent may reach. */
   readonly mcp_servers?: readonly string[];
+  /** MCP access groups that authorize this agent. */
   readonly mcp_access_groups?: readonly string[];
+  /** Per-server tool allowlists, keyed by MCP server name. */
   readonly mcp_tool_permissions?: Readonly<Record<string, readonly string[]>>;
+  /** Models the agent may invoke. */
   readonly models?: readonly string[];
+  /** Other agents this agent may delegate to. */
   readonly agents?: readonly string[];
 }
 
@@ -60,15 +88,23 @@ export interface AgentObjectPermission {
 export interface CreateAgentRequest {
   /** Unique agent name. */
   readonly agent_name: string;
+  /** Public agent card describing the agent's capabilities. */
   readonly agent_card_params: AgentCard;
   /** LiteLLM-specific routing parameters. `make_public: true` shares the agent. */
   readonly litellm_params?: Readonly<Record<string, unknown>>;
+  /** Object-level permissions for downstream resources. */
   readonly object_permission?: AgentObjectPermission;
+  /** Tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
+  /** Requests-per-minute ceiling. */
   readonly rpm_limit?: number;
+  /** Per-session tokens-per-minute ceiling. */
   readonly session_tpm_limit?: number;
+  /** Per-session requests-per-minute ceiling. */
   readonly session_rpm_limit?: number;
+  /** Headers sent on every outbound call to the agent. */
   readonly static_headers?: Readonly<Record<string, string>>;
+  /** Incoming header names to forward to the agent. */
   readonly extra_headers?: readonly string[];
 }
 
@@ -77,35 +113,61 @@ export type UpdateAgentRequest = CreateAgentRequest;
 
 /** Request body for `PATCH /v1/agents/{id}`. All fields optional. */
 export interface PatchAgentRequest {
+  /** Rename the agent. */
   readonly agent_name?: string;
+  /** Replace the public agent card. */
   readonly agent_card_params?: AgentCard;
+  /** Override LiteLLM routing parameters. */
   readonly litellm_params?: Readonly<Record<string, unknown>>;
+  /** Replace object-level permissions. */
   readonly object_permission?: AgentObjectPermission;
+  /** Update the tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
+  /** Update the requests-per-minute ceiling. */
   readonly rpm_limit?: number;
+  /** Update the per-session tokens-per-minute ceiling. */
   readonly session_tpm_limit?: number;
+  /** Update the per-session requests-per-minute ceiling. */
   readonly session_rpm_limit?: number;
+  /** Replace static outbound headers. */
   readonly static_headers?: Readonly<Record<string, string>>;
+  /** Replace the forwarded header allowlist. */
   readonly extra_headers?: readonly string[];
 }
 
 /** A single agent record returned by `/v1/agents`. */
 export interface Agent {
+  /** Server-assigned id. */
   readonly agent_id: string;
+  /** Display name. */
   readonly agent_name: string;
+  /** Stored LiteLLM routing parameters. */
   readonly litellm_params?: Readonly<Record<string, unknown>>;
+  /** Stored public agent card. */
   readonly agent_card_params: Readonly<Record<string, unknown>>;
+  /** Stored object-level permissions. */
   readonly object_permission?: Readonly<Record<string, unknown>>;
+  /** Accumulated spend in USD. */
   readonly spend?: number;
+  /** Tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
+  /** Requests-per-minute ceiling. */
   readonly rpm_limit?: number;
+  /** Per-session tokens-per-minute ceiling. */
   readonly session_tpm_limit?: number;
+  /** Per-session requests-per-minute ceiling. */
   readonly session_rpm_limit?: number;
+  /** Static outbound headers. */
   readonly static_headers?: Readonly<Record<string, string>>;
+  /** Forwarded header allowlist. */
   readonly extra_headers?: readonly string[];
+  /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
+  /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
+  /** Identifier of the creating user. */
   readonly created_by?: string;
+  /** Identifier of the last user to update. */
   readonly updated_by?: string;
 }
 
@@ -117,13 +179,17 @@ export interface ListAgentsQuery {
 
 /** Request body for `POST /v1/agents/make_public` and `POST /v1/agents/{id}/make_public`. */
 export interface MakeAgentsPublicRequest {
+  /** Agent ids to mark public. */
   readonly agent_ids: readonly string[];
 }
 
 /** Response from `POST /v1/agents/make_public`. */
 export interface MakeAgentsPublicResponse {
+  /** Human-readable status message. */
   readonly message: string;
+  /** Public agent groups the agents were added to. */
   readonly public_agent_groups: readonly string[];
+  /** Identifier of the user who performed the update. */
   readonly updated_by: string;
 }
 
@@ -141,9 +207,13 @@ export interface A2aSendMessageRequest {
 
 /** Response from `POST /v1/a2a/{agent_id}/message/send`. */
 export interface A2aSendMessageResponse {
+  /** JSON-RPC id matching the request. */
   readonly id: string;
+  /** JSON-RPC version string. */
   readonly jsonrpc: string;
+  /** Success payload from the agent. */
   readonly result?: Readonly<Record<string, unknown>>;
+  /** JSON-RPC error envelope, when the call failed. */
   readonly error?: Readonly<Record<string, unknown>>;
   /** Usage tracking added by LiteLLM. */
   readonly usage?: Readonly<Record<string, unknown>>;

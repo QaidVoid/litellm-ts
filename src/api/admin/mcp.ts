@@ -22,99 +22,165 @@ export type McpOauth2Flow = "client_credentials" | "authorization_code";
 
 /** Credentials passed alongside an MCP server config. */
 export interface McpCredentials {
+  /** Raw auth value for token / bearer / api_key schemes. */
   readonly auth_value?: string;
+  /** OAuth2 client id. */
   readonly client_id?: string;
+  /** OAuth2 client secret. */
   readonly client_secret?: string;
+  /** OAuth2 scopes requested. */
   readonly scopes?: readonly string[];
+  /** AWS access key id (for SigV4). */
   readonly aws_access_key_id?: string;
+  /** AWS secret access key. */
   readonly aws_secret_access_key?: string;
+  /** AWS session token. */
   readonly aws_session_token?: string;
+  /** AWS region name. */
   readonly aws_region_name?: string;
+  /** AWS service name used in the SigV4 signature. */
   readonly aws_service_name?: string;
+  /** IAM role to assume. */
   readonly aws_role_name?: string;
+  /** Session name supplied to STS AssumeRole. */
   readonly aws_session_name?: string;
+  /** Token-exchange audience. */
   readonly audience?: string;
+  /** OAuth2 token-exchange endpoint URL. */
   readonly token_exchange_endpoint?: string;
+  /** Subject token type used by token exchange. */
   readonly subject_token_type?: string;
 }
 
 /** Request body for `POST /v1/mcp/server`. */
 export interface CreateMcpServerRequest {
+  /** Explicit server id. Defaults to a server-generated UUID. */
   readonly server_id?: string;
+  /** Internal server name. */
   readonly server_name?: string;
+  /** Friendly alias used in the admin UI. */
   readonly alias?: string;
+  /** Free-form description. */
   readonly description?: string;
+  /** Wire transport. */
   readonly transport?: McpTransport;
+  /** Authentication scheme. */
   readonly auth_type?: McpAuthType;
+  /** Credentials matching the chosen auth scheme. */
   readonly credentials?: McpCredentials;
+  /** Server URL (HTTP / SSE transports). */
   readonly url?: string;
+  /** Optional path to a stored OpenAPI / MCP spec. */
   readonly spec_path?: string;
+  /** Free-form metadata returned alongside the server record. */
   readonly mcp_info?: Readonly<Record<string, unknown>>;
+  /** Access groups that authorize this server. */
   readonly mcp_access_groups?: readonly string[];
+  /** Restrict callable tools to this list. */
   readonly allowed_tools?: readonly string[];
+  /** Override display names per tool. */
   readonly tool_name_to_display_name?: Readonly<Record<string, string>>;
+  /** Override descriptions per tool. */
   readonly tool_name_to_description?: Readonly<Record<string, string>>;
+  /** Inbound header names to forward to the server. */
   readonly extra_headers?: readonly string[];
+  /** Static outbound headers attached to every call. */
   readonly static_headers?: Readonly<Record<string, string>>;
+  /** Instructions inserted before the server's tool list. */
   readonly instructions?: string;
   /** Required for `transport === "stdio"`. */
   readonly command?: string;
   /** Required for `transport === "stdio"`. */
   readonly args?: readonly string[];
+  /** Environment variables for the spawned process. */
   readonly env?: Readonly<Record<string, string>>;
+  /** OAuth2 authorization URL. */
   readonly authorization_url?: string;
+  /** OAuth2 token URL. */
   readonly token_url?: string;
+  /** Dynamic client registration URL. */
   readonly registration_url?: string;
+  /** OAuth2 grant flow. */
   readonly oauth2_flow?: McpOauth2Flow;
+  /** Allow every key on the proxy to use the server. */
   readonly allow_all_keys?: boolean;
+  /** Whether the server is reachable over the public internet. */
   readonly available_on_public_internet?: boolean;
+  /** Forward caller credentials to the upstream MCP server. */
   readonly delegate_auth_to_upstream?: boolean;
+  /** True when callers must supply their own API key (BYOK). */
   readonly is_byok?: boolean;
+  /** Bullet points describing the BYOK requirements. */
   readonly byok_description?: readonly string[];
+  /** URL pointing at provider documentation for obtaining a BYOK key. */
   readonly byok_api_key_help_url?: string;
+  /** Public URL the server was sourced from (for hub listings). */
   readonly source_url?: string;
 }
 
 /** Request body for `PUT /v1/mcp/server`. Same shape, with `server_id` required. */
 export interface UpdateMcpServerRequest extends Omit<CreateMcpServerRequest, "server_id"> {
+  /** Id of the server to update. */
   readonly server_id: string;
 }
 
 /** Server record returned by `/v1/mcp/server` (credentials redacted). */
 export interface McpServer {
+  /** Server-assigned id. */
   readonly server_id: string;
+  /** Internal server name. */
   readonly server_name?: string;
+  /** Friendly alias. */
   readonly alias?: string;
+  /** Free-form description. */
   readonly description?: string;
+  /** Wire transport. */
   readonly transport: McpTransport;
+  /** Authentication scheme. */
   readonly auth_type?: McpAuthType;
+  /** Server URL. */
   readonly url?: string;
+  /** Stored OpenAPI / MCP spec path. */
   readonly spec_path?: string;
+  /** Free-form metadata. */
   readonly mcp_info?: Readonly<Record<string, unknown>>;
+  /** Access groups that authorize the server. */
   readonly mcp_access_groups?: readonly string[];
+  /** Callable tool allowlist. */
   readonly allowed_tools?: readonly string[];
+  /** Submission lifecycle status. */
   readonly approval_status?: "active" | "pending_review" | "rejected";
+  /** Identifier of the user who submitted the server for review. */
   readonly submitted_by?: string;
+  /** ISO-8601 submission timestamp. */
   readonly submitted_at?: string;
+  /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
+  /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
 }
 
 /** Health row in the response to `GET /v1/mcp/server/health`. */
 export interface McpServerHealthRow {
+  /** Probed server id. */
   readonly server_id: string;
+  /** Last health verdict. */
   readonly status: "healthy" | "unhealthy" | "unknown" | null;
 }
 
 /** Request body for `POST /v1/mcp/make_public`. */
 export interface MakeMcpServersPublicRequest {
+  /** Server ids to mark public. */
   readonly mcp_server_ids: readonly string[];
 }
 
 /** Response from `POST /v1/mcp/make_public`. */
 export interface MakeMcpServersPublicResponse {
+  /** Human-readable status message. */
   readonly message: string;
+  /** Server ids now flagged public. */
   readonly public_mcp_servers: readonly string[];
+  /** Identifier of the user who performed the update. */
   readonly updated_by: string;
 }
 
@@ -132,52 +198,75 @@ export interface McpServerHealthQuery {
 
 /** Query parameters for `GET /v1/mcp/discover`. */
 export interface McpDiscoverQuery {
+  /** Free-text search term. */
   readonly query?: string;
+  /** Filter by category. */
   readonly category?: string;
 }
 
 /** Response from `GET /v1/mcp/discover`. */
 export interface McpDiscoverResponse {
+  /** Discovered servers (untyped passthrough). */
   readonly servers: readonly Readonly<Record<string, unknown>>[];
+  /** Categories available for filtering. */
   readonly categories: readonly string[];
 }
 
 /** A pending submission summarized by `GET /v1/mcp/server/submissions`. */
 export interface McpSubmissionsResponse {
+  /** Pending submissions. */
   readonly submissions: readonly McpServer[];
+  /** Total submission count. */
   readonly count?: number;
 }
 
 /** A `{ server_id, tool_name }` pair stored inside a toolset. */
 export interface McpToolsetTool {
+  /** MCP server hosting the tool. */
   readonly server_id: string;
+  /** Tool name on that server. */
   readonly tool_name: string;
 }
 
 /** Request body for `POST /v1/mcp/toolset`. */
 export interface CreateMcpToolsetRequest {
+  /** Unique toolset name. */
   readonly toolset_name: string;
+  /** Free-form description. */
   readonly description?: string;
+  /** Tools included in the toolset. */
   readonly tools?: readonly McpToolsetTool[];
 }
 
 /** Request body for `PUT /v1/mcp/toolset`. */
 export interface UpdateMcpToolsetRequest {
+  /** Id of the toolset to update. */
   readonly toolset_id: string;
+  /** Rename the toolset. */
   readonly toolset_name?: string;
+  /** Replace the description. */
   readonly description?: string;
+  /** Replace the tool list. */
   readonly tools?: readonly McpToolsetTool[];
 }
 
 /** A toolset record (curated selection of `{server_id, tool_name}` pairs). */
 export interface McpToolset {
+  /** Server-assigned id. */
   readonly toolset_id: string;
+  /** Toolset name. */
   readonly toolset_name: string;
+  /** Free-form description. */
   readonly description?: string;
+  /** Tools included in the toolset. */
   readonly tools: readonly McpToolsetTool[];
+  /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
+  /** Identifier of the creating user. */
   readonly created_by?: string;
+  /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
+  /** Identifier of the last user to update. */
   readonly updated_by?: string;
 }
 
@@ -233,7 +322,9 @@ export interface McpNamespace {
   makePublic(
     req: MakeMcpServersPublicRequest,
   ): Promise<Result<MakeMcpServersPublicResponse, ApiError>>;
+  /** MCP server CRUD, submissions, and approval workflow. */
   readonly servers: McpServersNamespace;
+  /** Curated tool-set administration. */
   readonly toolsets: McpToolsetsNamespace;
 }
 

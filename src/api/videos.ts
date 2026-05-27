@@ -10,33 +10,53 @@ export type VideoFileInput = Blob | Uint8Array;
 
 /** A single generated video record. */
 export interface VideoObject {
+  /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"video"`. */
   readonly object: "video";
+  /** Lifecycle status (e.g. `"queued"`, `"completed"`). */
   readonly status: string;
+  /** Unix epoch seconds when the job was created. */
   readonly created_at?: number;
+  /** Unix epoch seconds when the job completed. */
   readonly completed_at?: number;
+  /** Unix epoch seconds when the video expires. */
   readonly expires_at?: number;
+  /** Error envelope when the job failed. */
   readonly error?: Readonly<Record<string, unknown>>;
+  /** Completion percentage in `[0, 100]`. */
   readonly progress?: number;
+  /** Id of the video this one was remixed from. */
   readonly remixed_from_video_id?: string;
+  /** Duration of the video in seconds. */
   readonly seconds?: string;
+  /** Pixel dimensions string (e.g. `"1280x720"`). */
   readonly size?: string;
+  /** Model that produced the video. */
   readonly model?: string;
+  /** Provider-specific usage block. */
   readonly usage?: Readonly<Record<string, unknown>>;
 }
 
 /** Response from `GET /v1/videos`. */
 export interface VideoListResponse {
+  /** Videos on the current page. */
   readonly data: readonly VideoObject[];
 }
 
 /** Request body for `POST /v1/videos`. */
 export interface VideoGenerationRequest {
+  /** Video-generation-capable model id. */
   readonly model: ModelsWithMode<"video_generation">;
+  /** Text description of the video to generate. */
   readonly prompt: string;
+  /** Desired duration in seconds. */
   readonly seconds?: string;
+  /** Provider-specific size string (e.g. `"1280x720"`). */
   readonly size?: string;
+  /** Character references the model should incorporate. */
   readonly characters?: readonly Readonly<Record<string, string>>[];
+  /** Opaque caller identifier forwarded to upstream abuse-detection systems. */
   readonly user?: string;
   /** Provider-specific parameters passed through unmodified. */
   readonly parameters?: Readonly<Record<string, unknown>>;
@@ -44,40 +64,55 @@ export interface VideoGenerationRequest {
 
 /** Request body for `POST /v1/videos/{id}/remix`. */
 export interface VideoRemixRequest {
+  /** Remix instructions. */
   readonly prompt: string;
+  /** Override the remix model. */
   readonly model?: ModelsWithMode<"video_generation">;
 }
 
 /** Request body for `POST /v1/videos/edits`. */
 export interface VideoEditRequest {
+  /** Edit instructions. */
   readonly prompt: string;
   /** Source video reference. Most providers accept `{ id: "video_..." }`. */
   readonly video: Readonly<Record<string, string>>;
+  /** Override the edit model. */
   readonly model?: ModelsWithMode<"video_generation">;
 }
 
 /** Request body for `POST /v1/videos/extensions`. */
 export interface VideoExtensionRequest {
+  /** Extension instructions. */
   readonly prompt: string;
+  /** Additional duration in seconds. */
   readonly seconds: string;
+  /** Source video reference. */
   readonly video: Readonly<Record<string, string>>;
+  /** Override the extension model. */
   readonly model?: ModelsWithMode<"video_generation">;
 }
 
 /** Request body for `POST /v1/videos/characters` (multipart). */
 export interface CharacterCreateRequest {
+  /** Character name. */
   readonly name: string;
+  /** Source video bytes used as the character reference. */
   readonly video: VideoFileInput;
   /** Filename attached to the multipart payload. Defaults to `"character.mp4"`. */
   readonly filename?: string;
+  /** Override the character-creation model. */
   readonly model?: ModelsWithMode<"video_generation">;
 }
 
 /** A character generated from an uploaded video. */
 export interface CharacterObject {
+  /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"character"`. */
   readonly object: "character";
+  /** Unix epoch seconds when the character was created. */
   readonly created_at: number;
+  /** Character name. */
   readonly name: string;
 }
 

@@ -29,6 +29,7 @@ export interface BatchCreateRequest {
   readonly input_file_id: string;
   /** Endpoint the batch should issue requests against. */
   readonly endpoint: BatchEndpoint;
+  /** Time window the upstream allows the batch to run. */
   readonly completion_window: BatchCompletionWindow;
   /** Free-form metadata returned alongside the batch object. */
   readonly metadata?: Readonly<Record<string, string>>;
@@ -36,40 +37,67 @@ export interface BatchCreateRequest {
 
 /** Per-status counts of individual line items in a batch. */
 export interface BatchRequestCounts {
+  /** Total submitted line items. */
   readonly total: number;
+  /** Line items that completed successfully. */
   readonly completed: number;
+  /** Line items that failed. */
   readonly failed: number;
 }
 
 /** Inline error details on a failed batch. */
 export interface BatchErrorObject {
+  /** Machine-readable error code. */
   readonly code: string;
+  /** Human-readable error message. */
   readonly message: string;
+  /** Offending parameter name, when known. */
   readonly param?: string | null;
+  /** 1-based input line number, when known. */
   readonly line?: number | null;
 }
 
 /** A single batch job record. */
 export interface Batch {
+  /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"batch"`. */
   readonly object: "batch";
+  /** Endpoint the batch dispatches against. */
   readonly endpoint: BatchEndpoint;
+  /** Top-level error envelope when the batch failed. */
   readonly errors?: { readonly object: "list"; readonly data: readonly BatchErrorObject[] } | null;
+  /** File id supplied as input. */
   readonly input_file_id: string;
+  /** Time window the upstream allows the batch to run. */
   readonly completion_window: BatchCompletionWindow;
+  /** Current lifecycle state. */
   readonly status: BatchStatus;
+  /** File id holding the JSONL output once finalized. */
   readonly output_file_id?: string | null;
+  /** File id holding per-line error output. */
   readonly error_file_id?: string | null;
+  /** Unix epoch seconds when the batch was created. */
   readonly created_at: number;
+  /** Unix epoch seconds when processing began. */
   readonly in_progress_at?: number | null;
+  /** Unix epoch seconds at which the batch expires. */
   readonly expires_at?: number | null;
+  /** Unix epoch seconds when finalization started. */
   readonly finalizing_at?: number | null;
+  /** Unix epoch seconds when the batch completed. */
   readonly completed_at?: number | null;
+  /** Unix epoch seconds when the batch failed. */
   readonly failed_at?: number | null;
+  /** Unix epoch seconds when the batch expired. */
   readonly expired_at?: number | null;
+  /** Unix epoch seconds when cancellation was requested. */
   readonly cancelling_at?: number | null;
+  /** Unix epoch seconds when cancellation completed. */
   readonly cancelled_at?: number | null;
+  /** Per-status line-item counts. */
   readonly request_counts?: BatchRequestCounts;
+  /** Caller-supplied metadata returned verbatim. */
   readonly metadata?: Readonly<Record<string, string>>;
 }
 
@@ -83,10 +111,15 @@ export interface ListBatchesQuery {
 
 /** Response from `GET /v1/batches`. */
 export interface ListBatchesResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
+  /** Batches on the current page. */
   readonly data: readonly Batch[];
+  /** Id of the first record on the page. */
   readonly first_id?: string;
+  /** Id of the last record on the page. */
   readonly last_id?: string;
+  /** True when more pages remain. */
   readonly has_more: boolean;
 }
 

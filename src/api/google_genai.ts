@@ -32,16 +32,23 @@ export type GenerateContentChunk = Readonly<Record<string, unknown>>;
 
 /** Request body for `:countTokens`. */
 export interface CountTokensRequest {
+  /** Conversation turns to tokenize. */
   readonly contents: readonly Readonly<Record<string, unknown>>[];
+  /** System-instruction content block, counted toward the total. */
   readonly system_instruction?: Readonly<Record<string, unknown>>;
+  /** Tool definitions counted alongside the prompt. */
   readonly tools?: readonly Readonly<Record<string, unknown>>[];
+  /** Provider-specific extras forwarded as-is. */
   readonly [key: string]: unknown;
 }
 
 /** Response from `:countTokens`. */
 export interface CountTokensResponse {
+  /** Total tokens the upstream would charge for the prompt. */
   readonly totalTokens?: number;
+  /** Tokens that hit the cached-content cache. */
   readonly cachedContentTokenCount?: number;
+  /** Provider-specific extras. */
   readonly [key: string]: unknown;
 }
 
@@ -61,7 +68,9 @@ export interface GoogleAgentCreateRequest {
 
 /** Response from `/v1beta/agents` creation or retrieval. */
 export interface GoogleAgent {
+  /** Caller-supplied id. */
   readonly id?: string;
+  /** Provider-assigned fully qualified name. */
   readonly name?: string;
   /** Provider-specific extras. */
   readonly [key: string]: unknown;
@@ -69,25 +78,33 @@ export interface GoogleAgent {
 
 /** Query parameters for `GET /v1beta/agents`. */
 export interface ListGoogleAgentsQuery {
+  /** Maximum agents per page. */
   readonly page_size?: number;
+  /** Page token returned by a previous list call. */
   readonly page_token?: string;
 }
 
 /** Response from `GET /v1beta/agents`. */
 export interface ListGoogleAgentsResponse {
+  /** Agents on the current page. */
   readonly agents: readonly Readonly<Record<string, unknown>>[];
+  /** Token to fetch the next page. */
   readonly next_page_token?: string;
 }
 
 /** Response from `DELETE /v1beta/agents/{name}`. */
 export interface DeleteGoogleAgentResponse {
+  /** Fully qualified name of the deleted agent. */
   readonly name: string;
+  /** True when the delete succeeded. */
   readonly deleted: boolean;
 }
 
 /** Response from `GET /v1beta/agents/{name}/versions`. */
 export interface ListAgentVersionsResponse {
+  /** Version records on the current page. */
   readonly agent_versions: readonly Readonly<Record<string, unknown>>[];
+  /** Token to fetch the next page. */
   readonly next_page_token?: string;
 }
 
@@ -140,7 +157,9 @@ export interface GoogleGenaiNamespace {
     model: ModelId,
     req: CountTokensRequest,
   ): Promise<Result<CountTokensResponse, ApiError>>;
+  /** Provider-side agent administration (`/v1beta/agents`). */
   readonly agents: GoogleAgentsNamespace;
+  /** Interaction-lifecycle endpoints (`/v1beta/interactions`). */
   readonly interactions: GoogleInteractionsNamespace;
 }
 

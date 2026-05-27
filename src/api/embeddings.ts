@@ -15,6 +15,7 @@ export type EmbeddingsEncoding = "float" | "base64";
 
 /** Embeddings request body. `model` is constrained to embedding-mode models. */
 export interface EmbeddingsRequest {
+  /** Embedding-capable model id. */
   readonly model: ModelsWithMode<"embedding">;
   /** Input to embed. May be one string, an array of strings, or token-id arrays. */
   readonly input: EmbeddingsInput;
@@ -28,6 +29,7 @@ export interface EmbeddingsRequest {
 
 /** A single embedding row in the response. */
 export interface EmbeddingsDatum {
+  /** Discriminator, always `"embedding"`. */
   readonly object: "embedding";
   /** The vector itself. A `string` when `encoding_format` is `"base64"`. */
   readonly embedding: readonly number[] | string;
@@ -45,11 +47,13 @@ export interface EmbeddingsUsage {
 
 /** A complete embeddings response. */
 export interface EmbeddingsResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
   /** One entry per input, in the same order. */
   readonly data: readonly EmbeddingsDatum[];
   /** Model that produced the embeddings. */
   readonly model: string;
+  /** Token accounting for the request. */
   readonly usage: EmbeddingsUsage;
 }
 

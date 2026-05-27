@@ -8,7 +8,9 @@ import type { Transport } from "../transport.ts";
 
 /** A single input item in a Responses API request. */
 export interface ResponsesInputMessage {
+  /** Speaker role for this message. */
   readonly role: "system" | "user" | "assistant" | "developer";
+  /** Message content; plain text or an ordered array of content parts. */
   readonly content: string | readonly ResponsesContentPart[];
 }
 
@@ -48,27 +50,39 @@ export type ResponsesToolChoice =
 
 /** Reasoning controls (only honored by reasoning models). */
 export interface ResponsesReasoning {
+  /** How much reasoning effort the model should spend. */
   readonly effort?: "minimal" | "low" | "medium" | "high";
 }
 
 /** Request body for `POST /v1/responses`. */
 export interface ResponsesCreateRequest {
+  /** Model id to run the response against. */
   readonly model: ModelId;
+  /** Input prompt; string or structured input messages. */
   readonly input: ResponsesInput;
+  /** Top-level instructions for the model. */
   readonly instructions?: string;
   /** Continue a previous response by chaining on its id. */
   readonly previous_response_id?: string;
+  /** Tools the model may invoke. */
   readonly tools?: readonly ResponsesTool[];
+  /** Tool-call routing strategy. */
   readonly tool_choice?: ResponsesToolChoice;
+  /** Reasoning controls for reasoning models. */
   readonly reasoning?: ResponsesReasoning;
+  /** Sampling temperature. */
   readonly temperature?: number;
+  /** Nucleus sampling cutoff. */
   readonly top_p?: number;
+  /** Maximum tokens the model may produce. */
   readonly max_output_tokens?: number;
   /** Persist the response server-side for later retrieval. */
   readonly store?: boolean;
+  /** Free-form metadata attached to the stored response. */
   readonly metadata?: Readonly<Record<string, string>>;
   /** Opaque caller identifier forwarded to upstream abuse-detection systems. */
   readonly user?: string;
+  /** Stream the response as SSE events. */
   readonly stream?: boolean;
 }
 
@@ -102,24 +116,39 @@ export type ResponsesOutputItem =
 
 /** Token usage on a `ResponsesResponse`. */
 export interface ResponsesUsage {
+  /** Tokens consumed by the input. */
   readonly input_tokens: number;
+  /** Tokens produced in the output. */
   readonly output_tokens: number;
+  /** Sum of input and output tokens. */
   readonly total_tokens: number;
+  /** Breakdown of the output token total. */
   readonly output_tokens_details?: { readonly reasoning_tokens: number };
 }
 
 /** A completed (non-streaming) response. */
 export interface ResponsesResponse {
+  /** Server-assigned id. */
   readonly id: string;
+  /** Discriminator, always `"response"`. */
   readonly object: "response";
+  /** Unix epoch seconds when the response was created. */
   readonly created_at: number;
+  /** Model that produced the response. */
   readonly model: string;
+  /** Lifecycle status. */
   readonly status: "in_progress" | "completed" | "failed" | "incomplete";
+  /** Output items produced by the model, in order. */
   readonly output: readonly ResponsesOutputItem[];
+  /** Id of the response this one chains from. */
   readonly previous_response_id?: string | null;
+  /** Tools that were available to the model. */
   readonly tools?: readonly ResponsesTool[];
+  /** Tool-call routing strategy applied. */
   readonly tool_choice?: ResponsesToolChoice;
+  /** Token accounting. */
   readonly usage?: ResponsesUsage;
+  /** Free-form metadata stored with the response. */
   readonly metadata?: Readonly<Record<string, string>>;
 }
 
@@ -159,24 +188,35 @@ export type ResponsesStreamEvent =
 
 /** Query parameters for `GET /v1/responses`. */
 export interface ListResponsesQuery {
+  /** Cursor: return responses after this id. */
   readonly after?: string;
+  /** Maximum records per page. */
   readonly limit?: number;
+  /** Sort direction. */
   readonly order?: "asc" | "desc";
 }
 
 /** Response from `GET /v1/responses`. */
 export interface ListResponsesResponse {
+  /** Discriminator, always `"list"`. */
   readonly object: "list";
+  /** Responses on the current page. */
   readonly data: readonly ResponsesResponse[];
+  /** Id of the first record on the page. */
   readonly first_id?: string;
+  /** Id of the last record on the page. */
   readonly last_id?: string;
+  /** True when more pages remain. */
   readonly has_more: boolean;
 }
 
 /** Response from `DELETE /v1/responses/{id}`. */
 export interface DeleteResponseResponse {
+  /** Id of the deleted response. */
   readonly id: string;
+  /** Discriminator, always `"response"`. */
   readonly object: "response";
+  /** True when the delete succeeded. */
   readonly deleted: boolean;
 }
 

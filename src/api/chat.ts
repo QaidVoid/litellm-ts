@@ -25,6 +25,7 @@ export type ChatTextOnlyMessage =
 
 /** A system instruction message. */
 export interface ChatSystemMessage {
+  /** Discriminator, always `"system"`. */
   readonly role: "system";
   /** Free-form system instructions. */
   readonly content: string;
@@ -34,6 +35,7 @@ export interface ChatSystemMessage {
 
 /** A user-authored message. `content` may be a string or a multi-part array. */
 export interface ChatUserMessage {
+  /** Discriminator, always `"user"`. */
   readonly role: "user";
   /** Plain text or an ordered array of content parts (text and image inputs). */
   readonly content: string | readonly ChatUserContentPart[];
@@ -47,6 +49,7 @@ export interface ChatUserMessage {
  * keyed by such a model.
  */
 export interface ChatTextOnlyUserMessage {
+  /** Discriminator, always `"user"`. */
   readonly role: "user";
   /** Plain text or an array of text-only content parts. */
   readonly content: string | readonly ChatTextPart[];
@@ -59,6 +62,7 @@ export interface ChatTextOnlyUserMessage {
  * tool calls instead of text content.
  */
 export interface ChatAssistantMessage {
+  /** Discriminator, always `"assistant"`. */
   readonly role: "assistant";
   /** Generated text. `null` when the model decided to emit `tool_calls` instead. */
   readonly content: string | null;
@@ -70,6 +74,7 @@ export interface ChatAssistantMessage {
 
 /** Output of a tool invocation, referenced by `tool_call_id`. */
 export interface ChatToolMessage {
+  /** Discriminator, always `"tool"`. */
   readonly role: "tool";
   /** Matches the `id` of the assistant's `tool_calls[i]`. */
   readonly tool_call_id: string;
@@ -80,22 +85,32 @@ export interface ChatToolMessage {
 /** A single content part inside a user message with multi-modal input. */
 export type ChatUserContentPart = ChatTextPart | ChatImageUrlPart;
 
+/** Plain text segment in a multi-modal user message. */
 export interface ChatTextPart {
+  /** Discriminator, always `"text"`. */
   readonly type: "text";
+  /** UTF-8 text. */
   readonly text: string;
 }
 
+/** Image segment in a multi-modal user message. Only available on vision-capable models. */
 export interface ChatImageUrlPart {
+  /** Discriminator, always `"image_url"`. */
   readonly type: "image_url";
+  /** Image source and rendering hints. */
   readonly image_url: {
+    /** Either an `https://` URL or a `data:` URI of base64-encoded bytes. */
     readonly url: string;
+    /** Detail level the upstream should preserve. Defaults to `"auto"`. */
     readonly detail?: "auto" | "low" | "high";
   };
 }
 
 /** A tool the model may invoke. Only function-type tools are supported in v0.1. */
 export interface ChatTool {
+  /** Discriminator, always `"function"`. */
   readonly type: "function";
+  /** Function declaration the model may call. */
   readonly function: {
     /** Function identifier the model uses when emitting a tool call. */
     readonly name: string;
@@ -110,7 +125,9 @@ export interface ChatTool {
 export interface ChatToolCall {
   /** Stable identifier the caller uses when replying with a `ChatToolMessage`. */
   readonly id: string;
+  /** Discriminator, always `"function"`. */
   readonly type: "function";
+  /** Tool function name and arguments. */
   readonly function: {
     /** Matches the `name` of the declared `ChatTool`. */
     readonly name: string;
@@ -220,7 +237,9 @@ export type ChatFinishReason =
 export interface ChatChoice {
   /** Index of this choice within `choices`. */
   readonly index: number;
+  /** The assistant message produced for this choice. */
   readonly message: {
+    /** Discriminator, always `"assistant"`. */
     readonly role: "assistant";
     /** Final text content, or `null` when the model emitted tool calls instead. */
     readonly content: string | null;
@@ -245,6 +264,7 @@ export interface ChatUsage {
 export interface ChatCompletion {
   /** Server-assigned completion identifier. */
   readonly id: string;
+  /** Discriminator, always `"chat.completion"`. */
   readonly object: "chat.completion";
   /** Unix timestamp (seconds) of completion creation. */
   readonly created: number;
@@ -265,7 +285,9 @@ export interface ChatChunkToolCall {
   readonly index: number;
   /** Server-assigned identifier. Appears once, then is reused by index. */
   readonly id?: string;
+  /** Discriminator, always `"function"`. */
   readonly type?: "function";
+  /** Streamed function-call fragments. */
   readonly function?: {
     /** Function name. Streamed once. */
     readonly name?: string;
@@ -295,6 +317,7 @@ export interface ChatChunkChoice {
 export interface ChatCompletionChunk {
   /** Server-assigned completion identifier. Shared across chunks. */
   readonly id: string;
+  /** Discriminator, always `"chat.completion.chunk"`. */
   readonly object: "chat.completion.chunk";
   /** Unix timestamp (seconds) of chunk creation. */
   readonly created: number;

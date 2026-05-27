@@ -47,20 +47,29 @@ export interface OcrRequest {
 
 /** Request body for `POST /v1/ocr` via multipart file upload. */
 export interface OcrFileRequest {
+  /** OCR-capable model id. */
   readonly model: ModelsWithMode<"ocr">;
+  /** Document bytes. */
   readonly file: OcrFileInput;
   /** Filename attached to the multipart payload. Defaults to `"document.pdf"`. */
   readonly filename?: string;
+  /** Include base64-encoded inline images in the response. */
   readonly include_image_base64?: boolean;
+  /** Restrict OCR to these page indexes (0-based). */
   readonly pages?: readonly number[];
+  /** Cap the number of inline images returned per page. */
   readonly image_limit?: number;
+  /** Cap the inline image bbox size. */
   readonly image_min_size?: number;
 }
 
 /** Page dimensions reported by the OCR provider. */
 export interface OcrPageDimensions {
+  /** Image DPI. */
   readonly dpi?: number;
+  /** Page height in pixels. */
   readonly height?: number;
+  /** Page width in pixels. */
   readonly width?: number;
 }
 
@@ -78,22 +87,31 @@ export interface OcrPage {
   readonly index: number;
   /** Markdown rendering of the page content. */
   readonly markdown: string;
+  /** Images extracted from the page. */
   readonly images?: readonly OcrPageImage[];
+  /** Page dimensions reported by the provider. */
   readonly dimensions?: OcrPageDimensions;
 }
 
 /** Token and credit accounting on an `OcrResponse`. */
 export interface OcrUsageInfo {
+  /** Pages processed by the OCR run. */
   readonly pages_processed?: number;
+  /** Credits charged for the OCR run. */
   readonly credits?: number;
 }
 
 /** Response from `POST /v1/ocr`. */
 export interface OcrResponse {
+  /** Discriminator, always `"ocr"`. */
   readonly object: "ocr";
+  /** Model that produced the OCR output. */
   readonly model: string;
+  /** Per-page results, in page order. */
   readonly pages: readonly OcrPage[];
+  /** Provider-specific document-level annotations. */
   readonly document_annotation?: unknown;
+  /** Usage and billing detail. */
   readonly usage_info?: OcrUsageInfo;
 }
 

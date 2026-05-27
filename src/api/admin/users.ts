@@ -11,89 +11,142 @@ export type UserRole =
 
 /** Team-membership entry attached to a user. */
 export interface UserTeamMembership {
+  /** Team id the user joins. */
   readonly team_id: string;
+  /** Per-member spend ceiling within the team. */
   readonly max_budget_in_team?: number;
+  /** Role inside the team. */
   readonly user_role?: "user" | "admin";
 }
 
 /** Request body for `/user/new`. */
 export interface CreateUserRequest {
+  /** Explicit user id. Defaults to a server-generated UUID. */
   readonly user_id?: string;
+  /** Primary email address. */
   readonly user_email?: string;
+  /** Friendly alias shown in dashboards. */
   readonly user_alias?: string;
+  /** Authorization role. */
   readonly user_role?: UserRole;
   /** Either a list of team ids or richer membership descriptors. */
   readonly teams?: readonly string[] | readonly UserTeamMembership[];
+  /** Hard spend ceiling in USD. */
   readonly max_budget?: number;
+  /** Warning threshold below `max_budget`. */
   readonly soft_budget?: number;
+  /** Rolling window duration. */
   readonly budget_duration?: string;
+  /** Tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
+  /** Requests-per-minute ceiling. */
   readonly rpm_limit?: number;
+  /** Model allowlist for the user. */
   readonly models?: readonly string[];
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
   /** Generate and return an API key alongside user creation. Defaults to true. */
   readonly auto_create_key?: boolean;
+  /** Send an invitation email after creation. */
   readonly send_invite_email?: boolean;
+  /** External SSO user identifier. */
   readonly sso_user_id?: string;
+  /** Organizations the user belongs to. */
   readonly organizations?: readonly string[];
+  /** Guardrails enforced on the user. */
   readonly guardrails?: readonly string[];
+  /** Policies applied to the user. */
   readonly policies?: readonly string[];
+  /** Fine-grained permission map. */
   readonly permissions?: Readonly<Record<string, unknown>>;
+  /** Per-model budget map keyed by model name. */
   readonly model_max_budget?: Readonly<Record<string, unknown>>;
+  /** Per-model requests-per-minute ceilings. */
   readonly model_rpm_limit?: Readonly<Record<string, number>>;
+  /** Per-model tokens-per-minute ceilings. */
   readonly model_tpm_limit?: Readonly<Record<string, number>>;
+  /** Lifetime for the key created when `auto_create_key` is true. */
   readonly duration?: string;
+  /** Alias attached to the auto-created key. */
   readonly key_alias?: string;
 }
 
 /** A single internal user record. */
 export interface User {
+  /** Server-assigned id. */
   readonly user_id: string;
+  /** Primary email. */
   readonly user_email?: string;
+  /** Friendly alias. */
   readonly user_alias?: string;
+  /** Authorization role. */
   readonly user_role?: UserRole;
+  /** Hard spend ceiling. */
   readonly max_budget?: number;
+  /** Warning threshold below `max_budget`. */
   readonly soft_budget?: number;
+  /** Accumulated spend in USD. */
   readonly spend?: number;
+  /** Tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
+  /** Requests-per-minute ceiling. */
   readonly rpm_limit?: number;
+  /** Teams the user belongs to. */
   readonly teams?: readonly string[];
+  /** Model allowlist. */
   readonly models?: readonly string[];
+  /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
+  /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
+  /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
   /** When `auto_create_key` is true on `create`, the response includes the generated key. */
   readonly key?: string;
+  /** Expiry timestamp of the auto-created key. */
   readonly expires?: string;
 }
 
 /** Request body for `/user/update`. */
 export interface UpdateUserRequest
   extends Partial<Omit<CreateUserRequest, "user_id" | "user_email">> {
+  /** User id to update (one of `user_id` or `user_email` is required). */
   readonly user_id?: string;
+  /** Primary email; resolved to `user_id` when set. */
   readonly user_email?: string;
+  /** Replace the user's password (admin flow only). */
   readonly password?: string;
+  /** Replace the accumulated spend counter. */
   readonly spend?: number;
 }
 
 /** Request body for `/user/delete`. */
 export interface DeleteUsersRequest {
+  /** User ids to delete. */
   readonly user_ids: readonly string[];
 }
 
 /** Query parameters for `/user/list`. */
 export interface ListUsersQuery {
+  /** 1-based page number. */
   readonly page?: number;
+  /** Page size. */
   readonly size?: number;
+  /** Filter by user id. */
   readonly user_id?: string;
+  /** Filter by email. */
   readonly user_email?: string;
+  /** Filter by role. */
   readonly user_role?: UserRole;
 }
 
 /** Response from `/user/list`. */
 export interface ListUsersResponse {
+  /** Users on the current page. */
   readonly users: readonly User[];
+  /** Total user count across all pages. */
   readonly total_count?: number;
+  /** Page number returned. */
   readonly page?: number;
 }
 
