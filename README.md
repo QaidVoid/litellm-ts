@@ -233,6 +233,31 @@ LITELLM_API_KEY=sk-... \
 deno run --allow-net --allow-env examples/quickstart.ts
 ```
 
+## End-to-end tests
+
+`tests/e2e/` exercises the SDK against a live LiteLLM proxy. Tests skip when
+the proxy is unreachable or when a required model env var is unset, so the
+suite stays green even on minimal setups. Configure with:
+
+```bash
+LITELLM_BASE_URL=http://localhost:4000     # proxy URL (default shown)
+LITELLM_API_KEY=sk-1234                    # proxy master key (default shown)
+LITELLM_E2E_CHAT_MODEL=<chat model id>     # required by chat / streaming tests
+LITELLM_E2E_EMBED_MODEL=<embed model id>   # required by embeddings tests
+LITELLM_E2E_CHAT_MODEL_ALT=<id>            # optional second chat model
+LITELLM_E2E_EMBED_MODEL_ALT=<id>           # optional second embedding model
+LITELLM_E2E_REASONING_MODEL=<id>           # optional reasoning model
+```
+
+Then run:
+
+```bash
+deno task test:e2e
+```
+
+The default `deno task test` suite only runs `src/` and never hits the
+network, so e2e stays opt-in.
+
 ## Contributing
 
 Project conventions live in [`AGENTS.md`](./AGENTS.md). Run `deno task check` before sending a change.
