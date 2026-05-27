@@ -825,6 +825,37 @@ export type {
   UtilsNamespace,
 } from "./src/api/utils.ts";
 
+export type { PublicNamespace } from "./src/api/public.ts";
+
+export type {
+  CreateMemoryRequest,
+  DeleteMemoryResponse,
+  ListMemoryQuery,
+  ListMemoryResponse,
+  MemoryNamespace,
+  MemoryRow,
+  UpdateMemoryRequest,
+} from "./src/api/admin/memory.ts";
+
+export type {
+  CloudZeroExportRequest,
+  CloudZeroExportResponse,
+  CloudZeroInitRequest,
+  CloudZeroInitResponse,
+  CloudZeroNamespace,
+  CloudZeroSettingsUpdate,
+  CloudZeroSettingsView,
+  SpendConnectorsNamespace,
+  VantageDryRunRequest,
+  VantageExportRequest,
+  VantageExportResponse,
+  VantageInitRequest,
+  VantageInitResponse,
+  VantageNamespace,
+  VantageSettingsUpdate,
+  VantageSettingsView,
+} from "./src/api/admin/spend_connectors.ts";
+
 export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,

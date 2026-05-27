@@ -18,6 +18,11 @@ import { createCustomers, type CustomersNamespace } from "./api/admin/customers.
 import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.ts";
 import { createJwtMappings, type JwtMappingsNamespace } from "./api/admin/jwt_mappings.ts";
 import { createMcp, type McpNamespace } from "./api/admin/mcp.ts";
+import { createMemory, type MemoryNamespace } from "./api/admin/memory.ts";
+import {
+  createSpendConnectors,
+  type SpendConnectorsNamespace,
+} from "./api/admin/spend_connectors.ts";
 import { createPolicies, type PoliciesNamespace } from "./api/admin/policies.ts";
 import { createPrompts, type PromptsNamespace } from "./api/admin/prompts.ts";
 import { createWorkflows, type WorkflowsNamespace } from "./api/admin/workflows.ts";
@@ -37,6 +42,7 @@ import { type ClaudeCodeNamespace, createClaudeCode } from "./api/claude_code.ts
 import { createGoogleGenai, type GoogleGenaiNamespace } from "./api/google_genai.ts";
 import { createOcr, type OcrNamespace } from "./api/ocr.ts";
 import { createRag, type RagNamespace } from "./api/rag.ts";
+import { createPublic, type PublicNamespace } from "./api/public.ts";
 import { createSearch, type SearchNamespace } from "./api/search.ts";
 import { createUtils, type UtilsNamespace } from "./api/utils.ts";
 import { createRouter, type RouterNamespace } from "./api/admin/router.ts";
@@ -109,6 +115,12 @@ export interface Client {
   readonly claudeCode: ClaudeCodeNamespace;
   /** Utility endpoints (token counter, request transform, supported params). */
   readonly utils: UtilsNamespace;
+  /** Anonymous discovery endpoints (model hub, agent hub, providers, ...). */
+  readonly public: PublicNamespace;
+  /** Proxy KV memory store (per-user/per-team key/value blobs). */
+  readonly memory: MemoryNamespace;
+  /** Spend-connector administration (Vantage, CloudZero). */
+  readonly spendConnectors: SpendConnectorsNamespace;
   /** Rerank endpoint. */
   readonly rerank: RerankNamespace;
   /** Content moderation endpoint. */
@@ -229,6 +241,9 @@ export const createClient = (config: TransportConfig): Client => {
     anthropicSkills: createAnthropicSkills(transport),
     claudeCode: createClaudeCode(transport),
     utils: createUtils(transport),
+    public: createPublic(transport),
+    memory: createMemory(transport),
+    spendConnectors: createSpendConnectors(transport),
     rerank: createRerank(transport),
     moderation: createModeration(transport),
     files: createFiles(transport),
