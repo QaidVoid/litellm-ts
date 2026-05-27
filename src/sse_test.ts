@@ -101,3 +101,34 @@ Deno.test("the [DONE] sentinel surfaces as a normal data event", async () => {
   );
   assertEquals(events, [{ data: '{"x":1}' }, { data: "[DONE]" }]);
 });
+
+Deno.test("an already-aborted signal returns immediately without yielding", async () => {
+  const ctrl = new AbortController();
+  ctrl.abort();
+  const events: SSEEvent[] = [];
+  for await (const ev of parseSSE(streamFromString("data: hi\n\n"), { signal: ctrl.signal })) {
+    events.push(ev);
+  }
+  assertEquals(events, []);
+});
+
+Deno.test("aborting mid-stream stops iteration and cancels the reader", async () => {
+  const encoder = new TextEncoder();
+  let cancelled = false;
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode("data: first\n\n"));
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const ctrl = new AbortController();
+  const events: SSEEvent[] = [];
+  for await (const ev of parseSSE(stream, { signal: ctrl.signal })) {
+    events.push(ev);
+    ctrl.abort();
+  }
+  assertEquals(events, [{ data: "first" }]);
+  assertEquals(cancelled, true);
+});

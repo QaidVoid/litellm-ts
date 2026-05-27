@@ -338,6 +338,16 @@ export interface ChatCompletionChunk {
   readonly usage?: ChatUsage;
 }
 
+/** Per-call options shared by every streaming entry point. */
+export interface StreamCallOptions {
+  /**
+   * Abort the in-flight stream. Aborting after the iteration starts
+   * cancels the underlying response body so the consumer's `for await`
+   * loop exits promptly and the connection is released.
+   */
+  readonly signal?: AbortSignal;
+}
+
 /** Surface for chat endpoints on the `Client`. */
 export interface ChatNamespace {
   /**
@@ -356,6 +366,7 @@ export interface ChatNamespace {
    */
   createStream<M extends ModelId>(
     req: ChatCompletionRequest<M>,
+    opts?: StreamCallOptions,
   ): AsyncIterable<Result<ChatCompletionChunk, ApiError>>;
 }
 
@@ -365,11 +376,14 @@ const isErrorFrame = (data: unknown): data is { readonly error: unknown } =>
 const streamChunks = async function* (
   transport: Transport,
   req: ChatCompletionRequest,
+  opts: StreamCallOptions | undefined,
 ): AsyncIterable<Result<ChatCompletionChunk, ApiError>> {
+  const signal = opts?.signal;
   const streamResult = await transport.stream({
     method: "POST",
     path: "/v1/chat/completions",
     body: { ...req, stream: true },
+    ...(signal !== undefined ? { signal } : {}),
   });
   if (!streamResult.ok) {
     yield err(streamResult.error);
@@ -377,7 +391,7 @@ const streamChunks = async function* (
   }
   const body = streamResult.value;
   try {
-    for await (const event of parseSSE(body)) {
+    for await (const event of parseSSE(body, signal !== undefined ? { signal } : undefined)) {
       if (event.data === "[DONE]") return;
       const parsed = trySync<unknown>(() => JSON.parse(event.data));
       if (!parsed.ok) {
@@ -412,7 +426,7 @@ export const createChat = (transport: Transport): ChatNamespace => ({
       body: req,
     });
   },
-  createStream(req) {
-    return streamChunks(transport, req as ChatCompletionRequest);
+  createStream(req, opts) {
+    return streamChunks(transport, req as ChatCompletionRequest, opts);
   },
 });

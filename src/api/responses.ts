@@ -5,6 +5,7 @@ import type { Result } from "../result.ts";
 import { err, ok, trySync } from "../result.ts";
 import { parseSSE } from "../sse.ts";
 import type { Transport } from "../transport.ts";
+import type { StreamCallOptions } from "./chat.ts";
 
 /** A single input item in a Responses API request. */
 export interface ResponsesInputMessage {
@@ -295,6 +296,7 @@ export interface ResponsesNamespace {
   /** Issue a streaming Responses request. Yields typed events. */
   createStream(
     req: ResponsesCreateRequest,
+    opts?: StreamCallOptions,
   ): AsyncIterable<Result<ResponsesStreamEvent, ApiError>>;
   /** Retrieve a stored response by id. */
   retrieve(responseId: string): Promise<Result<ResponsesResponse, ApiError>>;
@@ -330,11 +332,14 @@ const isErrorFrame = (data: unknown): data is { readonly error: unknown } =>
 const streamEvents = async function* (
   transport: Transport,
   req: ResponsesCreateRequest,
+  opts: StreamCallOptions | undefined,
 ): AsyncIterable<Result<ResponsesStreamEvent, ApiError>> {
+  const signal = opts?.signal;
   const streamResult = await transport.stream({
     method: "POST",
     path: "/v1/responses",
     body: { ...req, stream: true },
+    ...(signal !== undefined ? { signal } : {}),
   });
   if (!streamResult.ok) {
     yield err(streamResult.error);
@@ -342,7 +347,7 @@ const streamEvents = async function* (
   }
   const body = streamResult.value;
   try {
-    for await (const event of parseSSE(body)) {
+    for await (const event of parseSSE(body, signal !== undefined ? { signal } : undefined)) {
       if (event.data === "[DONE]") return;
       const parsed = trySync<unknown>(() => JSON.parse(event.data));
       if (!parsed.ok) {
@@ -371,8 +376,8 @@ export const createResponses = (transport: Transport): ResponsesNamespace => ({
       body: req,
     });
   },
-  createStream(req) {
-    return streamEvents(transport, req);
+  createStream(req, opts) {
+    return streamEvents(transport, req, opts);
   },
   retrieve(responseId) {
     return transport.request<ResponsesResponse>({

@@ -5,6 +5,7 @@ import type { Result } from "../result.ts";
 import { err, ok, trySync } from "../result.ts";
 import { parseSSE } from "../sse.ts";
 import type { Transport } from "../transport.ts";
+import type { StreamCallOptions } from "./chat.ts";
 
 /** Request body for the legacy `/v1/completions` endpoint. */
 export interface CompletionRequest {
@@ -116,7 +117,10 @@ export interface CompletionsNamespace {
   /** Issue a non-streaming text completion. */
   create(req: CompletionRequest): Promise<Result<CompletionResponse, ApiError>>;
   /** Issue a streaming text completion. Yields per-frame `Result`s. */
-  createStream(req: CompletionRequest): AsyncIterable<Result<CompletionChunk, ApiError>>;
+  createStream(
+    req: CompletionRequest,
+    opts?: StreamCallOptions,
+  ): AsyncIterable<Result<CompletionChunk, ApiError>>;
 }
 
 const isErrorFrame = (data: unknown): data is { readonly error: unknown } =>
@@ -125,11 +129,14 @@ const isErrorFrame = (data: unknown): data is { readonly error: unknown } =>
 const streamChunks = async function* (
   transport: Transport,
   req: CompletionRequest,
+  opts: StreamCallOptions | undefined,
 ): AsyncIterable<Result<CompletionChunk, ApiError>> {
+  const signal = opts?.signal;
   const streamResult = await transport.stream({
     method: "POST",
     path: "/v1/completions",
     body: { ...req, stream: true },
+    ...(signal !== undefined ? { signal } : {}),
   });
   if (!streamResult.ok) {
     yield err(streamResult.error);
@@ -137,7 +144,7 @@ const streamChunks = async function* (
   }
   const body = streamResult.value;
   try {
-    for await (const event of parseSSE(body)) {
+    for await (const event of parseSSE(body, signal !== undefined ? { signal } : undefined)) {
       if (event.data === "[DONE]") return;
       const parsed = trySync<unknown>(() => JSON.parse(event.data));
       if (!parsed.ok) {
@@ -166,7 +173,7 @@ export const createCompletions = (transport: Transport): CompletionsNamespace =>
       body: req,
     });
   },
-  createStream(req) {
-    return streamChunks(transport, req);
+  createStream(req, opts) {
+    return streamChunks(transport, req, opts);
   },
 });

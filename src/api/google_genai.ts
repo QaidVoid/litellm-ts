@@ -5,6 +5,7 @@ import type { Result } from "../result.ts";
 import { err, ok, trySync } from "../result.ts";
 import { parseSSE } from "../sse.ts";
 import type { Transport } from "../transport.ts";
+import type { StreamCallOptions } from "./chat.ts";
 
 /** Request body for `:generateContent` and `:streamGenerateContent`. */
 export interface GenerateContentRequest {
@@ -151,6 +152,7 @@ export interface GoogleGenaiNamespace {
   streamGenerateContent(
     model: ModelId,
     req: GenerateContentRequest,
+    opts?: StreamCallOptions,
   ): AsyncIterable<Result<GenerateContentChunk, ApiError>>;
   /** `:countTokens` for a Google GenAI prompt. */
   countTokens(
@@ -179,11 +181,14 @@ const streamGenerate = async function* (
   transport: Transport,
   model: ModelId,
   req: GenerateContentRequest,
+  opts: StreamCallOptions | undefined,
 ): AsyncIterable<Result<GenerateContentChunk, ApiError>> {
+  const signal = opts?.signal;
   const streamResult = await transport.stream({
     method: "POST",
     path: `/v1beta/models/${encode(model)}:streamGenerateContent`,
     body: req,
+    ...(signal !== undefined ? { signal } : {}),
   });
   if (!streamResult.ok) {
     yield err(streamResult.error);
@@ -191,7 +196,7 @@ const streamGenerate = async function* (
   }
   const body = streamResult.value;
   try {
-    for await (const event of parseSSE(body)) {
+    for await (const event of parseSSE(body, signal !== undefined ? { signal } : undefined)) {
       if (event.data === "[DONE]") return;
       const parsed = trySync<GenerateContentChunk>(() => JSON.parse(event.data));
       if (!parsed.ok) {
@@ -277,8 +282,8 @@ export const createGoogleGenai = (transport: Transport): GoogleGenaiNamespace =>
       body: req,
     });
   },
-  streamGenerateContent(model, req) {
-    return streamGenerate(transport, model, req);
+  streamGenerateContent(model, req, opts) {
+    return streamGenerate(transport, model, req, opts);
   },
   countTokens(model, req) {
     return transport.request<CountTokensResponse>({

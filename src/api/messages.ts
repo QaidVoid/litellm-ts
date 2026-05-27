@@ -5,6 +5,7 @@ import type { Result } from "../result.ts";
 import { err, ok, trySync } from "../result.ts";
 import { parseSSE } from "../sse.ts";
 import type { Transport } from "../transport.ts";
+import type { StreamCallOptions } from "./chat.ts";
 
 /** A single content block inside an Anthropic-shape message. Discriminated by `type`. */
 export type MessagesContentBlock =
@@ -202,6 +203,7 @@ export interface MessagesNamespace {
    */
   createStream(
     req: MessagesRequest,
+    opts?: StreamCallOptions,
   ): AsyncIterable<Result<MessagesStreamEvent, ApiError>>;
   /**
    * Count input tokens for an Anthropic-shape request without generating a
@@ -220,11 +222,14 @@ const isErrorFrame = (data: unknown): data is { readonly error: unknown } =>
 const streamEvents = async function* (
   transport: Transport,
   req: MessagesRequest,
+  opts: StreamCallOptions | undefined,
 ): AsyncIterable<Result<MessagesStreamEvent, ApiError>> {
+  const signal = opts?.signal;
   const streamResult = await transport.stream({
     method: "POST",
     path: "/v1/messages",
     body: { ...req, stream: true },
+    ...(signal !== undefined ? { signal } : {}),
   });
   if (!streamResult.ok) {
     yield err(streamResult.error);
@@ -232,7 +237,7 @@ const streamEvents = async function* (
   }
   const body = streamResult.value;
   try {
-    for await (const event of parseSSE(body)) {
+    for await (const event of parseSSE(body, signal !== undefined ? { signal } : undefined)) {
       if (event.data === "[DONE]") return;
       const parsed = trySync<unknown>(() => JSON.parse(event.data));
       if (!parsed.ok) {
@@ -265,8 +270,8 @@ export const createMessages = (transport: Transport): MessagesNamespace => ({
       body: req,
     });
   },
-  createStream(req) {
-    return streamEvents(transport, req);
+  createStream(req, opts) {
+    return streamEvents(transport, req, opts);
   },
   countTokens(req) {
     return transport.request<MessagesCountTokensResponse>({

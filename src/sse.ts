@@ -10,6 +10,16 @@ export interface SSEEvent {
   readonly id?: string;
 }
 
+/** Options accepted by `parseSSE`. */
+export interface ParseSSEOptions {
+  /**
+   * When fired, cancels the underlying reader so the generator returns
+   * promptly without dispatching any further events. Safe to pass an
+   * already-aborted signal: the generator returns without reading.
+   */
+  readonly signal?: AbortSignal;
+}
+
 /**
  * Parse an `text/event-stream` byte stream into a sequence of `SSEEvent`s.
  *
@@ -19,11 +29,17 @@ export interface SSEEvent {
  * with `:` are comments. Stream-read errors propagate to the caller; this
  * parser does not wrap them in `Result`.
  *
+ * Pass `options.signal` to cancel an in-flight stream from another context:
+ * the reader is cancelled and the generator returns without yielding more
+ * events.
+ *
  * @see https://html.spec.whatwg.org/multipage/server-sent-events.html
  */
 export const parseSSE = async function* (
   stream: ReadableStream<Uint8Array>,
+  options?: ParseSSEOptions,
 ): AsyncIterable<SSEEvent> {
+  const signal = options?.signal;
   const reader = stream.getReader();
   const decoder = new TextDecoder("utf-8");
   let buffer = "";
@@ -68,9 +84,23 @@ export const parseSSE = async function* (
     return null;
   };
 
+  const onAbort = () => {
+    reader.cancel().catch(() => {});
+  };
+
+  if (signal !== undefined) {
+    if (signal.aborted) {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+      return;
+    }
+    signal.addEventListener("abort", onAbort);
+  }
+
   try {
     while (true) {
       const { done, value } = await reader.read();
+      if (signal?.aborted) return;
       if (done) {
         buffer += decoder.decode();
         if (buffer.length > 0) {
@@ -91,6 +121,7 @@ export const parseSSE = async function* (
       }
     }
   } finally {
+    signal?.removeEventListener("abort", onAbort);
     reader.releaseLock();
   }
 };

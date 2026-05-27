@@ -63,7 +63,7 @@ export type {
 
 export { createTransport } from "./src/transport.ts";
 
-export type { SSEEvent } from "./src/sse.ts";
+export type { ParseSSEOptions, SSEEvent } from "./src/sse.ts";
 
 export { parseSSE } from "./src/sse.ts";
 
@@ -95,6 +95,7 @@ export type {
   ChatUsage,
   ChatUserContentPart,
   ChatUserMessage,
+  StreamCallOptions,
 } from "./src/api/chat.ts";
 
 export type {

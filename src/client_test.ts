@@ -396,6 +396,55 @@ Deno.test("client.chat.createStream terminates on a server-side error frame", as
   }
 });
 
+Deno.test("client.chat.createStream stops yielding and cancels the body when the signal is aborted", async () => {
+  const chunk = (content: string): ChatCompletionChunk => ({
+    id: "chatcmpl-x",
+    object: "chat.completion.chunk",
+    created: 1,
+    model: "gpt-4o",
+    choices: [{ index: 0, delta: { content }, finish_reason: null }],
+  });
+  const encoder = new TextEncoder();
+  let cancelled = false;
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk("hi"))}\n\n`));
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const fetchFn: typeof fetch = () =>
+    Promise.resolve(
+      new Response(body, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      }),
+    );
+  const client = createClient({
+    baseUrl: "https://api.test",
+    apiKey: "test",
+    maxRetries: 0,
+    fetch: fetchFn,
+  });
+
+  const ctrl = new AbortController();
+  const results: Array<Result<ChatCompletionChunk, ApiError>> = [];
+  for await (
+    const r of client.chat.createStream(
+      { model: "gpt-4o", messages: [{ role: "user", content: "hi" }] },
+      { signal: ctrl.signal },
+    )
+  ) {
+    results.push(r);
+    ctrl.abort();
+  }
+
+  assertStrictEquals(results.length, 1);
+  assertStrictEquals(isOk(results[0]!), true);
+  assertStrictEquals(cancelled, true);
+});
+
 Deno.test("client.chat.createStream surfaces the upstream HTTP error as a single Result on connection failure", async () => {
   const { fetch } = recordingFetch([
     () => new Response("denied", { status: 403, statusText: "Forbidden" }),
