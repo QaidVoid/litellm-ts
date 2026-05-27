@@ -275,9 +275,14 @@ export interface Client {
   /** Native-shape passthrough to AWS Bedrock. */
   readonly bedrock: PassthroughNamespace;
   /**
-   * Generic escape-hatch passthrough bound at the proxy root. Use it
-   * to reach routes the typed surface doesn't expose (Admin UI helpers,
-   * experimental endpoints, etc.). Responses are not normalized.
+   * Escape-hatch passthrough bound at the proxy root (no path prefix).
+   *
+   * Different from the provider-named passthroughs (`anthropic`,
+   * `openai`, `bedrock`, ...): those forward to a specific provider
+   * under a reserved prefix (e.g. `/anthropic/*`). `proxy` reaches any
+   * route the LiteLLM proxy exposes, including routes the typed
+   * surface doesn't model (Admin UI helpers, lazy-loaded endpoints,
+   * single-route oddities). Responses are not normalized.
    */
   readonly proxy: PassthroughNamespace;
 }
