@@ -19,12 +19,27 @@ export interface PluginOwner {
 }
 
 /**
- * Git source reference for a plugin. The proxy accepts three shapes:
- * - `{ source: "github", repo: "org/repo" }`
- * - `{ source: "url", url: "https://github.com/org/repo.git" }`
- * - `{ source: "git-subdir", url: "https://github.com/org/repo.git", path: "plugins/x" }`
+ * Git source reference for a plugin. Discriminated by `source`; each variant
+ * carries only the fields the proxy validates for that source kind.
  */
-export type PluginSource = Readonly<Record<string, string>>;
+export type PluginSource =
+  | {
+    readonly source: "github";
+    /** Repository slug in `org/name` form. */
+    readonly repo: string;
+  }
+  | {
+    readonly source: "url";
+    /** Clonable git URL, typically ending in `.git`. */
+    readonly url: string;
+  }
+  | {
+    readonly source: "git-subdir";
+    /** Clonable git URL of the parent repository. */
+    readonly url: string;
+    /** Subdirectory inside the repository that contains the plugin. */
+    readonly path: string;
+  };
 
 /** Request body for `POST /claude-code/plugins`. */
 export interface RegisterPluginRequest {

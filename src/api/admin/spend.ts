@@ -3,23 +3,38 @@ import type { Result } from "../../result.ts";
 import type { Transport } from "../../transport.ts";
 import type { ChatMessage } from "../chat.ts";
 
-/** Request body for `/spend/calculate`. Provide either `messages` or `completion_response`. */
-export interface CalculateSpendRequest {
-  /** Model that was (or would be) called. */
-  readonly model: string;
-  /** Estimate cost from the request shape, before issuing it. */
-  readonly messages?: readonly ChatMessage[];
-  /** Compute cost from an actual upstream response (with usage). */
-  readonly completion_response?: {
-    /** Token-usage block returned by the upstream. */
-    readonly usage: {
-      /** Tokens consumed by the prompt. */
-      readonly prompt_tokens: number;
-      /** Tokens produced in the completion. */
-      readonly completion_tokens: number;
-    } & Readonly<Record<string, unknown>>;
+/** Upstream completion shape accepted by `/spend/calculate`. */
+export interface SpendCompletionResponse {
+  /** Token-usage block returned by the upstream. */
+  readonly usage: {
+    /** Tokens consumed by the prompt. */
+    readonly prompt_tokens: number;
+    /** Tokens produced in the completion. */
+    readonly completion_tokens: number;
   } & Readonly<Record<string, unknown>>;
 }
+
+/**
+ * Request body for `/spend/calculate`. The proxy needs exactly one cost
+ * source: either the input `messages` (pre-call estimate) or a recorded
+ * `completion_response` (post-call cost). This union encodes that constraint.
+ */
+export type CalculateSpendRequest =
+  & { readonly model: string }
+  & (
+    | {
+      /** Estimate cost from the request shape, before issuing it. */
+      readonly messages: readonly ChatMessage[];
+      readonly completion_response?: never;
+    }
+    | {
+      readonly messages?: never;
+      /** Compute cost from an actual upstream response (with usage). */
+      readonly completion_response:
+        & SpendCompletionResponse
+        & Readonly<Record<string, unknown>>;
+    }
+  );
 
 /** Response from `/spend/calculate`. */
 export interface CalculateSpendResponse {

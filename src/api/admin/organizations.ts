@@ -5,15 +5,17 @@ import type { Transport } from "../../transport.ts";
 /** Role of a member within an organization. */
 export type OrganizationMemberRole = "org_admin" | "org_user" | "internal_user";
 
-/** Member specification accepted when creating or updating an organization. */
-export interface OrganizationMemberSpec {
-  /** User identifier. */
-  readonly user_id?: string;
-  /** User email; resolved to `user_id` when set. */
-  readonly user_email?: string;
-  /** Role assigned within the organization. */
-  readonly role: OrganizationMemberRole;
-}
+/**
+ * Member specification accepted when creating or updating an organization.
+ * The proxy resolves `user_email` to a `user_id` and raises `ValueError` when
+ * neither is provided; this union encodes the constraint at the type level.
+ */
+export type OrganizationMemberSpec =
+  & { readonly role: OrganizationMemberRole }
+  & (
+    | { readonly user_id: string; readonly user_email?: string }
+    | { readonly user_id?: string; readonly user_email: string }
+  );
 
 /** Request body for `/organization/new`. */
 export interface CreateOrganizationRequest {

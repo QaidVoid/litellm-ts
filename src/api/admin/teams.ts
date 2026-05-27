@@ -156,15 +156,20 @@ export interface TeamIdRequest {
 }
 
 /** Body for `/team/member/add`. */
+/**
+ * Member identity used when adding to a team. Discriminated by which of
+ * `user_id` or `user_email` is supplied; the proxy raises `ValueError` when
+ * both are missing.
+ */
+export type MemberIdentity =
+  | { readonly user_id: string; readonly user_email?: string }
+  | { readonly user_id?: string; readonly user_email: string };
+
 export interface AddTeamMemberRequest {
   /** Target team id. */
   readonly team_id: string;
   /** Member to add (resolved by user id or email). */
-  readonly member: {
-    /** User identifier. */
-    readonly user_id?: string;
-    /** User email; resolved to `user_id` when set. */
-    readonly user_email?: string;
+  readonly member: MemberIdentity & {
     /** Role inside the team. */
     readonly role: TeamMemberRole;
   };

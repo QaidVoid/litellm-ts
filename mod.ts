@@ -262,6 +262,7 @@ export type {
   KeyHealthResponse,
   KeyMetadata,
   KeysNamespace,
+  KeyTempBudgetBump,
   KeyTokenRequest,
   KeyType,
   LimitType,
@@ -289,6 +290,7 @@ export type {
   DeleteTeamMemberRequest,
   DeleteTeamsRequest,
   ListTeamsResponse,
+  MemberIdentity,
   Team,
   TeamBudgetLimit,
   TeamIdRequest,
@@ -316,6 +318,7 @@ export type {
 export type {
   CalculateSpendRequest,
   CalculateSpendResponse,
+  SpendCompletionResponse,
   SpendLog,
   SpendLogsQuery,
   SpendLogsResponse,
@@ -339,6 +342,8 @@ export type {
   BlockCustomersRequest,
   CreateCustomerRequest,
   Customer,
+  CustomerBaseFields,
+  CustomerBudgetBinding,
   CustomerObjectPermission,
   CustomerRegion,
   CustomersNamespace,
@@ -413,6 +418,7 @@ export type {
   ToolUsageLogsResponse,
   UpdateToolPolicyRequest,
   UpdateToolPolicyResponse,
+  UpdateToolPolicyScope,
 } from "./src/api/admin/tools.ts";
 
 export type {
@@ -421,6 +427,7 @@ export type {
   ListMcpServersQuery,
   MakeMcpServersPublicRequest,
   MakeMcpServersPublicResponse,
+  McpAuthConfig,
   McpAuthType,
   McpCredentials,
   McpDiscoverQuery,
@@ -428,6 +435,7 @@ export type {
   McpNamespace,
   McpOauth2Flow,
   McpServer,
+  McpServerCommonFields,
   McpServerHealthQuery,
   McpServerHealthRow,
   McpServersNamespace,
@@ -436,6 +444,7 @@ export type {
   McpToolsetsNamespace,
   McpToolsetTool,
   McpTransport,
+  McpTransportConfig,
   UpdateMcpServerRequest,
   UpdateMcpToolsetRequest,
 } from "./src/api/admin/mcp.ts";
@@ -467,6 +476,7 @@ export type {
   Credential,
   CredentialMutationResponse,
   CredentialsNamespace,
+  CredentialValuesSource,
   ListCredentialsResponse,
   UpdateCredentialRequest,
 } from "./src/api/admin/credentials.ts";
@@ -525,6 +535,8 @@ export type {
   RagIngestOptions,
   RagIngestRequest,
   RagIngestResponse,
+  RagIngestSource,
+  RagInlineFile,
   RagNamespace,
   RagOpenAIVectorStoreOptions,
   RagQueryRequest,

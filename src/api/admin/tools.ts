@@ -98,21 +98,27 @@ export interface ToolPolicyOptionsResponse {
   readonly output_policies: readonly ToolPolicyOption[];
 }
 
+/**
+ * Scope of a `/v1/tool/policy` update. Setting both `team_id` and `key_hash`
+ * is rejected by the proxy; omitting both updates the global default. This
+ * union encodes the three valid combinations.
+ */
+export type UpdateToolPolicyScope =
+  | { readonly team_id?: never; readonly key_hash?: never; readonly key_alias?: never }
+  | { readonly team_id: string; readonly key_hash?: never; readonly key_alias?: string }
+  | { readonly team_id?: never; readonly key_hash: string; readonly key_alias?: string };
+
 /** Request body for `/v1/tool/policy`. */
-export interface UpdateToolPolicyRequest {
-  /** Tool to update. */
-  readonly tool_name: string;
-  /** Replacement input policy. */
-  readonly input_policy?: ToolInputPolicy;
-  /** Replacement output policy. */
-  readonly output_policy?: ToolOutputPolicy;
-  /** Scope the update to a team. */
-  readonly team_id?: string;
-  /** Scope the update to a hashed key. */
-  readonly key_hash?: string;
-  /** Friendly alias of the scoped key. */
-  readonly key_alias?: string;
-}
+export type UpdateToolPolicyRequest =
+  & {
+    /** Tool to update. */
+    readonly tool_name: string;
+    /** Replacement input policy. */
+    readonly input_policy?: ToolInputPolicy;
+    /** Replacement output policy. */
+    readonly output_policy?: ToolOutputPolicy;
+  }
+  & UpdateToolPolicyScope;
 
 /** Response from `/v1/tool/policy`. */
 export interface UpdateToolPolicyResponse {

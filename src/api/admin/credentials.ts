@@ -2,20 +2,32 @@ import type { ApiError } from "../../error.ts";
 import type { Result } from "../../result.ts";
 import type { Transport } from "../../transport.ts";
 
+/**
+ * Source of credential values for `POST /credentials`. The proxy needs exactly
+ * one source: caller-supplied `credential_values` or a `model_id` whose stored
+ * credentials are copied. Setting both is rejected at request time.
+ */
+export type CredentialValuesSource =
+  | {
+    /** Provider-specific key/value pairs. Encrypted at rest by the proxy. */
+    readonly credential_values: Readonly<Record<string, unknown>>;
+    readonly model_id?: never;
+  }
+  | {
+    /** Deployment id whose stored credentials are copied. */
+    readonly model_id: string;
+    readonly credential_values?: never;
+  };
+
 /** Request body for `POST /credentials`. */
-export interface CreateCredentialRequest {
-  /** Unique name used to look up this credential later. */
-  readonly credential_name: string;
-  /** Provider-specific key/value pairs. Encrypted at rest by the proxy. */
-  readonly credential_values?: Readonly<Record<string, unknown>>;
-  /** Free-form metadata; not encrypted. */
-  readonly credential_info: Readonly<Record<string, unknown>>;
-  /**
-   * When set, the proxy copies the credentials currently bound to this
-   * deployment instead of accepting `credential_values` from the caller.
-   */
-  readonly model_id?: string;
-}
+export type CreateCredentialRequest =
+  & {
+    /** Unique name used to look up this credential later. */
+    readonly credential_name: string;
+    /** Free-form metadata; not encrypted. */
+    readonly credential_info: Readonly<Record<string, unknown>>;
+  }
+  & CredentialValuesSource;
 
 /** Request body for `PATCH /credentials/{name}`. */
 export interface UpdateCredentialRequest {

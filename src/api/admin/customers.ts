@@ -21,63 +21,74 @@ export interface CustomerObjectPermission {
   readonly agent_access_groups?: readonly string[];
 }
 
-/** Request body for `/customer/new`. */
-export interface CreateCustomerRequest {
+/**
+ * Budget binding for a customer. The proxy rejects setting both an inline
+ * `max_budget` and an existing `budget_id`; this union encodes that rule so
+ * the compiler catches the misuse.
+ */
+export type CustomerBudgetBinding =
+  | {
+    /** Pre-existing budget id to reattach to. */
+    readonly budget_id: string;
+    readonly max_budget?: never;
+    readonly soft_budget?: never;
+    readonly budget_duration?: never;
+    readonly model_max_budget?: never;
+    readonly budget_reset_at?: never;
+  }
+  | {
+    readonly budget_id?: never;
+    /** Spend ceiling in USD. */
+    readonly max_budget?: number;
+    /** Warning threshold below `max_budget`. */
+    readonly soft_budget?: number;
+    /** Rolling window duration (e.g. `"30d"`). */
+    readonly budget_duration?: string;
+    /** Per-model budget map keyed by model name. */
+    readonly model_max_budget?: Readonly<Record<string, unknown>>;
+    /** ISO-8601 timestamp when the budget counters reset. */
+    readonly budget_reset_at?: string;
+  };
+
+/** Common customer fields that do not interact with the budget binding. */
+export interface CustomerBaseFields {
   /** Unique end-user identifier. */
   readonly user_id: string;
   /** Friendly alias shown in dashboards. */
   readonly alias?: string;
   /** Pre-block the customer at creation time. */
   readonly blocked?: boolean;
-  /** Either `max_budget` or `budget_id` may be set, not both. */
-  readonly max_budget?: number;
-  /** Attach an existing budget record by id. */
-  readonly budget_id?: string;
-  /** Warning threshold below `max_budget`. */
-  readonly soft_budget?: number;
-  /** Rolling window duration. */
-  readonly budget_duration?: string;
   /** Tokens-per-minute ceiling. */
   readonly tpm_limit?: number;
   /** Requests-per-minute ceiling. */
   readonly rpm_limit?: number;
   /** Maximum parallel in-flight requests. */
   readonly max_parallel_requests?: number;
-  /** Per-model budget map keyed by model name. */
-  readonly model_max_budget?: Readonly<Record<string, unknown>>;
   /** Region restriction for upstream model routing. */
   readonly allowed_model_region?: CustomerRegion;
   /** Default model used when the caller does not specify one. */
   readonly default_model?: string;
   /** Initial spend in USD. */
   readonly spend?: number;
-  /** ISO-8601 timestamp when the budget counters reset. */
-  readonly budget_reset_at?: string;
   /** Free-form metadata. */
   readonly metadata?: Readonly<Record<string, unknown>>;
   /** Object-level permission overrides. */
   readonly object_permission?: CustomerObjectPermission;
 }
 
+/** Request body for `/customer/new`. */
+export type CreateCustomerRequest = CustomerBaseFields & CustomerBudgetBinding;
+
 /** Request body for `/customer/update`. */
-export interface UpdateCustomerRequest {
-  /** End-user identifier to update. */
-  readonly user_id: string;
-  /** Replace the alias. */
-  readonly alias?: string;
-  /** Block or unblock the customer. */
-  readonly blocked?: boolean;
-  /** Replace the spend ceiling. */
-  readonly max_budget?: number;
-  /** Reattach to a different budget record. */
-  readonly budget_id?: string;
-  /** Replace the allowed region. */
-  readonly allowed_model_region?: CustomerRegion;
-  /** Replace the default model. */
-  readonly default_model?: string;
-  /** Replace the object-level permissions. */
-  readonly object_permission?: CustomerObjectPermission;
-}
+export type UpdateCustomerRequest =
+  & Omit<
+    CustomerBaseFields,
+    "spend" | "tpm_limit" | "rpm_limit" | "max_parallel_requests" | "metadata"
+  >
+  & (
+    | { readonly budget_id: string; readonly max_budget?: never }
+    | { readonly budget_id?: never; readonly max_budget?: number }
+  );
 
 /** Request body for `/customer/delete`. */
 export interface DeleteCustomersRequest {

@@ -161,24 +161,47 @@ export interface RagIngestOptions {
   readonly vector_store: RagVectorStoreOptions;
 }
 
-/** Request body for `POST /v1/rag/ingest`. At least one source must be set. */
-export interface RagIngestRequest {
-  /** Pipeline configuration. */
-  readonly ingest_options: RagIngestOptions;
-  /** Public URL the proxy fetches the file from. */
-  readonly file_url?: string;
-  /** Identifier returned by `client.files.create`. */
-  readonly file_id?: string;
-  /** Inline file payload (filename + base64 + content_type). */
-  readonly file?: {
-    /** Original filename. */
-    readonly filename: string;
-    /** Base64-encoded bytes. */
-    readonly content: string;
-    /** MIME type of the payload. */
-    readonly content_type: string;
-  };
+/** Inline file payload accepted by `RagIngestRequest`. */
+export interface RagInlineFile {
+  /** Original filename. */
+  readonly filename: string;
+  /** Base64-encoded bytes. */
+  readonly content: string;
+  /** MIME type of the payload. */
+  readonly content_type: string;
 }
+
+/**
+ * Source of the file to ingest. Exactly one of `file_url`, `file_id`, or
+ * `file` must be provided; the proxy raises when zero sources are present.
+ */
+export type RagIngestSource =
+  | {
+    /** Public URL the proxy fetches the file from. */
+    readonly file_url: string;
+    readonly file_id?: never;
+    readonly file?: never;
+  }
+  | {
+    /** Identifier returned by `client.files.create`. */
+    readonly file_id: string;
+    readonly file_url?: never;
+    readonly file?: never;
+  }
+  | {
+    /** Inline file payload. */
+    readonly file: RagInlineFile;
+    readonly file_url?: never;
+    readonly file_id?: never;
+  };
+
+/** Request body for `POST /v1/rag/ingest`. */
+export type RagIngestRequest =
+  & {
+    /** Pipeline configuration. */
+    readonly ingest_options: RagIngestOptions;
+  }
+  & RagIngestSource;
 
 /** Response from `POST /v1/rag/ingest`. */
 export interface RagIngestResponse {

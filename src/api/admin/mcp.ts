@@ -20,9 +20,15 @@ export type McpAuthType =
 /** OAuth2 grant flow when `auth_type === "oauth2"`. */
 export type McpOauth2Flow = "client_credentials" | "authorization_code";
 
-/** Credentials passed alongside an MCP server config. */
+/**
+ * Wire-shape for credentials passed alongside an MCP server. The accepted
+ * keys vary by `auth_type`; the upstream stores whatever the caller sends
+ * and rejects only fully-bad shapes at request time. We keep the union
+ * permissive so per-variant TypeScript narrowing on the request object stays
+ * crisp without producing cross-variant excess-property errors.
+ */
 export interface McpCredentials {
-  /** Raw auth value for token / bearer / api_key schemes. */
+  /** Raw value sent in the configured auth header (header-value schemes). */
   readonly auth_value?: string;
   /** OAuth2 client id. */
   readonly client_id?: string;
@@ -30,30 +36,117 @@ export interface McpCredentials {
   readonly client_secret?: string;
   /** OAuth2 scopes requested. */
   readonly scopes?: readonly string[];
-  /** AWS access key id (for SigV4). */
+  /** AWS access key id (SigV4). */
   readonly aws_access_key_id?: string;
-  /** AWS secret access key. */
+  /** AWS secret access key (SigV4). */
   readonly aws_secret_access_key?: string;
-  /** AWS session token. */
+  /** AWS session token (SigV4). */
   readonly aws_session_token?: string;
-  /** AWS region name. */
+  /** AWS region used in the signature. */
   readonly aws_region_name?: string;
-  /** AWS service name used in the SigV4 signature. */
+  /** AWS service used in the signature (e.g. `"bedrock-agentcore"`). */
   readonly aws_service_name?: string;
-  /** IAM role to assume. */
+  /** IAM role ARN to assume. */
   readonly aws_role_name?: string;
-  /** Session name supplied to STS AssumeRole. */
+  /** Session name used for STS AssumeRole, surfaced in CloudTrail. */
   readonly aws_session_name?: string;
   /** Token-exchange audience. */
   readonly audience?: string;
-  /** OAuth2 token-exchange endpoint URL. */
+  /** IDP token endpoint that performs the exchange. */
   readonly token_exchange_endpoint?: string;
-  /** Subject token type used by token exchange. */
+  /**
+   * Subject token type sent to the IDP. Defaults to
+   * `"urn:ietf:params:oauth:token-type:access_token"`.
+   */
   readonly subject_token_type?: string;
 }
 
-/** Request body for `POST /v1/mcp/server`. */
-export interface CreateMcpServerRequest {
+/**
+ * Auth-shape union for create/update requests. Discriminated by `auth_type`:
+ * the top-level helper fields (OAuth2 URLs, `oauth2_flow`,
+ * `delegate_auth_to_upstream`) are only present on the variants that honor
+ * them. `credentials` is kept as a wide bag so callers don't fight excess
+ * property checks across cross-variant intersections.
+ */
+export type McpAuthConfig =
+  | {
+    /** No auth, or a simple header-value scheme. */
+    readonly auth_type?:
+      | "none"
+      | "api_key"
+      | "bearer_token"
+      | "basic"
+      | "authorization"
+      | "token";
+    /** Credentials, keyed per the chosen auth scheme. */
+    readonly credentials?: McpCredentials;
+  }
+  | {
+    readonly auth_type: "oauth2";
+    /** Credentials, keyed per the chosen auth scheme. */
+    readonly credentials?: McpCredentials;
+    /** OAuth2 authorization URL. */
+    readonly authorization_url?: string;
+    /** OAuth2 token URL. */
+    readonly token_url?: string;
+    /** Dynamic client registration URL. */
+    readonly registration_url?: string;
+    /**
+     * OAuth2 grant flow. Defaults to the interactive `"authorization_code"`
+     * flow; set to `"client_credentials"` for M2M.
+     */
+    readonly oauth2_flow?: McpOauth2Flow;
+    /**
+     * Forward the caller's bearer token to the upstream MCP server, bypassing
+     * LiteLLM-side auth. Honored only when `auth_type === "oauth2"`.
+     */
+    readonly delegate_auth_to_upstream?: boolean;
+  }
+  | {
+    readonly auth_type: "aws_sigv4";
+    /** Credentials, keyed per the chosen auth scheme. */
+    readonly credentials?: McpCredentials;
+  }
+  | {
+    readonly auth_type: "oauth2_token_exchange";
+    /** Credentials, keyed per the chosen auth scheme. */
+    readonly credentials?: McpCredentials;
+  };
+
+/**
+ * Transport-shape union for create/update requests. Discriminated by
+ * `transport`.
+ *
+ * `stdio` requires `command` and `args`; the HTTP and SSE transports require
+ * either `url` or `spec_path` (the second variant covers the spec-only case).
+ */
+export type McpTransportConfig =
+  | {
+    readonly transport: "stdio";
+    /** Command to spawn. Restricted to an allowlist on the proxy. */
+    readonly command: string;
+    /** Arguments passed to the command. */
+    readonly args: readonly string[];
+    /** Environment variables set on the spawned process. */
+    readonly env?: Readonly<Record<string, string>>;
+  }
+  | {
+    readonly transport: "http" | "sse";
+    /** Server URL. */
+    readonly url: string;
+    /** Optional path to a stored OpenAPI / MCP spec. */
+    readonly spec_path?: string;
+  }
+  | {
+    readonly transport: "http" | "sse";
+    /** Server URL (omit when `spec_path` is provided). */
+    readonly url?: string;
+    /** Path to a stored OpenAPI / MCP spec. */
+    readonly spec_path: string;
+  };
+
+/** Common fields shared by every MCP server, regardless of transport or auth. */
+export interface McpServerCommonFields {
   /** Explicit server id. Defaults to a server-generated UUID. */
   readonly server_id?: string;
   /** Internal server name. */
@@ -62,16 +155,6 @@ export interface CreateMcpServerRequest {
   readonly alias?: string;
   /** Free-form description. */
   readonly description?: string;
-  /** Wire transport. */
-  readonly transport?: McpTransport;
-  /** Authentication scheme. */
-  readonly auth_type?: McpAuthType;
-  /** Credentials matching the chosen auth scheme. */
-  readonly credentials?: McpCredentials;
-  /** Server URL (HTTP / SSE transports). */
-  readonly url?: string;
-  /** Optional path to a stored OpenAPI / MCP spec. */
-  readonly spec_path?: string;
   /** Free-form metadata returned alongside the server record. */
   readonly mcp_info?: Readonly<Record<string, unknown>>;
   /** Access groups that authorize this server. */
@@ -88,26 +171,10 @@ export interface CreateMcpServerRequest {
   readonly static_headers?: Readonly<Record<string, string>>;
   /** Instructions inserted before the server's tool list. */
   readonly instructions?: string;
-  /** Required for `transport === "stdio"`. */
-  readonly command?: string;
-  /** Required for `transport === "stdio"`. */
-  readonly args?: readonly string[];
-  /** Environment variables for the spawned process. */
-  readonly env?: Readonly<Record<string, string>>;
-  /** OAuth2 authorization URL. */
-  readonly authorization_url?: string;
-  /** OAuth2 token URL. */
-  readonly token_url?: string;
-  /** Dynamic client registration URL. */
-  readonly registration_url?: string;
-  /** OAuth2 grant flow. */
-  readonly oauth2_flow?: McpOauth2Flow;
   /** Allow every key on the proxy to use the server. */
   readonly allow_all_keys?: boolean;
   /** Whether the server is reachable over the public internet. */
   readonly available_on_public_internet?: boolean;
-  /** Forward caller credentials to the upstream MCP server. */
-  readonly delegate_auth_to_upstream?: boolean;
   /** True when callers must supply their own API key (BYOK). */
   readonly is_byok?: boolean;
   /** Bullet points describing the BYOK requirements. */
@@ -118,11 +185,22 @@ export interface CreateMcpServerRequest {
   readonly source_url?: string;
 }
 
+/**
+ * Request body for `POST /v1/mcp/server`. Combines the always-allowed fields
+ * with the transport-specific and auth-specific variants, so each chosen
+ * transport / auth value unlocks only its valid fields.
+ */
+export type CreateMcpServerRequest =
+  & McpServerCommonFields
+  & McpTransportConfig
+  & McpAuthConfig;
+
 /** Request body for `PUT /v1/mcp/server`. Same shape, with `server_id` required. */
-export interface UpdateMcpServerRequest extends Omit<CreateMcpServerRequest, "server_id"> {
-  /** Id of the server to update. */
-  readonly server_id: string;
-}
+export type UpdateMcpServerRequest =
+  & Omit<McpServerCommonFields, "server_id">
+  & { readonly server_id: string }
+  & McpTransportConfig
+  & McpAuthConfig;
 
 /** Server record returned by `/v1/mcp/server` (credentials redacted). */
 export interface McpServer {

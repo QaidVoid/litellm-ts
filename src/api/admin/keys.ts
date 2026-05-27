@@ -130,17 +130,33 @@ export interface KeyMetadata {
   readonly key_type?: KeyType;
 }
 
+/**
+ * Optional one-shot budget bump on `/key/update`. The proxy requires both
+ * `temp_budget_increase` and `temp_budget_expiry` to be set together or both
+ * omitted; this union encodes that rule.
+ */
+export type KeyTempBudgetBump =
+  | {
+    /** One-shot budget bump amount in USD. */
+    readonly temp_budget_increase: number;
+    /** Expiry of the temporary bump (ISO 8601). */
+    readonly temp_budget_expiry: string;
+  }
+  | {
+    readonly temp_budget_increase?: never;
+    readonly temp_budget_expiry?: never;
+  };
+
 /** Request body for `/key/update`. */
-export interface UpdateKeyRequest extends Partial<GenerateKeyRequest> {
-  /** Target key value. */
-  readonly key: string;
-  /** Replace the accumulated spend counter. */
-  readonly spend?: number;
-  /** One-shot budget bump active until `temp_budget_expiry`. */
-  readonly temp_budget_increase?: number;
-  /** Expiry of the temporary budget bump (ISO 8601). */
-  readonly temp_budget_expiry?: string;
-}
+export type UpdateKeyRequest =
+  & Partial<GenerateKeyRequest>
+  & {
+    /** Target key value. */
+    readonly key: string;
+    /** Replace the accumulated spend counter. */
+    readonly spend?: number;
+  }
+  & KeyTempBudgetBump;
 
 /** Request body for `/key/regenerate`. */
 export interface RegenerateKeyRequest extends Partial<GenerateKeyRequest> {
