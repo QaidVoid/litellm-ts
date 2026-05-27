@@ -13,7 +13,9 @@ import { createCustomers, type CustomersNamespace } from "./api/admin/customers.
 import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.ts";
 import { createJwtMappings, type JwtMappingsNamespace } from "./api/admin/jwt_mappings.ts";
 import { createMcp, type McpNamespace } from "./api/admin/mcp.ts";
+import { createPolicies, type PoliciesNamespace } from "./api/admin/policies.ts";
 import { createPrompts, type PromptsNamespace } from "./api/admin/prompts.ts";
+import { createWorkflows, type WorkflowsNamespace } from "./api/admin/workflows.ts";
 import { createScim, type ScimNamespace } from "./api/admin/scim.ts";
 import { createCredentials, type CredentialsNamespace } from "./api/admin/credentials.ts";
 import { type ContainersNamespace, createContainers } from "./api/containers.ts";
@@ -150,6 +152,10 @@ export interface Client {
   readonly tools: ToolsNamespace;
   /** Prompt registry administration. */
   readonly prompts: PromptsNamespace;
+  /** Policy-engine administration (policies + versions + attachments + resolve). */
+  readonly policies: PoliciesNamespace;
+  /** Workflow run administration (runs + events + messages). */
+  readonly workflows: WorkflowsNamespace;
   /** MCP server and toolset administration. */
   readonly mcp: McpNamespace;
   /** SCIM v2 identity-provider integration (enterprise only). */
@@ -231,6 +237,8 @@ export const createClient = (config: TransportConfig): Client => {
     compliance: createCompliance(transport),
     tools: createTools(transport),
     prompts: createPrompts(transport),
+    policies: createPolicies(transport),
+    workflows: createWorkflows(transport),
     mcp: createMcp(transport),
     scim: createScim(transport),
     credentials: createCredentials(transport),

@@ -433,6 +433,51 @@ export type {
 } from "./src/api/admin/tools.ts";
 
 export type {
+  CreatePolicyAttachmentRequest,
+  CreatePolicyRequest,
+  CreatePolicyVersionRequest,
+  ListPoliciesQuery,
+  ListPoliciesResponse,
+  ListPolicyAttachmentsResponse,
+  ListPolicyVersionsResponse,
+  PoliciesNamespace,
+  Policy,
+  PolicyAttachment,
+  PolicyAttachmentImpactResponse,
+  PolicyAttachmentsNamespace,
+  PolicyCompareResponse,
+  PolicyCondition,
+  PolicyMatchDetail,
+  PolicyPipeline,
+  PolicyVersionsNamespace,
+  PolicyVersionStatus,
+  ResolvePoliciesQuery,
+  ResolvePoliciesRequest,
+  ResolvePoliciesResponse,
+  TestPipelineRequest,
+  UpdatePolicyRequest,
+  UpdatePolicyVersionStatusRequest,
+} from "./src/api/admin/policies.ts";
+
+export type {
+  CreateWorkflowEventRequest,
+  CreateWorkflowMessageRequest,
+  CreateWorkflowRunRequest,
+  ListWorkflowEventsQuery,
+  ListWorkflowEventsResponse,
+  ListWorkflowMessagesQuery,
+  ListWorkflowMessagesResponse,
+  ListWorkflowRunsQuery,
+  ListWorkflowRunsResponse,
+  UpdateWorkflowRunRequest,
+  WorkflowEvent,
+  WorkflowMessage,
+  WorkflowRun,
+  WorkflowRunStatus,
+  WorkflowsNamespace,
+} from "./src/api/admin/workflows.ts";
+
+export type {
   CreatePromptRequest,
   DotpromptFileInput,
   ListPromptsResponse,
