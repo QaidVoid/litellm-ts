@@ -321,6 +321,17 @@ export type {
 } from "./src/api/admin/budgets.ts";
 
 export type {
+  BlockCustomersRequest,
+  CreateCustomerRequest,
+  Customer,
+  CustomerObjectPermission,
+  CustomerRegion,
+  CustomersNamespace,
+  DeleteCustomersRequest,
+  UpdateCustomerRequest,
+} from "./src/api/admin/customers.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,

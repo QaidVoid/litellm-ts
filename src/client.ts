@@ -7,6 +7,7 @@ import { type BudgetsNamespace, createBudgets } from "./api/admin/budgets.ts";
 import { type CacheNamespace, createCache } from "./api/admin/cache.ts";
 import { type CallbacksNamespace, createCallbacks } from "./api/admin/callbacks.ts";
 import { type ConfigNamespace, createConfig } from "./api/admin/config.ts";
+import { createCustomers, type CustomersNamespace } from "./api/admin/customers.ts";
 import { createGuardrails, type GuardrailsNamespace } from "./api/admin/guardrails.ts";
 import { createSpend, type SpendNamespace } from "./api/admin/spend.ts";
 import { createUsers, type UsersNamespace } from "./api/admin/users.ts";
@@ -80,6 +81,8 @@ export interface Client {
   readonly budgets: BudgetsNamespace;
   /** Organization administration. */
   readonly organizations: OrganizationsNamespace;
+  /** Customer (end-user) administration. */
+  readonly customers: CustomersNamespace;
   /** Logging callback configuration. */
   readonly callbacks: CallbacksNamespace;
   /** Configured guardrails listing. */
@@ -134,6 +137,7 @@ export const createClient = (config: TransportConfig): Client => {
     spend: createSpend(transport),
     budgets: createBudgets(transport),
     organizations: createOrganizations(transport),
+    customers: createCustomers(transport),
     callbacks: createCallbacks(transport),
     guardrails: createGuardrails(transport),
     cache: createCache(transport),
