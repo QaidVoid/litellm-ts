@@ -57,6 +57,8 @@ export type {
   RequestOptions,
   Transport,
   TransportConfig,
+  TransportHookContext,
+  TransportHooks,
 } from "./src/transport.ts";
 
 export { createTransport } from "./src/transport.ts";

@@ -314,6 +314,82 @@ Deno.test("fetchRaw still surfaces non-2xx as ApiError", async () => {
   }
 });
 
+Deno.test("hooks fire onRequest/onResponse on success", async () => {
+  const events: string[] = [];
+  const { fetch } = recordingFetch([() => json({ ok: true })]);
+  const t = createTransport(
+    baseConfig({
+      fetch,
+      hooks: {
+        onRequest: (ctx) => {
+          events.push(`req ${ctx.method} ${ctx.url} #${ctx.attempt}`);
+        },
+        onResponse: (ctx, res) => {
+          events.push(`res ${ctx.method} ${res.status} #${ctx.attempt}`);
+        },
+        onError: () => {
+          events.push("error");
+        },
+      },
+    }),
+  );
+
+  const result = await t.request({ method: "GET", path: "/x" });
+  assertEquals(result.ok, true);
+  assertEquals(events, [
+    "req GET https://api.test/x #1",
+    "res GET 200 #1",
+  ]);
+});
+
+Deno.test("hooks fire onError for each failed attempt", async () => {
+  const seen: Array<{ attempt: number; kind: string }> = [];
+  const { fetch } = recordingFetch([
+    () => new Response("boom", { status: 500 }),
+    () => new Response("boom", { status: 500 }),
+    () => json({ ok: true }),
+  ]);
+  const t = createTransport(
+    baseConfig({
+      fetch,
+      maxRetries: 2,
+      backoff: () => 0,
+      hooks: {
+        onError: (ctx, error) => {
+          seen.push({ attempt: ctx.attempt, kind: error.kind });
+        },
+      },
+    }),
+  );
+
+  const result = await t.request({ method: "GET", path: "/x" });
+  assertEquals(result.ok, true);
+  assertStrictEquals(seen.length, 2);
+  assertStrictEquals(seen[0]?.attempt, 1);
+  assertStrictEquals(seen[1]?.attempt, 2);
+  assertStrictEquals(seen[0]?.kind, "http");
+});
+
+Deno.test("hook errors are swallowed and do not affect the result", async () => {
+  const { fetch } = recordingFetch([() => json({ ok: true })]);
+  const t = createTransport(
+    baseConfig({
+      fetch,
+      hooks: {
+        onRequest: () => {
+          throw new Error("hook explosion");
+        },
+        onResponse: () => {
+          throw new Error("hook explosion");
+        },
+      },
+    }),
+  );
+
+  const result = await t.request<{ ok: boolean }>({ method: "GET", path: "/x" });
+  assertEquals(result, { ok: true, value: { ok: true } });
+});
+
 Deno.test("custom backoff strategy receives attempt + error", async () => {
   const seen: Array<{ attempt: number; kind: string }> = [];
   const { fetch } = recordingFetch([

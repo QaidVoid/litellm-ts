@@ -24,6 +24,38 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
  */
 export type BackoffStrategy = (attempt: number, error: ApiError) => number;
 
+/** Per-request context surfaced to `TransportHooks`. */
+export interface TransportHookContext {
+  /** HTTP method. */
+  readonly method: HttpMethod;
+  /** Fully-resolved URL including query string. */
+  readonly url: string;
+  /** 1-based attempt counter (1 = initial attempt, 2 = first retry, ...). */
+  readonly attempt: number;
+}
+
+/**
+ * Observer hooks fired during request processing. All are async-aware
+ * (the transport awaits each call) so they can flush logs or emit
+ * spans without dropping data. Throwing from a hook is best-effort:
+ * the transport catches and surfaces the original outcome, hook errors
+ * are swallowed.
+ */
+export interface TransportHooks {
+  /** Called before each outgoing fetch (every attempt, including retries). */
+  readonly onRequest?: (ctx: TransportHookContext) => void | Promise<void>;
+  /** Called for every response received, regardless of status. */
+  readonly onResponse?: (
+    ctx: TransportHookContext,
+    response: { readonly status: number; readonly durationMs: number },
+  ) => void | Promise<void>;
+  /** Called for every typed `ApiError` produced (network, timeout, non-2xx, ...). */
+  readonly onError?: (
+    ctx: TransportHookContext,
+    error: ApiError,
+  ) => void | Promise<void>;
+}
+
 /** Configuration for `createTransport`. */
 export interface TransportConfig {
   /** Base URL of the LiteLLM proxy or compatible endpoint. */
@@ -42,6 +74,11 @@ export interface TransportConfig {
    * `Retry-After` header parsed off a 429.
    */
   readonly backoff?: BackoffStrategy;
+  /**
+   * Observer hooks fired on every attempt. Use them for logging,
+   * metrics, or distributed tracing without wrapping `fetch`.
+   */
+  readonly hooks?: TransportHooks;
   /** Custom fetch implementation. Defaults to `globalThis.fetch`. Injected for testing. */
   readonly fetch?: typeof fetch;
 }
@@ -248,6 +285,19 @@ export const createTransport = (config: TransportConfig): Transport => {
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxRetries = config.maxRetries ?? DEFAULT_MAX_RETRIES;
   const backoff = config.backoff ?? computeBackoffMs;
+  const hooks = config.hooks;
+
+  const safeHook = async <Args extends unknown[]>(
+    hook: ((...a: Args) => void | Promise<void>) | undefined,
+    ...args: Args
+  ): Promise<void> => {
+    if (hook === undefined) return;
+    try {
+      await hook(...args);
+    } catch {
+      // hook errors must not affect the request outcome
+    }
+  };
 
   const runWithRetry = async (
     opts: RequestOptions,
@@ -257,8 +307,11 @@ export const createTransport = (config: TransportConfig): Transport => {
     const initResult = buildRequestInit(config, opts, overrides);
     if (!initResult.ok) return initResult;
 
-    let attempt = 0;
+    let attempt = 1;
     while (true) {
+      const ctx: TransportHookContext = { method: opts.method, url, attempt };
+      await safeHook(hooks?.onRequest, ctx);
+      const startedAt = Date.now();
       const result = await attemptFetch({
         url,
         init: initResult.value,
@@ -266,11 +319,19 @@ export const createTransport = (config: TransportConfig): Transport => {
         timeoutMs,
         userSignal: opts.signal,
       });
-      if (result.ok) return result;
-      if (attempt >= maxRetries) return result;
+      const durationMs = Date.now() - startedAt;
+      if (result.ok) {
+        await safeHook(hooks?.onResponse, ctx, {
+          status: result.value.status,
+          durationMs,
+        });
+        return result;
+      }
+      await safeHook(hooks?.onError, ctx, result.error);
+      if (attempt > maxRetries) return result;
       if (!isRetryable(result.error)) return result;
-      attempt++;
       await sleep(backoff(attempt, result.error));
+      attempt++;
     }
   };
 
