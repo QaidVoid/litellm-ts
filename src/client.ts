@@ -33,6 +33,7 @@ import { createRealtime, type RealtimeNamespace } from "./api/realtime.ts";
 import { createRerank, type RerankNamespace } from "./api/rerank.ts";
 import { createResponses, type ResponsesNamespace } from "./api/responses.ts";
 import { createVectorStores, type VectorStoresNamespace } from "./api/vector_stores.ts";
+import { createVideos, type VideosNamespace } from "./api/videos.ts";
 import { createTransport, type TransportConfig } from "./transport.ts";
 
 /** The top-level SDK surface. Construct via `createClient`. */
@@ -55,6 +56,8 @@ export interface Client {
   readonly images: ImagesNamespace;
   /** Audio transcription and speech endpoints. */
   readonly audio: AudioNamespace;
+  /** Video generation endpoints (mode-gated). */
+  readonly videos: VideosNamespace;
   /** Rerank endpoint. */
   readonly rerank: RerankNamespace;
   /** Content moderation endpoint. */
@@ -145,6 +148,7 @@ export const createClient = (config: TransportConfig): Client => {
     embeddings: createEmbeddings(transport),
     images: createImages(transport),
     audio: createAudio(transport),
+    videos: createVideos(transport),
     rerank: createRerank(transport),
     moderation: createModeration(transport),
     files: createFiles(transport),

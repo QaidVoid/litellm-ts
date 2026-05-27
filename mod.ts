@@ -173,6 +173,19 @@ export type {
 } from "./src/api/audio.ts";
 
 export type {
+  CharacterCreateRequest,
+  CharacterObject,
+  VideoEditRequest,
+  VideoExtensionRequest,
+  VideoFileInput,
+  VideoGenerationRequest,
+  VideoListResponse,
+  VideoObject,
+  VideoRemixRequest,
+  VideosNamespace,
+} from "./src/api/videos.ts";
+
+export type {
   RerankMeta,
   RerankNamespace,
   RerankRequest,
