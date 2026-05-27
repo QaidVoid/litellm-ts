@@ -1,6 +1,7 @@
 import type { ApiError } from "../error.ts";
 import type { Result } from "../result.ts";
 import type { Transport } from "../transport.ts";
+import type { ChatCompletion } from "./chat.ts";
 
 /** RecursiveCharacterTextSplitter parameters used when chunking documents. */
 export interface RagChunkingStrategy {
@@ -256,11 +257,11 @@ export interface RagQueryRequest {
 }
 
 /**
- * Response from `POST /v1/rag/query`. The proxy returns a standard chat
- * completion shape, so the response is left as `unknown` and consumers can
- * narrow with `ChatCompletion` from the chat namespace if desired.
+ * Response from `POST /v1/rag/query`. The proxy delegates the final
+ * generation step to a chat completion, so the response matches the
+ * non-streaming `ChatCompletion` shape exactly.
  */
-export type RagQueryResponse = Readonly<Record<string, unknown>>;
+export type RagQueryResponse = ChatCompletion;
 
 /** Surface for the RAG endpoints on the `Client`. */
 export interface RagNamespace {
