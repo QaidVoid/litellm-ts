@@ -119,6 +119,23 @@ export const formatApiError = (err: ApiError): string => {
   }
 };
 
+/**
+ * Throwable wrapper around an `ApiError`. The `Client` surface returns
+ * `Result<T, ApiError>` and never throws; the parallel `client.throws`
+ * surface throws this class on failure so callers can use ordinary
+ * `try`/`catch`. The underlying typed error is preserved on `.error`;
+ * `e.message` is the same single-line summary `formatApiError` produces.
+ */
+export class ApiErrorException extends Error {
+  /** The underlying typed error. Switch on `.error.kind` to recover. */
+  readonly error: ApiError;
+  constructor(error: ApiError) {
+    super(formatApiError(error));
+    this.name = "ApiErrorException";
+    this.error = error;
+  }
+}
+
 const inspectSymbol = Symbol.for("Deno.customInspect");
 const nodeInspectSymbol = Symbol.for("nodejs.util.inspect.custom");
 

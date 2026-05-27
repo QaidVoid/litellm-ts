@@ -11,6 +11,7 @@ export type {
 } from "./src/error.ts";
 
 export {
+  ApiErrorException,
   authError,
   formatApiError,
   httpError,
@@ -20,6 +21,10 @@ export {
   timeoutError,
   validationError,
 } from "./src/error.ts";
+
+export type { Throws } from "./src/throws.ts";
+
+export { makeThrows } from "./src/throws.ts";
 
 export type { PaginationPage } from "./src/pagination.ts";
 
@@ -1115,5 +1120,5 @@ export type {
   MessagesUsage,
 } from "./src/api/messages.ts";
 
-export type { Client } from "./src/client.ts";
+export type { Client, ClientNamespaces } from "./src/client.ts";
 export { createClient } from "./src/client.ts";

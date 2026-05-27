@@ -85,10 +85,15 @@ import { createRerank, type RerankNamespace } from "./api/rerank.ts";
 import { createResponses, type ResponsesNamespace } from "./api/responses.ts";
 import { createVectorStores, type VectorStoresNamespace } from "./api/vector_stores.ts";
 import { createVideos, type VideosNamespace } from "./api/videos.ts";
+import { makeThrows, type Throws } from "./throws.ts";
 import { createTransport, type TransportConfig } from "./transport.ts";
 
-/** The top-level SDK surface. Construct via `createClient`. */
-export interface Client {
+/**
+ * The full set of typed namespaces on a `Client`. The `throws` mirror
+ * uses this as its source shape, then maps every `Result`-returning
+ * method to a throwing variant.
+ */
+export interface ClientNamespaces {
   /** Chat completion endpoints (OpenAI shape). */
   readonly chat: ChatNamespace;
   /** Anthropic-shape `/v1/messages` endpoint. */
@@ -287,10 +292,37 @@ export interface Client {
   readonly proxy: PassthroughNamespace;
 }
 
+/**
+ * The top-level SDK surface. Construct via `createClient`.
+ *
+ * Every namespace returns `Promise<Result<T, ApiError>>` so error
+ * handling is exhaustive at the type level. If you prefer
+ * `try`/`catch`, use `client.throws` which mirrors the same surface
+ * but throws `ApiErrorException` on failure.
+ */
+export interface Client extends ClientNamespaces {
+  /**
+   * Parallel surface that throws `ApiErrorException` on failure
+   * instead of returning a `Result`. Every method matches the
+   * shape of its `Result`-returning counterpart with the wrapper
+   * unwrapped.
+   *
+   * @example
+   * ```ts
+   * try {
+   *   const chunk = await client.throws.chat.create({ model, messages });
+   * } catch (e) {
+   *   if (e instanceof ApiErrorException) console.log(e.error.kind);
+   * }
+   * ```
+   */
+  readonly throws: Throws<ClientNamespaces>;
+}
+
 /** Build a `Client` bound to the given transport configuration. */
 export const createClient = (config: TransportConfig): Client => {
   const transport = createTransport(config);
-  return {
+  const namespaces: ClientNamespaces = {
     chat: createChat(transport),
     messages: createMessages(transport),
     completions: createCompletions(transport),
@@ -371,4 +403,5 @@ export const createClient = (config: TransportConfig): Client => {
     bedrock: createPassthrough(transport, "/bedrock"),
     proxy: createPassthrough(transport, ""),
   };
+  return { ...namespaces, throws: makeThrows(namespaces) };
 };
