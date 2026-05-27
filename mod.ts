@@ -414,6 +414,31 @@ export type {
 } from "./src/api/admin/tools.ts";
 
 export type {
+  CreateMcpServerRequest,
+  CreateMcpToolsetRequest,
+  ListMcpServersQuery,
+  MakeMcpServersPublicRequest,
+  MakeMcpServersPublicResponse,
+  McpAuthType,
+  McpCredentials,
+  McpDiscoverQuery,
+  McpDiscoverResponse,
+  McpNamespace,
+  McpOauth2Flow,
+  McpServer,
+  McpServerHealthQuery,
+  McpServerHealthRow,
+  McpServersNamespace,
+  McpSubmissionsResponse,
+  McpToolset,
+  McpToolsetsNamespace,
+  McpToolsetTool,
+  McpTransport,
+  UpdateMcpServerRequest,
+  UpdateMcpToolsetRequest,
+} from "./src/api/admin/mcp.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,

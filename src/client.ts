@@ -12,6 +12,7 @@ import { type ComplianceNamespace, createCompliance } from "./api/admin/complian
 import { createCustomers, type CustomersNamespace } from "./api/admin/customers.ts";
 import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.ts";
 import { createJwtMappings, type JwtMappingsNamespace } from "./api/admin/jwt_mappings.ts";
+import { createMcp, type McpNamespace } from "./api/admin/mcp.ts";
 import { createRouter, type RouterNamespace } from "./api/admin/router.ts";
 import { createTags, type TagsNamespace } from "./api/admin/tags.ts";
 import { createTools, type ToolsNamespace } from "./api/admin/tools.ts";
@@ -107,6 +108,8 @@ export interface Client {
   readonly compliance: ComplianceNamespace;
   /** Tool registry and per-tool policy administration. */
   readonly tools: ToolsNamespace;
+  /** MCP server and toolset administration. */
+  readonly mcp: McpNamespace;
   /** Logging callback configuration. */
   readonly callbacks: CallbacksNamespace;
   /** Configured guardrails listing. */
@@ -170,6 +173,7 @@ export const createClient = (config: TransportConfig): Client => {
     jwtMappings: createJwtMappings(transport),
     compliance: createCompliance(transport),
     tools: createTools(transport),
+    mcp: createMcp(transport),
     callbacks: createCallbacks(transport),
     guardrails: createGuardrails(transport),
     cache: createCache(transport),

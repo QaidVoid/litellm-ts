@@ -34,7 +34,9 @@ export interface RequestOptions {
   readonly method: HttpMethod;
   readonly path: string;
   readonly body?: unknown;
-  readonly query?: Readonly<Record<string, string | number | boolean | undefined>>;
+  readonly query?: Readonly<
+    Record<string, string | number | boolean | readonly (string | number | boolean)[] | undefined>
+  >;
   readonly headers?: Readonly<Record<string, string>>;
   readonly signal?: AbortSignal;
 }
@@ -84,7 +86,12 @@ const buildUrl = (
   const url = new URL(normalizedPath, normalizedBase);
   if (query !== undefined) {
     for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined) url.searchParams.set(k, String(v));
+      if (v === undefined) continue;
+      if (Array.isArray(v)) {
+        for (const item of v) url.searchParams.append(k, String(item));
+      } else {
+        url.searchParams.set(k, String(v));
+      }
     }
   }
   return url.toString();
