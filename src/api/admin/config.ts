@@ -188,10 +188,10 @@ export interface ConfigFieldsNamespace {
   list(configType?: ConfigSectionType): Promise<Result<readonly ConfigFieldEntry[], ApiError>>;
   /** Retrieve a single field's metadata + value. */
   info(fieldName: string): Promise<Result<ConfigFieldEntry, ApiError>>;
-  /** Replace a single field value. */
-  update(req: ConfigFieldUpdate): Promise<Result<{ readonly status: "success" }, ApiError>>;
-  /** Reset a single field back to its default. */
-  delete(req: ConfigFieldDelete): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  /** Replace a single field value. Returns the underlying DB row. */
+  update(req: ConfigFieldUpdate): Promise<Result<unknown, ApiError>>;
+  /** Reset a single field back to its default. Returns the underlying DB row. */
+  delete(req: ConfigFieldDelete): Promise<Result<unknown, ApiError>>;
 }
 
 /** Cost-discount sub-namespace under `client.config.costDiscounts`. */
@@ -259,8 +259,11 @@ export interface ConfigPassThroughEndpointsNamespace {
 export interface ConfigNamespace {
   /** Retrieve the proxy's current configuration snapshot. */
   get(): Promise<Result<ProxyConfigSnapshot, ApiError>>;
-  /** Partially update the proxy's runtime configuration. */
-  update(req: UpdateConfigRequest): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  /**
+   * Partially update the proxy's runtime configuration. Returns an
+   * implementation-defined shape (`{message}` or `{}` or a row dict).
+   */
+  update(req: UpdateConfigRequest): Promise<Result<unknown, ApiError>>;
   /** Get the raw YAML the proxy boots from. */
   yaml(): Promise<Result<unknown, ApiError>>;
   /** Remove a callback by name from the active list. */
@@ -295,14 +298,14 @@ const createFields = (transport: Transport): ConfigFieldsNamespace => ({
     });
   },
   update(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<unknown>({
       method: "POST",
       path: "/config/field/update",
       body: req,
     });
   },
   delete(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<unknown>({
       method: "POST",
       path: "/config/field/delete",
       body: req,
@@ -427,7 +430,7 @@ export const createConfig = (transport: Transport): ConfigNamespace => ({
     return transport.request<ProxyConfigSnapshot>({ method: "GET", path: "/config/get" });
   },
   update(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<unknown>({
       method: "POST",
       path: "/config/update",
       body: req,

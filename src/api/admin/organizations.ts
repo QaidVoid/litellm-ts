@@ -148,16 +148,16 @@ export interface OrganizationsNamespace {
   list(): Promise<Result<ListOrganizationsResponse, ApiError>>;
   /** Partially update an organization. */
   update(req: UpdateOrganizationRequest): Promise<Result<Organization, ApiError>>;
-  /** Soft-delete one or more organizations. */
+  /** Soft-delete one or more organizations. Returns the deleted rows. */
   delete(
     req: DeleteOrganizationsRequest,
-  ): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  ): Promise<Result<readonly Organization[], ApiError>>;
   /** Add a member to an organization. */
   addMember(req: AddOrganizationMemberRequest): Promise<Result<OrganizationMemberSpec, ApiError>>;
-  /** Remove a member from an organization. */
+  /** Remove a member from an organization. Returns the deleted member spec. */
   deleteMember(
     req: DeleteOrganizationMemberRequest,
-  ): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  ): Promise<Result<OrganizationMemberSpec, ApiError>>;
   /** Update a member's role. */
   updateMember(
     req: UpdateOrganizationMemberRequest,
@@ -208,7 +208,7 @@ export const createOrganizations = (transport: Transport): OrganizationsNamespac
     });
   },
   delete(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<readonly Organization[]>({
       method: "DELETE",
       path: "/organization/delete",
       body: req,
@@ -222,7 +222,7 @@ export const createOrganizations = (transport: Transport): OrganizationsNamespac
     });
   },
   deleteMember(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<OrganizationMemberSpec>({
       method: "DELETE",
       path: "/organization/member_delete",
       body: req,

@@ -263,8 +263,8 @@ export interface UsersNamespace {
   list(query?: ListUsersQuery): Promise<Result<ListUsersResponse, ApiError>>;
   /** Partially update a user. */
   update(req: UpdateUserRequest): Promise<Result<User, ApiError>>;
-  /** Soft-delete one or more users. */
-  delete(req: DeleteUsersRequest): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  /** Soft-delete one or more users. Returns the deleted rows. */
+  delete(req: DeleteUsersRequest): Promise<Result<readonly User[], ApiError>>;
   /** Roles the Admin UI exposes when assigning a user role. */
   availableRoles(): Promise<Result<AvailableUserRolesResponse, ApiError>>;
   /** Bulk-update users by id/email, or broadcast a payload to every user. */
@@ -318,7 +318,7 @@ export const createUsers = (transport: Transport): UsersNamespace => ({
     return transport.request<User>({ method: "POST", path: "/user/update", body: req });
   },
   delete(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<readonly User[]>({
       method: "POST",
       path: "/user/delete",
       body: req,

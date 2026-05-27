@@ -1,4 +1,4 @@
-import { assertEquals, assertStrictEquals } from "@std/assert";
+import { assert, assertEquals, assertStrictEquals } from "@std/assert";
 import { createClient } from "../../client.ts";
 
 const recordingFetch = (
@@ -35,18 +35,36 @@ Deno.test("budgets.create POSTs to /budget/new with the request body", async () 
   assertStrictEquals(calls[0]?.input, "https://api.test/budget/new");
 });
 
-Deno.test("budgets.info passes budget_id as a query parameter", async () => {
+Deno.test("budgets.info posts a single-id batch to /budget/info and unwraps the first match", async () => {
   const { fetch, calls } = recordingFetch([
     () =>
-      new Response(JSON.stringify({ budget_id: "b-1" }), {
+      new Response(JSON.stringify([{ budget_id: "b-1" }]), {
         status: 200,
         headers: { "content-type": "application/json" },
       }),
   ]);
   const client = baseClient(fetch);
-  await client.budgets.info("b-1");
-  const url = new URL(calls[0]?.input as string);
-  assertStrictEquals(url.searchParams.get("budget_id"), "b-1");
+  const result = await client.budgets.info("b-1");
+  assertStrictEquals(calls[0]?.input, "https://api.test/budget/info");
+  const body = JSON.parse(calls[0]?.init?.body as string);
+  assertEquals(body, { budgets: ["b-1"] });
+  assert(result.ok);
+  assertStrictEquals(result.value.budget_id, "b-1");
+});
+
+Deno.test("budgets.info surfaces a 404-shaped error when the proxy returns an empty array", async () => {
+  const { fetch } = recordingFetch([
+    () =>
+      new Response("[]", {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+  ]);
+  const client = baseClient(fetch);
+  const result = await client.budgets.info("missing");
+  assert(!result.ok);
+  assertStrictEquals(result.error.kind, "http");
+  if (result.error.kind === "http") assertStrictEquals(result.error.status, 404);
 });
 
 Deno.test("budgets.delete posts the id to /budget/delete", async () => {

@@ -48,7 +48,7 @@ export type {
   Provider,
 } from "./src/models/mod.ts";
 
-export { MODELS } from "./src/models/mod.ts";
+export { customModel, MODELS } from "./src/models/mod.ts";
 
 export type { HttpMethod, RequestOptions, Transport, TransportConfig } from "./src/transport.ts";
 
@@ -296,6 +296,7 @@ export type {
   GenerateKeyRequest,
   KeyHealthResponse,
   KeyInfoBatchRequest,
+  KeyInfoResponse,
   KeyMetadata,
   KeysNamespace,
   KeyTempBudgetBump,
@@ -437,6 +438,7 @@ export type {
   CustomerRegion,
   CustomersNamespace,
   DeleteCustomersRequest,
+  DeleteCustomersResponse,
   UpdateCustomerRequest,
 } from "./src/api/admin/customers.ts";
 

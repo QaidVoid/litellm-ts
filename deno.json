@@ -8,8 +8,9 @@
     "fmt": "deno fmt",
     "lint": "deno lint",
     "typecheck": "deno check .",
-    "test": "deno test",
-    "check": "deno fmt && deno lint && deno check . && deno test",
+    "test": "deno test src/",
+    "test:e2e": "deno test --allow-net --allow-env tests/e2e/",
+    "check": "deno fmt && deno lint && deno check . && deno test src/",
     "gen:models": "deno run --allow-read --allow-write --allow-env --allow-net scripts/generate-models.ts",
     "build:npm": "deno run --allow-read --allow-write --allow-env --allow-net --allow-run scripts/build-npm.ts"
   },

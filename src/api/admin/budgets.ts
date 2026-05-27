@@ -1,5 +1,7 @@
 import type { ApiError } from "../../error.ts";
+import { httpError } from "../../error.ts";
 import type { Result } from "../../result.ts";
+import { err, ok } from "../../result.ts";
 import type { Transport } from "../../transport.ts";
 
 /** Per-model budget descriptor. */
@@ -72,13 +74,8 @@ export interface DeleteBudgetRequest {
   readonly id: string;
 }
 
-/** Response from `/budget/list`. */
-export interface ListBudgetsResponse {
-  /** Returned budgets. */
-  readonly budgets: readonly Budget[];
-  /** Total budget count across all pages. */
-  readonly total_count?: number;
-}
+/** Response from `/budget/list`. The proxy returns a flat array. */
+export type ListBudgetsResponse = readonly Budget[];
 
 /** Request body for the batch form of `POST /budget/info`. */
 export interface BudgetInfoBatchRequest {
@@ -128,8 +125,8 @@ export interface BudgetsNamespace {
   settings(budgetId: string): Promise<Result<BudgetSettingsResponse, ApiError>>;
   /** Partially update a budget. */
   update(req: UpdateBudgetRequest): Promise<Result<Budget, ApiError>>;
-  /** Delete a budget. */
-  delete(req: DeleteBudgetRequest): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  /** Delete a budget. Returns the deleted row. */
+  delete(req: DeleteBudgetRequest): Promise<Result<Budget, ApiError>>;
 }
 
 /** Bind a `BudgetsNamespace` to a constructed `Transport`. */
@@ -140,12 +137,23 @@ export const createBudgets = (transport: Transport): BudgetsNamespace => ({
   create(req) {
     return transport.request<Budget>({ method: "POST", path: "/budget/new", body: req });
   },
-  info(budgetId) {
-    return transport.request<Budget>({
-      method: "GET",
+  async info(budgetId) {
+    // The proxy exposes only `POST /budget/info` with a batched body.
+    // Wrap it in a single-id batch call and surface the first match (or a
+    // 404-shaped http error when the proxy returns an empty array).
+    const result = await transport.request<readonly Budget[]>({
+      method: "POST",
       path: "/budget/info",
-      query: { budget_id: budgetId },
+      body: { budgets: [budgetId] } satisfies BudgetInfoBatchRequest,
     });
+    if (!result.ok) return result;
+    const first = result.value[0];
+    if (first === undefined) {
+      return err(
+        httpError({ status: 404, statusText: "Not Found", body: { budget_id: budgetId } }),
+      );
+    }
+    return ok(first);
   },
   list() {
     return transport.request<ListBudgetsResponse>({ method: "GET", path: "/budget/list" });
@@ -168,7 +176,7 @@ export const createBudgets = (transport: Transport): BudgetsNamespace => ({
     return transport.request<Budget>({ method: "POST", path: "/budget/update", body: req });
   },
   delete(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<Budget>({
       method: "POST",
       path: "/budget/delete",
       body: req,

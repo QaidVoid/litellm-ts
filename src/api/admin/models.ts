@@ -98,10 +98,10 @@ export interface DeleteModelResponse {
   readonly status: "success";
 }
 
-/** Response from `/model/list`. */
+/** Response from `/model/info`. */
 export interface ListModelsResponse {
   /** Returned models. */
-  readonly models: readonly ProxyModel[];
+  readonly data: readonly ProxyModel[];
   /** Total model count across all pages. */
   readonly total_count?: number;
 }
@@ -391,7 +391,7 @@ export const createProxyModels = (transport: Transport): ProxyModelsNamespace =>
   list() {
     return transport.request<ListModelsResponse>({
       method: "GET",
-      path: "/model/list",
+      path: "/model/info",
     });
   },
   update(modelId, req) {

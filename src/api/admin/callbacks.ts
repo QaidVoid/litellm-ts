@@ -79,8 +79,13 @@ export type CallbackConfigsResponse = Readonly<Record<string, CallbackConfigEntr
 export interface CallbacksNamespace {
   /** List configured callbacks. */
   list(): Promise<Result<ListCallbacksResponse, ApiError>>;
-  /** Update the proxy's success / failure callback chains. */
-  update(req: UpdateCallbacksRequest): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  /**
+   * Update the proxy's success / failure callback chains by routing through
+   * `POST /config/update` with the changes wrapped as `router_settings`.
+   * The proxy returns an implementation-defined shape (a message dict, the
+   * raw DB row, or `{}`).
+   */
+  update(req: UpdateCallbacksRequest): Promise<Result<unknown, ApiError>>;
   /** Probe each callback's logging endpoint for liveness. */
   health(): Promise<Result<CallbackHealthResponse, ApiError>>;
   /** Read the per-callback configuration schema (used by the Admin UI). */
@@ -109,7 +114,7 @@ export const createCallbacks = (transport: Transport): CallbacksNamespace => ({
     });
   },
   update(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<unknown>({
       method: "POST",
       path: "/config/update",
       body: { router_settings: req },

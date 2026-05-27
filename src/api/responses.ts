@@ -340,20 +340,25 @@ const streamEvents = async function* (
     yield err(streamResult.error);
     return;
   }
-  for await (const event of parseSSE(streamResult.value)) {
-    if (event.data === "[DONE]") return;
-    const parsed = trySync<unknown>(() => JSON.parse(event.data));
-    if (!parsed.ok) {
-      yield err(streamError({ reason: "parse", cause: parsed.error }));
-      continue;
+  const body = streamResult.value;
+  try {
+    for await (const event of parseSSE(body)) {
+      if (event.data === "[DONE]") return;
+      const parsed = trySync<unknown>(() => JSON.parse(event.data));
+      if (!parsed.ok) {
+        yield err(streamError({ reason: "parse", cause: parsed.error }));
+        continue;
+      }
+      if (isErrorFrame(parsed.value)) {
+        yield err(
+          httpError({ status: 0, statusText: "stream error frame", body: parsed.value }),
+        );
+        return;
+      }
+      yield ok(parsed.value as ResponsesStreamEvent);
     }
-    if (isErrorFrame(parsed.value)) {
-      yield err(
-        httpError({ status: 0, statusText: "stream error frame", body: parsed.value }),
-      );
-      return;
-    }
-    yield ok(parsed.value as ResponsesStreamEvent);
+  } finally {
+    await body.cancel().catch(() => {});
   }
 };
 

@@ -76,6 +76,18 @@ export interface GenerateKeyRequest {
   readonly rotation_interval?: string;
 }
 
+/**
+ * Wrapper returned by `GET /key/info`: the plaintext key plus an `info`
+ * block carrying the metadata. The generate/update endpoints return
+ * `KeyMetadata` directly, so this wrapper is specific to `info`.
+ */
+export interface KeyInfoResponse {
+  /** The plaintext key value the request asked about. */
+  readonly key: string;
+  /** Metadata block. */
+  readonly info: KeyMetadata;
+}
+
 /** Full key metadata returned by generate/info/update endpoints. */
 export interface KeyMetadata {
   /** The bearer token. Treat as a secret. */
@@ -359,7 +371,7 @@ export interface KeysNamespace {
   /** Generate a team-scoped service-account key (not tied to a user). */
   generateServiceAccount(req?: GenerateKeyRequest): Promise<Result<KeyMetadata, ApiError>>;
   /** Retrieve metadata for a single key (defaults to the calling key). */
-  info(key?: string): Promise<Result<KeyMetadata, ApiError>>;
+  info(key?: string): Promise<Result<KeyInfoResponse, ApiError>>;
   /** List keys with optional filters and pagination. */
   list(query?: ListKeysQuery): Promise<Result<ListKeysResponse, ApiError>>;
   /** Partially update a key. */
@@ -453,7 +465,7 @@ export const createKeys = (transport: Transport): KeysNamespace => ({
     });
   },
   info(key) {
-    return transport.request<KeyMetadata>({
+    return transport.request<KeyInfoResponse>({
       method: "GET",
       path: "/key/info",
       ...(key === undefined ? {} : { query: { key } }),

@@ -96,6 +96,14 @@ export interface DeleteCustomersRequest {
   readonly user_ids: readonly string[];
 }
 
+/** Response from `/customer/delete`. */
+export interface DeleteCustomersResponse {
+  /** Deleted customer rows. */
+  readonly deleted_customers: readonly Customer[];
+  /** Human-readable status message. */
+  readonly message: string;
+}
+
 /** Request body for `/customer/block` and `/customer/unblock`. */
 export interface BlockCustomersRequest {
   /** End-user identifiers to block or unblock. */
@@ -156,8 +164,8 @@ export interface CustomersNamespace {
   list(): Promise<Result<readonly Customer[], ApiError>>;
   /** Partially update a customer. */
   update(req: UpdateCustomerRequest): Promise<Result<Customer, ApiError>>;
-  /** Delete one or more customers. */
-  delete(req: DeleteCustomersRequest): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  /** Delete one or more customers. Returns the deleted rows plus a status message. */
+  delete(req: DeleteCustomersRequest): Promise<Result<DeleteCustomersResponse, ApiError>>;
   /** Block the given customers from making requests. */
   block(req: BlockCustomersRequest): Promise<Result<readonly Customer[], ApiError>>;
   /** Lift a previous block. */
@@ -195,7 +203,7 @@ export const createCustomers = (transport: Transport): CustomersNamespace => ({
     return transport.request<Customer>({ method: "POST", path: "/customer/update", body: req });
   },
   delete(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<DeleteCustomersResponse>({
       method: "POST",
       path: "/customer/delete",
       body: req,

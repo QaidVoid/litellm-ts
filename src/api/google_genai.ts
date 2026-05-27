@@ -189,14 +189,19 @@ const streamGenerate = async function* (
     yield err(streamResult.error);
     return;
   }
-  for await (const event of parseSSE(streamResult.value)) {
-    if (event.data === "[DONE]") return;
-    const parsed = trySync<GenerateContentChunk>(() => JSON.parse(event.data));
-    if (!parsed.ok) {
-      yield err(streamError({ reason: "parse", cause: parsed.error }));
-      continue;
+  const body = streamResult.value;
+  try {
+    for await (const event of parseSSE(body)) {
+      if (event.data === "[DONE]") return;
+      const parsed = trySync<GenerateContentChunk>(() => JSON.parse(event.data));
+      if (!parsed.ok) {
+        yield err(streamError({ reason: "parse", cause: parsed.error }));
+        continue;
+      }
+      yield ok(parsed.value);
     }
-    yield ok(parsed.value);
+  } finally {
+    await body.cancel().catch(() => {});
   }
 };
 

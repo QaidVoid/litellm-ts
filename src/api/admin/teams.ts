@@ -372,18 +372,18 @@ export interface TeamsNamespace {
   list(): Promise<Result<ListTeamsResponse, ApiError>>;
   /** Partially update a team. */
   update(req: UpdateTeamRequest): Promise<Result<Team, ApiError>>;
-  /** Soft-delete one or more teams. */
-  delete(req: DeleteTeamsRequest): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  /** Soft-delete one or more teams. Returns the deleted rows. */
+  delete(req: DeleteTeamsRequest): Promise<Result<readonly Team[], ApiError>>;
   /** Block a team (and all its keys). */
   block(req: TeamIdRequest): Promise<Result<Team, ApiError>>;
   /** Unblock a previously blocked team. */
   unblock(req: TeamIdRequest): Promise<Result<Team, ApiError>>;
   /** Add a member to a team. */
   addMember(req: AddTeamMemberRequest): Promise<Result<TeamMembership, ApiError>>;
-  /** Remove a member from a team. */
+  /** Remove a member from a team. Returns the updated team. */
   deleteMember(
     req: DeleteTeamMemberRequest,
-  ): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  ): Promise<Result<Team, ApiError>>;
   /** Update a member's role or per-member limits. */
   updateMember(req: UpdateTeamMemberRequest): Promise<Result<TeamMembership, ApiError>>;
   /** Append models to a team's allowed model list. */
@@ -473,7 +473,7 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
     return transport.request<Team>({ method: "POST", path: "/team/update", body: req });
   },
   delete(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<readonly Team[]>({
       method: "POST",
       path: "/team/delete",
       body: req,
@@ -493,7 +493,7 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
     });
   },
   deleteMember(req) {
-    return transport.request<{ readonly status: "success" }>({
+    return transport.request<Team>({
       method: "POST",
       path: "/team/member_delete",
       body: req,

@@ -222,8 +222,17 @@ export interface ChatToolFields {
  */
 export type ChatCompletionRequest<M extends ModelId = ModelId> =
   & { readonly model: M }
-  & (M extends ModelsWithCapability<"vision"> ? ChatRequestBase : ChatRequestBaseTextOnly)
-  & (M extends ModelsWithCapability<"function_calling"> ? ChatToolFields : Record<never, never>);
+  & (
+    // `customModel(...)` resolves to `never` so the SDK can't gate on
+    // capabilities it doesn't know about; widen to the lenient branch.
+    [M] extends [never] ? ChatRequestBase
+      : (M extends ModelsWithCapability<"vision"> ? ChatRequestBase : ChatRequestBaseTextOnly)
+  )
+  & (
+    [M] extends [never] ? ChatToolFields
+      : (M extends ModelsWithCapability<"function_calling"> ? ChatToolFields
+        : Record<never, never>)
+  );
 
 /** Why the model stopped producing tokens. */
 export type ChatFinishReason =
@@ -366,24 +375,31 @@ const streamChunks = async function* (
     yield err(streamResult.error);
     return;
   }
-  for await (const event of parseSSE(streamResult.value)) {
-    if (event.data === "[DONE]") return;
-    const parsed = trySync<unknown>(() => JSON.parse(event.data));
-    if (!parsed.ok) {
-      yield err(streamError({ reason: "parse", cause: parsed.error }));
-      continue;
+  const body = streamResult.value;
+  try {
+    for await (const event of parseSSE(body)) {
+      if (event.data === "[DONE]") return;
+      const parsed = trySync<unknown>(() => JSON.parse(event.data));
+      if (!parsed.ok) {
+        yield err(streamError({ reason: "parse", cause: parsed.error }));
+        continue;
+      }
+      if (isErrorFrame(parsed.value)) {
+        yield err(
+          httpError({
+            status: 0,
+            statusText: "stream error frame",
+            body: parsed.value,
+          }),
+        );
+        return;
+      }
+      yield ok(parsed.value as ChatCompletionChunk);
     }
-    if (isErrorFrame(parsed.value)) {
-      yield err(
-        httpError({
-          status: 0,
-          statusText: "stream error frame",
-          body: parsed.value,
-        }),
-      );
-      return;
-    }
-    yield ok(parsed.value as ChatCompletionChunk);
+  } finally {
+    // `parseSSE` only releases the reader lock; the body still owns
+    // unread bytes (anything after `[DONE]`). Cancel to free the connection.
+    await body.cancel().catch(() => {});
   }
 };
 
