@@ -1,5 +1,9 @@
 # @qaidvoid/litellm
 
+[![JSR](https://jsr.io/badges/@qaidvoid/litellm)](https://jsr.io/@qaidvoid/litellm)
+[![JSR Score](https://jsr.io/badges/@qaidvoid/litellm/score)](https://jsr.io/@qaidvoid/litellm)
+[![npm](https://img.shields.io/npm/v/@qaidvoid/litellm?logo=npm)](https://www.npmjs.com/package/@qaidvoid/litellm)
+
 A type-safe TypeScript SDK for [LiteLLM], the LLM proxy and gateway.
 
 - Literal model union over 2,700 known models, with capability and mode metadata baked in at build time.
