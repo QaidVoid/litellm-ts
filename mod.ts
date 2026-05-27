@@ -342,6 +342,15 @@ export type {
 } from "./src/api/admin/tags.ts";
 
 export type {
+  FallbackCreateRequest,
+  FallbackDeleteResponse,
+  FallbackGetResponse,
+  FallbackResponse,
+  FallbacksNamespace,
+  FallbackType,
+} from "./src/api/admin/fallbacks.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,
