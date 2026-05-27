@@ -135,3 +135,33 @@ e2eTest(
     tolerantPolicies(result);
   },
 );
+
+e2eTest(
+  "policies.attachments.create + get + delete round-trip (tolerant)",
+  async ({ client }) => {
+    // Attach a non-existent policy at global scope. On builds where this is
+    // permitted the round-trip cleans up; everywhere else we tolerate the
+    // expected 4xx/5xx.
+    const policyName = `e2e-attach-${Date.now()}`;
+    const created = await client.policies.attachments.create({
+      policy_name: policyName,
+      scope: "*",
+    });
+    if (!created.ok) {
+      tolerantPolicies(created);
+      return;
+    }
+    const attachmentId = created.value.attachment_id;
+    try {
+      const got = await client.policies.attachments.get(attachmentId);
+      if (!got.ok) {
+        tolerantPolicies(got);
+        return;
+      }
+      assert(got.value.attachment_id === attachmentId);
+    } finally {
+      const removed = await client.policies.attachments.delete(attachmentId);
+      if (!removed.ok) tolerantPolicies(removed);
+    }
+  },
+);

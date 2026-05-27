@@ -252,3 +252,31 @@ e2eTest(
     }
   },
 );
+
+e2eTest("admin.guardrails.update replaces the full record (PUT)", async ({ client }) => {
+  const name = `e2e-gr-put-${Date.now()}`;
+  const created = await client.guardrails.create({
+    guardrail: {
+      guardrail_name: name,
+      litellm_params: { guardrail: "presidio", mode: "pre_call" },
+      guardrail_info: { purpose: "e2e" },
+    },
+  });
+  assert(created.ok, `create failed: ${JSON.stringify(created)}`);
+  const id = created.value.guardrail_id;
+  assert(typeof id === "string");
+
+  try {
+    const result = await client.guardrails.update(id, {
+      guardrail: {
+        guardrail_id: id,
+        guardrail_name: name,
+        litellm_params: { guardrail: "presidio", mode: "during_call" },
+        guardrail_info: { purpose: "e2e-replaced" },
+      },
+    });
+    assert(result.ok, `update failed: ${JSON.stringify(result)}`);
+  } finally {
+    await client.guardrails.delete(id);
+  }
+});

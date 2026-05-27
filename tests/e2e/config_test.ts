@@ -152,3 +152,59 @@ e2eTest(
     tolerantConfig(result);
   },
 );
+
+e2eTest(
+  "admin.config.fields.info / update / delete round-trip on a throwaway field",
+  async ({ client }) => {
+    // Pick a settings field the proxy always exposes. `info` works
+    // against any registered general-setting; update/delete are tolerant
+    // since some fields are protected.
+    const info = await client.config.fields.info("max_request_size_mb");
+    if (!info.ok) {
+      // Some builds 400 on unknown / restricted fields.
+      tolerantConfig(info);
+      return;
+    }
+
+    // Update with whatever value the proxy returned (no-op write).
+    const updated = await client.config.fields.update({
+      config_type: "general_settings",
+      field_name: "max_request_size_mb",
+      field_value: info.value.field_value ?? 100,
+    });
+    tolerantConfig(updated);
+
+    const deleted = await client.config.fields.delete({
+      config_type: "general_settings",
+      field_name: "max_request_size_mb",
+    });
+    tolerantConfig(deleted);
+  },
+);
+
+e2eTest(
+  "admin.config.costDiscounts.update overwrites the discount config (tolerant)",
+  async ({ client }) => {
+    // Re-write whatever the proxy returned as a no-op.
+    const current = await client.config.costDiscounts.get();
+    if (!current.ok) {
+      tolerantConfig(current);
+      return;
+    }
+    const result = await client.config.costDiscounts.update(current.value.values);
+    tolerantConfig(result);
+  },
+);
+
+e2eTest(
+  "admin.config.costMargins.update overwrites the margin config (tolerant)",
+  async ({ client }) => {
+    const current = await client.config.costMargins.get();
+    if (!current.ok) {
+      tolerantConfig(current);
+      return;
+    }
+    const result = await client.config.costMargins.update(current.value.values);
+    tolerantConfig(result);
+  },
+);

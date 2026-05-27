@@ -54,6 +54,55 @@ e2eTest("passthrough handles a leading slash on the supplied path", async ({ cli
   );
 });
 
+e2eTest("bedrock passthrough.request reaches the AWS-shape upstream", async ({ client }) => {
+  // Without AWS creds the proxy still routes; upstream surfaces 401/403/500.
+  const result = await client.bedrock.request<UnknownObject>({
+    method: "GET",
+    path: "/model/anthropic.claude-3-sonnet-20240229-v1:0/invoke",
+  });
+  if (result.ok) {
+    assert(typeof result.value === "object" && result.value !== null);
+    return;
+  }
+  assert(
+    result.error.kind === "http" || result.error.kind === "auth",
+    `unexpected bedrock error: ${result.error.kind}`,
+  );
+});
+
+e2eTest("bedrock passthrough.stream opens an SSE-style response", async ({ client }) => {
+  const result = await client.bedrock.stream({
+    method: "POST",
+    path: "/model/anthropic.claude-3-sonnet-20240229-v1:0/invoke-with-response-stream",
+    body: { prompt: "Reply with one word: x." },
+  });
+  if (result.ok) {
+    // Drain so Deno's leak sanitizer is happy.
+    await result.value.cancel();
+    return;
+  }
+  assert(
+    result.error.kind === "http" || result.error.kind === "auth",
+    `unexpected bedrock stream error: ${result.error.kind}`,
+  );
+});
+
+e2eTest("bedrock passthrough.fetchRaw exposes the raw Response", async ({ client }) => {
+  const result = await client.bedrock.fetchRaw({
+    method: "GET",
+    path: "/foundation-models",
+  });
+  if (!result.ok) {
+    assert(
+      result.error.kind === "http" || result.error.kind === "auth",
+      `unexpected bedrock fetchRaw error: ${result.error.kind}`,
+    );
+    return;
+  }
+  assert(result.value instanceof Response);
+  await result.value.body?.cancel();
+});
+
 e2eTest("passthrough fetchRaw returns a Response for binary endpoints", async ({ client }) => {
   const result = await client.anthropic.fetchRaw({
     method: "GET",

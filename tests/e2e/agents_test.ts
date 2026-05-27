@@ -214,3 +214,29 @@ e2eTest("admin.agents.dailyActivity returns the activity rollup", async ({ clien
     );
   }
 });
+
+e2eTest("admin.agents.update replaces the full agent record (PUT)", async ({ client }) => {
+  const agentId = await createThrowawayAgent(client, "upd");
+  try {
+    const renamed = `${agentId}-updated`;
+    const result = await client.agents.update(agentId, {
+      agent_name: renamed,
+      agent_card_params: {
+        protocolVersion: "0.0.1",
+        name: renamed,
+        description: "e2e replaced",
+        url: "https://example.test/agent-v2",
+        version: "0.0.2",
+        capabilities: {},
+        defaultInputModes: ["text"],
+        defaultOutputModes: ["text"],
+        skills: [
+          { id: "echo", name: "echo", description: "echoes input", tags: ["e2e"] },
+        ],
+      },
+    });
+    assert(result.ok, `update failed: ${JSON.stringify(result)}`);
+  } finally {
+    await client.agents.delete(agentId);
+  }
+});
