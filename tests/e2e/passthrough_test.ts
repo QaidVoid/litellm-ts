@@ -120,3 +120,25 @@ e2eTest("passthrough fetchRaw returns a Response for binary endpoints", async ({
   // Drain so the runtime doesn't flag a leak.
   await result.value.body?.cancel();
 });
+
+e2eTest("proxy root passthrough hits arbitrary proxy paths", async ({ client }) => {
+  // `client.proxy` is bound at the proxy root, so any in-proxy route works.
+  // `/health/liveliness` is the universally-available smoke target.
+  const result = await client.proxy.request<unknown>({
+    method: "GET",
+    path: "/health/liveliness",
+  });
+  assert(result.ok, `proxy.request failed: ${JSON.stringify(result)}`);
+});
+
+e2eTest("proxy root passthrough surfaces 404 cleanly for missing routes", async ({ client }) => {
+  const result = await client.proxy.request<unknown>({
+    method: "GET",
+    path: "/this-route-does-not-exist",
+  });
+  assert(!result.ok, "expected a 404");
+  assertStrictEquals(result.error.kind, "http");
+  if (result.error.kind === "http") {
+    assertStrictEquals(result.error.status, 404);
+  }
+});

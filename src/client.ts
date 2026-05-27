@@ -274,6 +274,12 @@ export interface Client {
   readonly azure: PassthroughNamespace;
   /** Native-shape passthrough to AWS Bedrock. */
   readonly bedrock: PassthroughNamespace;
+  /**
+   * Generic escape-hatch passthrough bound at the proxy root. Use it
+   * to reach routes the typed surface doesn't expose (Admin UI helpers,
+   * experimental endpoints, etc.). Responses are not normalized.
+   */
+  readonly proxy: PassthroughNamespace;
 }
 
 /** Build a `Client` bound to the given transport configuration. */
@@ -358,5 +364,6 @@ export const createClient = (config: TransportConfig): Client => {
     assemblyai: createPassthrough(transport, "/assemblyai"),
     azure: createPassthrough(transport, "/azure"),
     bedrock: createPassthrough(transport, "/bedrock"),
+    proxy: createPassthrough(transport, ""),
   };
 };
