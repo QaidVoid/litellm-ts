@@ -50,7 +50,7 @@ e2eTest("realtime.connect opens a WebSocket against /v1/realtime", async ({ clie
     signal: ctrl.signal,
   });
   if (result.ok) {
-    result.value.close();
+    await result.value.close();
     return;
   }
   assert(

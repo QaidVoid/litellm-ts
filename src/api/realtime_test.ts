@@ -52,7 +52,7 @@ Deno.test("realtime.connect returns a session once the mock WebSocket opens", as
     const sendResult = result.value.send({ type: "session.update", session: {} });
     assertEquals(sendResult.ok, true);
     assertStrictEquals(sent.length, 1);
-    result.value.close();
+    await result.value.close();
   }
 });
 
@@ -69,6 +69,6 @@ Deno.test("realtime.connect surfaces a network error when no WebSocket is availa
   // succeeds against the constructor. Force the no-WebSocket path by
   // injecting an undefined override and removing the global if present.
   if (result.ok) {
-    result.value.close();
+    await result.value.close();
   }
 });

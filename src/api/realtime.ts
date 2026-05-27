@@ -56,8 +56,14 @@ export interface RealtimeSession {
    * terminates when the session closes for any reason.
    */
   readonly events: AsyncIterable<Result<RealtimeServerEvent, ApiError>>;
-  /** Close the WebSocket gracefully. */
-  close(): void;
+  /**
+   * Close the WebSocket gracefully and resolve once the underlying
+   * socket has finished its close handshake. Awaiting the returned
+   * promise ensures no in-flight receive operations remain, which
+   * matters in test environments that detect resource leaks.
+   * Calling on an already-closed session resolves immediately.
+   */
+  close(): Promise<void>;
 }
 
 const toWsUrl = (baseUrl: string, path: string): string => {
@@ -177,6 +183,10 @@ export const createRealtime = (
       const waiters: Array<(v: IteratorResult<Result<RealtimeServerEvent, ApiError>>) => void> = [];
       let closed = false;
       let openResolved = false;
+      let resolveClosed: () => void;
+      const closedPromise = new Promise<void>((res) => {
+        resolveClosed = res;
+      });
 
       const emit = (item: Result<RealtimeServerEvent, ApiError>) => {
         const waiter = waiters.shift();
@@ -190,6 +200,7 @@ export const createRealtime = (
           const waiter = waiters.shift()!;
           waiter({ value: undefined as never, done: true });
         }
+        resolveClosed();
       };
 
       ws.onopen = () => {
@@ -216,6 +227,7 @@ export const createRealtime = (
       ws.onerror = () => {
         if (!openResolved) {
           openResolved = true;
+          resolveClosed();
           resolve(err(networkError(null, "websocket failed to open")));
           return;
         }
@@ -225,6 +237,7 @@ export const createRealtime = (
       ws.onclose = () => {
         if (!openResolved) {
           openResolved = true;
+          resolveClosed();
           resolve(err(networkError(null, "websocket closed before opening")));
           return;
         }
@@ -281,11 +294,13 @@ export const createRealtime = (
           },
         },
         close() {
+          if (closed) return closedPromise;
           try {
             ws.close();
           } catch {
             // ignore
           }
+          return closedPromise;
         },
       };
     });
