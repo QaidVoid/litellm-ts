@@ -87,12 +87,52 @@ export type RateLimitedError = {
   readonly retryAfterMs?: number;
 };
 
+/**
+ * Render an `ApiError` as a single-line human-readable string. Useful for
+ * logs and `toString` fallbacks; structured access still goes through the
+ * discriminated union.
+ */
+export const formatApiError = (err: ApiError): string => {
+  switch (err.kind) {
+    case "network":
+      return `NetworkError: ${err.message}`;
+    case "http": {
+      const rid = err.requestId === undefined ? "" : ` (requestId=${err.requestId})`;
+      return `HttpError ${err.status} ${err.statusText}${rid}`;
+    }
+    case "validation":
+      return `ValidationError at ${err.path}: expected ${err.expected}`;
+    case "stream": {
+      const cause = err.cause === undefined ? "" : ` (cause=${String(err.cause)})`;
+      return `StreamError: ${err.reason}${cause}`;
+    }
+    case "auth": {
+      const status = err.status === undefined ? "" : ` status=${err.status}`;
+      return `AuthError: ${err.reason}${status}`;
+    }
+    case "timeout":
+      return `TimeoutError: exceeded ${err.ms}ms`;
+    case "rate-limited": {
+      const retry = err.retryAfterMs === undefined ? "" : ` retry-after=${err.retryAfterMs}ms`;
+      return `RateLimitedError: 429${retry}`;
+    }
+  }
+};
+
+const inspectSymbol = Symbol.for("Deno.customInspect");
+const nodeInspectSymbol = Symbol.for("nodejs.util.inspect.custom");
+
+const withInspect = <T extends ApiError>(err: T): T => {
+  const fmt = () => formatApiError(err);
+  Object.defineProperty(err, "toString", { value: fmt, enumerable: false });
+  Object.defineProperty(err, inspectSymbol, { value: fmt, enumerable: false });
+  Object.defineProperty(err, nodeInspectSymbol, { value: fmt, enumerable: false });
+  return err;
+};
+
 /** Construct a `NetworkError`. */
-export const networkError = (cause: unknown, message: string): NetworkError => ({
-  kind: "network",
-  cause,
-  message,
-});
+export const networkError = (cause: unknown, message: string): NetworkError =>
+  withInspect({ kind: "network", cause, message });
 
 /** Construct an `HttpError`. */
 export const httpError = (opts: {
@@ -107,7 +147,9 @@ export const httpError = (opts: {
     statusText: opts.statusText,
     body: opts.body,
   };
-  return opts.requestId === undefined ? base : { ...base, requestId: opts.requestId };
+  return withInspect(
+    opts.requestId === undefined ? base : { ...base, requestId: opts.requestId },
+  );
 };
 
 /** Construct a `ValidationError`. */
@@ -115,12 +157,13 @@ export const validationError = (opts: {
   path: string;
   expected: string;
   got: unknown;
-}): ValidationError => ({
-  kind: "validation",
-  path: opts.path,
-  expected: opts.expected,
-  got: opts.got,
-});
+}): ValidationError =>
+  withInspect({
+    kind: "validation",
+    path: opts.path,
+    expected: opts.expected,
+    got: opts.got,
+  });
 
 /** Construct a `StreamError`. */
 export const streamError = (opts: {
@@ -128,7 +171,7 @@ export const streamError = (opts: {
   cause?: unknown;
 }): StreamError => {
   const base: StreamError = { kind: "stream", reason: opts.reason };
-  return opts.cause === undefined ? base : { ...base, cause: opts.cause };
+  return withInspect(opts.cause === undefined ? base : { ...base, cause: opts.cause });
 };
 
 /** Construct an `AuthError`. */
@@ -140,19 +183,18 @@ export const authError = (opts: {
   let e: AuthError = { kind: "auth", reason: opts.reason };
   if (opts.status !== undefined) e = { ...e, status: opts.status };
   if (opts.body !== undefined) e = { ...e, body: opts.body };
-  return e;
+  return withInspect(e);
 };
 
 /** Construct a `TimeoutError`. */
-export const timeoutError = (ms: number): TimeoutError => ({
-  kind: "timeout",
-  ms,
-});
+export const timeoutError = (ms: number): TimeoutError => withInspect({ kind: "timeout", ms });
 
 /** Construct a `RateLimitedError`. Status is always 429. */
 export const rateLimitedError = (opts: {
   retryAfterMs?: number;
 }): RateLimitedError => {
   const base: RateLimitedError = { kind: "rate-limited", status: 429 };
-  return opts.retryAfterMs === undefined ? base : { ...base, retryAfterMs: opts.retryAfterMs };
+  return withInspect(
+    opts.retryAfterMs === undefined ? base : { ...base, retryAfterMs: opts.retryAfterMs },
+  );
 };

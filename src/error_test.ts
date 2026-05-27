@@ -2,6 +2,7 @@ import { assertEquals, assertStrictEquals } from "@std/assert";
 import {
   type ApiError,
   authError,
+  formatApiError,
   httpError,
   networkError,
   rateLimitedError,
@@ -116,4 +117,33 @@ Deno.test("ApiError switch is exhaustive at compile time", () => {
   );
   assertStrictEquals(describe(timeoutError(1)), "t");
   assertStrictEquals(describe(rateLimitedError({})), "r");
+});
+
+Deno.test("formatApiError renders each kind as a single-line summary", () => {
+  assertStrictEquals(
+    formatApiError(networkError(new Error("nope"), "no DNS")),
+    "NetworkError: no DNS",
+  );
+  assertStrictEquals(
+    formatApiError(httpError({ status: 404, statusText: "Not Found", body: {} })),
+    "HttpError 404 Not Found",
+  );
+  assertStrictEquals(
+    formatApiError(
+      httpError({ status: 500, statusText: "Internal Server Error", body: {}, requestId: "r1" }),
+    ),
+    "HttpError 500 Internal Server Error (requestId=r1)",
+  );
+  assertStrictEquals(
+    formatApiError(rateLimitedError({ retryAfterMs: 3000 })),
+    "RateLimitedError: 429 retry-after=3000ms",
+  );
+  assertStrictEquals(formatApiError(timeoutError(5000)), "TimeoutError: exceeded 5000ms");
+});
+
+Deno.test("ApiError toString and Deno.inspect render the same summary", () => {
+  const err = httpError({ status: 418, statusText: "I'm a teapot", body: {} });
+  const summary = "HttpError 418 I'm a teapot";
+  assertStrictEquals(String(err), summary);
+  assertStrictEquals(Deno.inspect(err), summary);
 });
