@@ -33,6 +33,7 @@ import { createGoogleGenai, type GoogleGenaiNamespace } from "./api/google_genai
 import { createOcr, type OcrNamespace } from "./api/ocr.ts";
 import { createRag, type RagNamespace } from "./api/rag.ts";
 import { createSearch, type SearchNamespace } from "./api/search.ts";
+import { createUtils, type UtilsNamespace } from "./api/utils.ts";
 import { createRouter, type RouterNamespace } from "./api/admin/router.ts";
 import { createTags, type TagsNamespace } from "./api/admin/tags.ts";
 import { createTools, type ToolsNamespace } from "./api/admin/tools.ts";
@@ -101,6 +102,8 @@ export interface Client {
   readonly anthropicSkills: AnthropicSkillsNamespace;
   /** Claude Code plugin marketplace administration. */
   readonly claudeCode: ClaudeCodeNamespace;
+  /** Utility endpoints (token counter, request transform, supported params). */
+  readonly utils: UtilsNamespace;
   /** Rerank endpoint. */
   readonly rerank: RerankNamespace;
   /** Content moderation endpoint. */
@@ -215,6 +218,7 @@ export const createClient = (config: TransportConfig): Client => {
     googleGenai: createGoogleGenai(transport),
     anthropicSkills: createAnthropicSkills(transport),
     claudeCode: createClaudeCode(transport),
+    utils: createUtils(transport),
     rerank: createRerank(transport),
     moderation: createModeration(transport),
     files: createFiles(transport),

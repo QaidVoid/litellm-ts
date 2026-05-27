@@ -721,6 +721,18 @@ export type {
 } from "./src/api/claude_code.ts";
 
 export type {
+  SupportedOpenAIParamsQuery,
+  SupportedOpenAIParamsResponse,
+  TestPoliciesAndGuardrailsRequest,
+  TokenCountRequest,
+  TokenCountResponse,
+  TransformRequestBody,
+  TransformRequestCallType,
+  TransformRequestResponse,
+  UtilsNamespace,
+} from "./src/api/utils.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,
