@@ -1,11 +1,11 @@
 import { assert, assertEquals, assertStrictEquals } from "@std/assert";
-import { e2eTest, MODELS } from "./_helpers.ts";
+import { e2eTest } from "./_helpers.ts";
 
 e2eTest(
   "chat.create returns assistant content for the primary chat model",
-  async ({ client }) => {
+  async ({ client, models }) => {
     const result = await client.chat.create({
-      model: MODELS.chat!,
+      model: models.chat,
       messages: [
         { role: "user", content: "Reply with exactly one word: orange. No punctuation." },
       ],
@@ -31,9 +31,9 @@ e2eTest(
 
 e2eTest(
   "chat.create works against a second backend (cross-provider sanity)",
-  async ({ client }) => {
+  async ({ client, models }) => {
     const result = await client.chat.create({
-      model: MODELS.chatAlt!,
+      model: models.chatAlt,
       messages: [{ role: "user", content: "Reply with exactly one word: violet." }],
       max_tokens: 20,
       temperature: 0,
@@ -46,9 +46,9 @@ e2eTest(
   { requires: ["chatAlt"] },
 );
 
-e2eTest("chat.createStream yields chunks and terminates cleanly", async ({ client }) => {
+e2eTest("chat.createStream yields chunks and terminates cleanly", async ({ client, models }) => {
   const stream = client.chat.createStream({
-    model: MODELS.chat!,
+    model: models.chat,
     messages: [{ role: "user", content: "Count from 1 to 3, one number per line." }],
     max_tokens: 50,
     temperature: 0,
@@ -69,14 +69,14 @@ e2eTest("chat.createStream yields chunks and terminates cleanly", async ({ clien
 
 e2eTest(
   "chat.create round-trips reasoning_content when the reasoning model is configured",
-  async ({ client }) => {
+  async ({ client, models }) => {
     // Reasoning models emit a `reasoning_content` field alongside the
     // assistant message. The proxy should pass it through; we don't assert
     // that it's always populated (qwen sometimes omits it for trivial
     // prompts), only that the call completes and the field round-trips
     // when present.
     const result = await client.chat.create({
-      model: MODELS.reasoning!,
+      model: models.reasoning,
       messages: [{ role: "user", content: "What is 12 times 4? Give just the number." }],
       max_tokens: 80,
       temperature: 0,
@@ -96,10 +96,10 @@ e2eTest(
 
 e2eTest(
   "chat.create + chat.createStream both yield non-empty output for the same prompt",
-  async ({ client }) => {
+  async ({ client, models }) => {
     const prompt = "Reply with exactly the single word 'banana'. No other text.";
     const opts = {
-      model: MODELS.chat!,
+      model: models.chat,
       messages: [{ role: "user" as const, content: prompt }],
       max_tokens: 10,
       temperature: 0,

@@ -57,11 +57,11 @@ e2eTest("unknown model surfaces kind=http", async ({ client }) => {
 
 e2eTest(
   "streaming surfaces a per-frame Result and terminates when the upstream completes",
-  async ({ client }) => {
+  async ({ client, models }) => {
     // Verify the iterator closes naturally rather than hanging or yielding
     // anything after the upstream sends [DONE].
     const stream = client.chat.createStream({
-      model: MODELS.chat!,
+      model: models.chat,
       messages: [{ role: "user", content: "Say 'x'." }],
       max_tokens: 5,
       temperature: 0,

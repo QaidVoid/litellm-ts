@@ -1,14 +1,14 @@
 import { assert, assertStrictEquals } from "@std/assert";
-import { e2eTest, MODELS } from "./_helpers.ts";
+import { e2eTest } from "./_helpers.ts";
 
 e2eTest(
   "messages.create returns an Anthropic-shape response",
-  async ({ client }) => {
+  async ({ client, models }) => {
     // `/v1/messages` is Anthropic's native shape. For backends that aren't
     // Anthropic, the proxy auto-translates between the chat and messages
     // shapes, so any chat-capable model works here.
     const result = await client.messages.create({
-      model: MODELS.chat!,
+      model: models.chat,
       max_tokens: 20,
       messages: [{ role: "user", content: "Reply with one word: orange." }],
     });
@@ -25,9 +25,9 @@ e2eTest(
 
 e2eTest(
   "messages.createStream yields events and terminates",
-  async ({ client }) => {
+  async ({ client, models }) => {
     const stream = client.messages.createStream({
-      model: MODELS.chat!,
+      model: models.chat,
       max_tokens: 20,
       messages: [{ role: "user", content: "Reply: x." }],
     });
@@ -45,9 +45,9 @@ e2eTest(
 
 e2eTest(
   "messages.countTokens returns a non-zero count for a non-empty prompt",
-  async ({ client }) => {
+  async ({ client, models }) => {
     const result = await client.messages.countTokens({
-      model: MODELS.chat!,
+      model: models.chat,
       messages: [{ role: "user", content: "Hello world." }],
     });
 

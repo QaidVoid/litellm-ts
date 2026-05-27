@@ -1,14 +1,14 @@
 import { assert, assertStrictEquals } from "@std/assert";
-import { e2eTest, MODELS } from "./_helpers.ts";
+import { e2eTest } from "./_helpers.ts";
 
 e2eTest(
   "completions.create returns a non-empty text completion",
-  async ({ client }) => {
+  async ({ client, models }) => {
     // The legacy `/v1/completions` endpoint expects a prompt string,
     // not a chat message array. Many local backends (including Ollama)
     // route this through the chat-template path under the hood.
     const result = await client.completions.create({
-      model: MODELS.chat!,
+      model: models.chat,
       prompt: "Complete this with one word: orange. The next word is",
       max_tokens: 5,
       temperature: 0,
@@ -25,9 +25,9 @@ e2eTest(
 
 e2eTest(
   "completions.createStream yields chunks and terminates cleanly",
-  async ({ client }) => {
+  async ({ client, models }) => {
     const stream = client.completions.createStream({
-      model: MODELS.chat!,
+      model: models.chat,
       prompt: "One, two,",
       max_tokens: 10,
       temperature: 0,

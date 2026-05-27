@@ -26,6 +26,9 @@ const apiKey = Deno.env.get("LITELLM_API_KEY") ?? "sk-1234";
 /** Build a client bound to the configured proxy. `maxRetries: 0` keeps test failures fast. */
 export const e2eClient = (): Client => createClient({ baseUrl, apiKey, maxRetries: 0 });
 
+/** Test-model handle names. */
+export type ModelHandle = "chat" | "chatAlt" | "embed" | "embedAlt" | "reasoning";
+
 /** Environment variable each model handle resolves from. */
 const MODEL_ENV: Readonly<Record<ModelHandle, string>> = {
   chat: "LITELLM_E2E_CHAT_MODEL",
@@ -35,22 +38,23 @@ const MODEL_ENV: Readonly<Record<ModelHandle, string>> = {
   reasoning: "LITELLM_E2E_REASONING_MODEL",
 };
 
-const resolveModel = (envVar: string): ReturnType<typeof customModel> | undefined => {
+type ModelValue = ReturnType<typeof customModel>;
+
+const resolveModel = (envVar: string): ModelValue | undefined => {
   const v = Deno.env.get(envVar);
   if (v === undefined || v.length === 0) return undefined;
   return customModel(v);
 };
 
-/** Test-model handle names. */
-export type ModelHandle = "chat" | "chatAlt" | "embed" | "embedAlt" | "reasoning";
-
 /**
  * Generic test-model handles. Each value is the `customModel(...)`-wrapped
  * id from the corresponding environment variable, or `undefined` when
- * unset. Tests reference a handle and declare `requires` on `e2eTest` so
- * unconfigured models surface as skipped rather than failures.
+ * unset. Tests usually reference a handle through the narrowed `models`
+ * object on the test context (so non-null assertions aren't needed) and
+ * declare `requires` on `e2eTest` so unconfigured models surface as
+ * skipped rather than failures.
  */
-export const MODELS: Readonly<Record<ModelHandle, ReturnType<typeof customModel> | undefined>> = {
+export const MODELS: Readonly<Record<ModelHandle, ModelValue | undefined>> = {
   chat: resolveModel(MODEL_ENV.chat),
   chatAlt: resolveModel(MODEL_ENV.chatAlt),
   embed: resolveModel(MODEL_ENV.embed),
@@ -81,20 +85,42 @@ export const proxyReachable = async (): Promise<boolean> => {
   return reachable;
 };
 
+/**
+ * Models bag exposed on the test context. Handles declared in `requires`
+ * narrow to a defined `ModelValue`; everything else stays optional. Tests
+ * can use either the context-narrowed `models.chat` (preferred) or the
+ * module-level `MODELS.chat` when they don't gate on a particular handle.
+ */
+export type E2eModels<R extends readonly ModelHandle[]> =
+  & { readonly [K in R[number]]: ModelValue }
+  & { readonly [K in Exclude<ModelHandle, R[number]>]: ModelValue | undefined };
+
 /** Optional gating for `e2eTest`. `requires` skips when the named model is unset. */
-export interface E2eTestOptions {
-  readonly requires?: readonly ModelHandle[];
+export interface E2eTestOptions<R extends readonly ModelHandle[] = readonly ModelHandle[]> {
+  readonly requires?: R;
+}
+
+export interface E2eTestContext<R extends readonly ModelHandle[]> {
+  readonly client: Client;
+  readonly baseUrl: string;
+  readonly apiKey: string;
+  /** Model handles, narrowed to `ModelValue` for any handle listed in `requires`. */
+  readonly models: E2eModels<R>;
 }
 
 /**
  * Wrap `Deno.test` with runtime reachability + model-availability gates.
  * The test is registered either way so the suite output still surfaces
  * what *would* have run.
+ *
+ * `requires` is keyed on `ModelHandle`. Listed handles narrow on the
+ * `models` ctx field so the test body can use `models.chat` directly
+ * without a non-null assertion.
  */
-export const e2eTest = (
+export const e2eTest = <const R extends readonly ModelHandle[] = []>(
   name: string,
-  fn: (ctx: { client: Client; baseUrl: string; apiKey: string }) => Promise<void> | void,
-  opts: E2eTestOptions = {},
+  fn: (ctx: E2eTestContext<R>) => Promise<void> | void,
+  opts: E2eTestOptions<R> = {},
 ): void => {
   Deno.test({
     name,
@@ -116,7 +142,12 @@ export const e2eTest = (
         });
         return;
       }
-      await fn({ client: e2eClient(), baseUrl, apiKey });
+      await fn({
+        client: e2eClient(),
+        baseUrl,
+        apiKey,
+        models: MODELS as unknown as E2eModels<R>,
+      });
     },
   });
 };

@@ -1,12 +1,12 @@
 import { assert, assertStrictEquals } from "@std/assert";
 import type { EmbeddingsDatum } from "../../mod.ts";
-import { e2eTest, MODELS } from "./_helpers.ts";
+import { e2eTest } from "./_helpers.ts";
 
 e2eTest(
   "embeddings.create returns a single vector for a string input",
-  async ({ client }) => {
+  async ({ client, models }) => {
     const result = await client.embeddings.create({
-      model: MODELS.embed!,
+      model: models.embed,
       input: "hello world",
     });
 
@@ -27,10 +27,10 @@ e2eTest(
   { requires: ["embed"] },
 );
 
-e2eTest("embeddings.create handles a batch of inputs", async ({ client }) => {
+e2eTest("embeddings.create handles a batch of inputs", async ({ client, models }) => {
   const inputs = ["one", "two", "three"];
   const result = await client.embeddings.create({
-    model: MODELS.embed!,
+    model: models.embed,
     input: inputs,
   });
 
@@ -46,9 +46,9 @@ e2eTest("embeddings.create handles a batch of inputs", async ({ client }) => {
 
 e2eTest(
   "embeddings via a second backend produces a vector of the same shape",
-  async ({ client }) => {
+  async ({ client, models }) => {
     const result = await client.embeddings.create({
-      model: MODELS.embedAlt!,
+      model: models.embedAlt,
       input: "hello world",
     });
 
@@ -61,10 +61,10 @@ e2eTest(
   { requires: ["embedAlt"] },
 );
 
-e2eTest("embeddings are stable across two identical calls", async ({ client }) => {
+e2eTest("embeddings are stable across two identical calls", async ({ client, models }) => {
   const input = "the quick brown fox";
-  const a = await client.embeddings.create({ model: MODELS.embed!, input });
-  const b = await client.embeddings.create({ model: MODELS.embed!, input });
+  const a = await client.embeddings.create({ model: models.embed, input });
+  const b = await client.embeddings.create({ model: models.embed, input });
 
   assert(a.ok && b.ok);
   const va = a.value.data[0]?.embedding;
