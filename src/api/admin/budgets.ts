@@ -80,6 +80,31 @@ export interface ListBudgetsResponse {
   readonly total_count?: number;
 }
 
+/** Request body for the batch form of `POST /budget/info`. */
+export interface BudgetInfoBatchRequest {
+  /** Budget ids to retrieve in a single round trip. */
+  readonly budgets: readonly string[];
+}
+
+/** A single configurable field returned from `GET /budget/settings`. */
+export interface BudgetSettingsField {
+  /** Backend field name (e.g. `"max_budget"`). */
+  readonly field_name: string;
+  /** Field type tag (`"Integer"`, `"Float"`, `"String"`, `"Object"`). */
+  readonly field_type: string;
+  /** Free-form description of the field. */
+  readonly field_description: string;
+  /** Currently stored value for the queried budget. */
+  readonly field_value: unknown;
+  /** Whether the field has a persisted value. */
+  readonly stored_in_db: boolean;
+  /** Default value applied when unset. */
+  readonly field_default_value?: unknown;
+}
+
+/** Response from `GET /budget/settings`. */
+export type BudgetSettingsResponse = readonly BudgetSettingsField[];
+
 /** Surface for budget administration on the `Client`. */
 export interface BudgetsNamespace {
   /** Create a new budget. */
@@ -88,6 +113,13 @@ export interface BudgetsNamespace {
   info(budgetId: string): Promise<Result<Budget, ApiError>>;
   /** List all budgets. */
   list(): Promise<Result<ListBudgetsResponse, ApiError>>;
+  /**
+   * Batch retrieve multiple budgets by id. Mirrors the proxy's
+   * `POST /budget/info` endpoint, which accepts a list of ids in the body.
+   */
+  infoBatch(req: BudgetInfoBatchRequest): Promise<Result<readonly Budget[], ApiError>>;
+  /** Read the schema and current values for a single budget. */
+  settings(budgetId: string): Promise<Result<BudgetSettingsResponse, ApiError>>;
   /** Partially update a budget. */
   update(req: UpdateBudgetRequest): Promise<Result<Budget, ApiError>>;
   /** Delete a budget. */
@@ -108,6 +140,20 @@ export const createBudgets = (transport: Transport): BudgetsNamespace => ({
   },
   list() {
     return transport.request<ListBudgetsResponse>({ method: "GET", path: "/budget/list" });
+  },
+  infoBatch(req) {
+    return transport.request<readonly Budget[]>({
+      method: "POST",
+      path: "/budget/info",
+      body: req,
+    });
+  },
+  settings(budgetId) {
+    return transport.request<BudgetSettingsResponse>({
+      method: "GET",
+      path: "/budget/settings",
+      query: { budget_id: budgetId },
+    });
   },
   update(req) {
     return transport.request<Budget>({ method: "POST", path: "/budget/update", body: req });

@@ -173,6 +173,80 @@ export interface DeleteVectorStoreFileResponse {
   readonly deleted: boolean;
 }
 
+/** Filter expression accepted by `POST /v1/vector_stores/{id}/search`. */
+export type VectorStoreSearchFilter =
+  | {
+    /** Composite filter combining sub-filters. */
+    readonly type: "and" | "or";
+    /** Sub-filters joined by the composite operator. */
+    readonly filters: readonly VectorStoreSearchFilter[];
+  }
+  | {
+    /** Comparison operator (eq, ne, gt, gte, lt, lte, etc.). */
+    readonly type: "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
+    /** Metadata key to compare. */
+    readonly key: string;
+    /** Value to compare against. */
+    readonly value: string | number | boolean;
+  };
+
+/** Request body for `POST /v1/vector_stores/{id}/search`. */
+export interface VectorStoreSearchRequest {
+  /** Natural-language search query. */
+  readonly query: string;
+  /** Maximum chunks to return. */
+  readonly max_num_results?: number;
+  /** Optional metadata filter to apply before vector matching. */
+  readonly filters?: VectorStoreSearchFilter;
+  /** Re-ranking strategy passthrough to the upstream provider. */
+  readonly ranking_options?: Readonly<Record<string, unknown>>;
+  /** Whether to rewrite the query before searching. */
+  readonly rewrite_query?: boolean;
+  /** Additional provider-specific fields. */
+  readonly [key: string]: unknown;
+}
+
+/** A single matched chunk returned from vector-store search. */
+export interface VectorStoreSearchResult {
+  /** Id of the source file that produced this chunk. */
+  readonly file_id: string;
+  /** Display filename of the source file. */
+  readonly filename?: string;
+  /** Similarity score for the chunk. */
+  readonly score: number;
+  /** Attached file-level metadata. */
+  readonly attributes?: Readonly<Record<string, unknown>>;
+  /** Chunk content (one or more typed parts). */
+  readonly content: readonly Readonly<{
+    /** Content type tag (e.g. `"text"`). */
+    readonly type: string;
+    /** Decoded chunk text when `type === "text"`. */
+    readonly text?: string;
+  }>[];
+}
+
+/** Response from `POST /v1/vector_stores/{id}/search`. */
+export interface VectorStoreSearchResponse {
+  /** Discriminator, always `"vector_store.search_results.page"`. */
+  readonly object: "vector_store.search_results.page";
+  /** Echo of the search query. */
+  readonly search_query: string;
+  /** Matched chunks. */
+  readonly data: readonly VectorStoreSearchResult[];
+  /** True when more pages remain. */
+  readonly has_more: boolean;
+  /** Cursor token for the next page. */
+  readonly next_page?: string | null;
+}
+
+/** Request body for `POST /v1/vector_stores/{id}/files/{file_id}` (update file metadata). */
+export interface UpdateVectorStoreFileRequest {
+  /** Replace the metadata bag stored against this file attachment. */
+  readonly attributes?: Readonly<Record<string, unknown>> | null;
+  /** Additional provider-specific fields. */
+  readonly [key: string]: unknown;
+}
+
 /** A single chunk of file content returned from the content endpoint. */
 export interface VectorStoreFileContentChunk {
   /** Wire type tag, typically `"text"` for chunked text content. */
@@ -233,6 +307,17 @@ export interface VectorStoresNamespace {
     vectorStoreId: string,
     fileId: string,
   ): Promise<Result<VectorStoreFileContentResponse, ApiError>>;
+  /** Semantic search across a vector store. */
+  search(
+    vectorStoreId: string,
+    req: VectorStoreSearchRequest,
+  ): Promise<Result<VectorStoreSearchResponse, ApiError>>;
+  /** Update the metadata stored against a file attachment. */
+  updateFile(
+    vectorStoreId: string,
+    fileId: string,
+    req: UpdateVectorStoreFileRequest,
+  ): Promise<Result<VectorStoreFile, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -312,6 +397,20 @@ export const createVectorStores = (transport: Transport): VectorStoresNamespace 
     return transport.request<VectorStoreFileContentResponse>({
       method: "GET",
       path: `/v1/vector_stores/${enc(vectorStoreId)}/files/${enc(fileId)}/content`,
+    });
+  },
+  search(vectorStoreId, req) {
+    return transport.request<VectorStoreSearchResponse>({
+      method: "POST",
+      path: `/v1/vector_stores/${enc(vectorStoreId)}/search`,
+      body: req,
+    });
+  },
+  updateFile(vectorStoreId, fileId, req) {
+    return transport.request<VectorStoreFile>({
+      method: "POST",
+      path: `/v1/vector_stores/${enc(vectorStoreId)}/files/${enc(fileId)}`,
+      body: req,
     });
   },
 });

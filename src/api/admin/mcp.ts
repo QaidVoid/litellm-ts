@@ -386,6 +386,153 @@ export interface McpToolsetsNamespace {
   delete(toolsetId: string): Promise<Result<unknown, ApiError>>;
 }
 
+/** Response from `GET /v1/mcp/network/client-ip`. */
+export interface McpClientIpResponse {
+  /** Caller's IP as seen by the proxy. */
+  readonly ip: string;
+}
+
+/**
+ * Response from `GET /v1/mcp/openapi-registry`. Shape is the registry JSON
+ * loaded from disk; admin-only.
+ */
+export interface McpOpenApiRegistryResponse {
+  /** Registered OpenAPI APIs available to the OpenAPI MCP picker. */
+  readonly apis: readonly Readonly<Record<string, unknown>>[];
+}
+
+/** Response from `GET /v1/mcp/registry.json` (public MCP registry). */
+export interface McpPublicRegistryResponse {
+  /** Registered server entries. */
+  readonly servers?: readonly Readonly<Record<string, unknown>>[];
+  /** Other top-level fields per the MCP registry spec. */
+  readonly [key: string]: unknown;
+}
+
+/** Request body for storing a BYOK API-key credential. */
+export interface StoreMcpUserCredentialRequest {
+  /** Plaintext API key to store. */
+  readonly credential: string;
+  /** Persist the credential when true; when false the credential is not stored. */
+  readonly save?: boolean;
+}
+
+/** Response from `POST` / `DELETE /v1/mcp/server/{server_id}/user-credential`. */
+export interface McpUserCredentialResponse {
+  /** Echo of the server id. */
+  readonly server_id: string;
+  /** Whether the credential is currently persisted. */
+  readonly has_credential: boolean;
+}
+
+/** Request body for storing an OAuth2 BYOK credential. */
+export interface StoreMcpOAuthUserCredentialRequest {
+  /** OAuth2 access token. */
+  readonly access_token: string;
+  /** Optional refresh token. */
+  readonly refresh_token?: string;
+  /** Token lifetime in seconds. */
+  readonly expires_in?: number;
+  /** Granted OAuth2 scopes. */
+  readonly scopes?: readonly string[];
+}
+
+/** Response from the OAuth2 user-credential endpoints. */
+export interface McpOAuthUserCredentialStatus {
+  /** Echo of the server id. */
+  readonly server_id: string;
+  /** Whether a credential is currently persisted. */
+  readonly has_credential: boolean;
+  /** Whether the persisted credential is past its expiry. */
+  readonly is_expired: boolean;
+  /** ISO-8601 expiry timestamp, when known. */
+  readonly expires_at?: string | null;
+  /** ISO-8601 timestamp when the credential was last refreshed. */
+  readonly connected_at?: string | null;
+}
+
+/** A single entry returned by `GET /v1/mcp/user-credentials`. */
+export interface McpUserCredentialListItem {
+  /** Server id the credential belongs to. */
+  readonly server_id: string;
+  /** Persisted scopes for the credential. */
+  readonly scopes?: readonly string[];
+  /** ISO-8601 expiry timestamp. */
+  readonly expires_at?: string | null;
+  /** ISO-8601 timestamp the credential was last refreshed. */
+  readonly connected_at?: string | null;
+  /** Other proxy-provided fields. */
+  readonly [key: string]: unknown;
+}
+
+/** Query parameters for `GET /v1/mcp/oauth/authorize`. */
+export interface McpOAuthAuthorizeQuery {
+  /** OAuth2 client identifier. */
+  readonly client_id?: string;
+  /** Redirect URI for the authorization response. */
+  readonly redirect_uri: string;
+  /** Must be `"code"`. */
+  readonly response_type: "code";
+  /** PKCE code challenge. */
+  readonly code_challenge: string;
+  /** Code challenge method (`"S256"` is required by the proxy). */
+  readonly code_challenge_method?: "S256";
+  /** Opaque state value echoed back to the redirect. */
+  readonly state?: string;
+  /** Target MCP server id. */
+  readonly server_id?: string;
+}
+
+/** Request body for `POST /v1/mcp/oauth/token` (form-encoded by the proxy). */
+export interface McpOAuthTokenRequest {
+  /** Always `"authorization_code"`. */
+  readonly grant_type: "authorization_code";
+  /** Authorization code returned by `/v1/mcp/oauth/authorize`. */
+  readonly code: string;
+  /** Same redirect URI used to obtain the code. */
+  readonly redirect_uri?: string;
+  /** PKCE verifier matching the original challenge. */
+  readonly code_verifier: string;
+  /** OAuth2 client identifier. */
+  readonly client_id?: string;
+}
+
+/** Response from `POST /v1/mcp/oauth/token`. */
+export interface McpOAuthTokenResponse {
+  /** Short-lived BYOK session JWT. */
+  readonly access_token: string;
+  /** Token kind, always `"Bearer"` for this endpoint. */
+  readonly token_type: string;
+  /** Token lifetime in seconds. */
+  readonly expires_in: number;
+  /** Granted scopes. */
+  readonly scope?: string;
+  /** Additional provider-specific fields. */
+  readonly [key: string]: unknown;
+}
+
+/** Request body for `POST /v1/mcp/oauth/register` (Dynamic Client Registration). */
+export interface McpOAuthRegisterRequest {
+  /** Application name for the registering client. */
+  readonly client_name?: string;
+  /** Redirect URIs the client owns. */
+  readonly redirect_uris?: readonly string[];
+  /** Additional DCR fields per RFC 7591. */
+  readonly [key: string]: unknown;
+}
+
+/** Response from `POST /v1/mcp/oauth/register`. */
+export interface McpOAuthRegisterResponse {
+  /** Issued OAuth2 client id. */
+  readonly client_id: string;
+  /** Issued client secret (when applicable). */
+  readonly client_secret?: string;
+  /** Echoed redirect URIs. */
+  readonly redirect_uris?: readonly string[];
+  /** Additional DCR fields. */
+  readonly [key: string]: unknown;
+}
+
 /** Surface for MCP server / toolset administration on the `Client`. */
 export interface McpNamespace {
   /** List all MCP tools available to the calling key. */
@@ -400,6 +547,45 @@ export interface McpNamespace {
   makePublic(
     req: MakeMcpServersPublicRequest,
   ): Promise<Result<MakeMcpServersPublicResponse, ApiError>>;
+  /** Returns the caller's IP as seen by the proxy. */
+  clientIp(): Promise<Result<McpClientIpResponse, ApiError>>;
+  /** Admin-only OpenAPI registry (well-known APIs with OAuth metadata). */
+  openApiRegistry(): Promise<Result<McpOpenApiRegistryResponse, ApiError>>;
+  /** Public MCP registry response. Available when the registry is enabled. */
+  registryJson(): Promise<Result<McpPublicRegistryResponse, ApiError>>;
+  /** List OAuth2 MCP credentials persisted for the calling user. */
+  userCredentials(): Promise<Result<readonly McpUserCredentialListItem[], ApiError>>;
+  /** Store or update the calling user's BYOK API key for an MCP server. */
+  storeUserCredential(
+    serverId: string,
+    req: StoreMcpUserCredentialRequest,
+  ): Promise<Result<McpUserCredentialResponse, ApiError>>;
+  /** Delete the calling user's stored BYOK credential. */
+  deleteUserCredential(
+    serverId: string,
+  ): Promise<Result<McpUserCredentialResponse, ApiError>>;
+  /** Store or refresh the calling user's OAuth2 BYOK credential. */
+  storeOAuthUserCredential(
+    serverId: string,
+    req: StoreMcpOAuthUserCredentialRequest,
+  ): Promise<Result<McpOAuthUserCredentialStatus, ApiError>>;
+  /** Revoke the calling user's OAuth2 BYOK credential. */
+  deleteOAuthUserCredential(
+    serverId: string,
+  ): Promise<Result<McpOAuthUserCredentialStatus, ApiError>>;
+  /** Probe whether the calling user has a stored OAuth2 credential. */
+  oauthUserCredentialStatus(
+    serverId: string,
+  ): Promise<Result<McpOAuthUserCredentialStatus, ApiError>>;
+  /**
+   * GET form of the BYOK OAuth2 authorize endpoint. Returns the raw response
+   * body since the proxy serves HTML for the consent screen rather than JSON.
+   */
+  oauthAuthorize(query: McpOAuthAuthorizeQuery): Promise<Result<unknown, ApiError>>;
+  /** Exchange an authorization code for a BYOK session token. */
+  oauthToken(req: McpOAuthTokenRequest): Promise<Result<McpOAuthTokenResponse, ApiError>>;
+  /** Dynamic Client Registration entry point for OAuth2 clients. */
+  oauthRegister(req: McpOAuthRegisterRequest): Promise<Result<McpOAuthRegisterResponse, ApiError>>;
   /** MCP server CRUD, submissions, and approval workflow. */
   readonly servers: McpServersNamespace;
   /** Curated tool-set administration. */
@@ -538,6 +724,83 @@ export const createMcp = (transport: Transport): McpNamespace => ({
     return transport.request<MakeMcpServersPublicResponse>({
       method: "POST",
       path: "/v1/mcp/make_public",
+      body: req,
+    });
+  },
+  clientIp() {
+    return transport.request<McpClientIpResponse>({
+      method: "GET",
+      path: "/v1/mcp/network/client-ip",
+    });
+  },
+  openApiRegistry() {
+    return transport.request<McpOpenApiRegistryResponse>({
+      method: "GET",
+      path: "/v1/mcp/openapi-registry",
+    });
+  },
+  registryJson() {
+    return transport.request<McpPublicRegistryResponse>({
+      method: "GET",
+      path: "/v1/mcp/registry.json",
+    });
+  },
+  userCredentials() {
+    return transport.request<readonly McpUserCredentialListItem[]>({
+      method: "GET",
+      path: "/v1/mcp/user-credentials",
+    });
+  },
+  storeUserCredential(serverId, req) {
+    return transport.request<McpUserCredentialResponse>({
+      method: "POST",
+      path: `/v1/mcp/server/${encode(serverId)}/user-credential`,
+      body: req,
+    });
+  },
+  deleteUserCredential(serverId) {
+    return transport.request<McpUserCredentialResponse>({
+      method: "DELETE",
+      path: `/v1/mcp/server/${encode(serverId)}/user-credential`,
+    });
+  },
+  storeOAuthUserCredential(serverId, req) {
+    return transport.request<McpOAuthUserCredentialStatus>({
+      method: "POST",
+      path: `/v1/mcp/server/${encode(serverId)}/oauth-user-credential`,
+      body: req,
+    });
+  },
+  deleteOAuthUserCredential(serverId) {
+    return transport.request<McpOAuthUserCredentialStatus>({
+      method: "DELETE",
+      path: `/v1/mcp/server/${encode(serverId)}/oauth-user-credential`,
+    });
+  },
+  oauthUserCredentialStatus(serverId) {
+    return transport.request<McpOAuthUserCredentialStatus>({
+      method: "GET",
+      path: `/v1/mcp/server/${encode(serverId)}/oauth-user-credential/status`,
+    });
+  },
+  oauthAuthorize(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/v1/mcp/oauth/authorize",
+      query: filterUndefined(query),
+    });
+  },
+  oauthToken(req) {
+    return transport.request<McpOAuthTokenResponse>({
+      method: "POST",
+      path: "/v1/mcp/oauth/token",
+      body: req,
+    });
+  },
+  oauthRegister(req) {
+    return transport.request<McpOAuthRegisterResponse>({
+      method: "POST",
+      path: "/v1/mcp/oauth/register",
       body: req,
     });
   },

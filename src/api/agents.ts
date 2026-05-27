@@ -244,11 +244,22 @@ export interface AgentsNamespace {
   ): Promise<Result<MakeAgentsPublicResponse, ApiError>>;
   /** Fetch the public agent card for an agent. */
   agentCard(agentId: string): Promise<Result<AgentCard, ApiError>>;
+  /**
+   * Legacy A2A discovery filename. Some clients fetch `/.well-known/agent.json`
+   * instead of `/.well-known/agent-card.json`; this method targets that path.
+   */
+  agentCardLegacy(agentId: string): Promise<Result<AgentCard, ApiError>>;
   /** Send a JSON-RPC message to an agent (A2A). */
   sendMessage(
     agentId: string,
     req: A2aSendMessageRequest,
   ): Promise<Result<A2aSendMessageResponse, ApiError>>;
+  /**
+   * Generic A2A invocation at the bare `/a2a/{agent_id}` path. Returns the
+   * untyped response since the body shape depends on the agent. The payload
+   * follows the A2A request envelope (typically a JSON-RPC body).
+   */
+  invoke(agentId: string, req: unknown): Promise<Result<unknown, ApiError>>;
 }
 
 const encode = (s: string) => encodeURIComponent(s);
@@ -321,10 +332,23 @@ export const createAgents = (transport: Transport): AgentsNamespace => ({
       path: `/a2a/${encode(agentId)}/.well-known/agent-card.json`,
     });
   },
+  agentCardLegacy(agentId) {
+    return transport.request<AgentCard>({
+      method: "GET",
+      path: `/a2a/${encode(agentId)}/.well-known/agent.json`,
+    });
+  },
   sendMessage(agentId, req) {
     return transport.request<A2aSendMessageResponse>({
       method: "POST",
       path: `/v1/a2a/${encode(agentId)}/message/send`,
+      body: req,
+    });
+  },
+  invoke(agentId, req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: `/a2a/${encode(agentId)}`,
       body: req,
     });
   },

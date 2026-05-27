@@ -83,6 +83,95 @@ export interface AccessGroupsNamespace {
   delete(accessGroupId: string): Promise<Result<unknown, ApiError>>;
 }
 
+/**
+ * Request body for the legacy `POST /access_group/new` endpoint. Distinct
+ * from `CreateAccessGroupRequest`: this form tags model deployments by name
+ * (or by id) so that keys/teams referencing the access group can route to
+ * them.
+ */
+export interface CreateModelAccessGroupRequest {
+  /** Access group name (e.g. `"production-models"`). */
+  readonly access_group: string;
+  /** Model names to tag (tags every deployment for each name). */
+  readonly model_names?: readonly string[];
+  /** Specific deployment ids to tag (more precise than `model_names`). */
+  readonly model_ids?: readonly string[];
+}
+
+/**
+ * Request body for `PUT /access_group/{access_group}/update`. At least one of
+ * `model_names` and `model_ids` must be provided.
+ */
+export interface UpdateModelAccessGroupRequest {
+  /** Replacement model names list. */
+  readonly model_names?: readonly string[];
+  /** Replacement deployment id list. */
+  readonly model_ids?: readonly string[];
+}
+
+/** Response from create / update on a model access group. */
+export interface ModelAccessGroupMutationResponse {
+  /** Access group name. */
+  readonly access_group: string;
+  /** Echoed model names list, when supplied. */
+  readonly model_names?: readonly string[] | null;
+  /** Echoed deployment ids, when supplied. */
+  readonly model_ids?: readonly string[] | null;
+  /** Number of deployments updated by the call. */
+  readonly models_updated: number;
+}
+
+/** Response from `DELETE /access_group/{access_group}/delete`. */
+export interface DeleteModelAccessGroupResponse {
+  /** Access group name. */
+  readonly access_group: string;
+  /** Number of deployments where the access group tag was removed. */
+  readonly models_updated: number;
+  /** Human-readable status message. */
+  readonly message: string;
+}
+
+/** Aggregated info for one model access group. */
+export interface ModelAccessGroupInfo {
+  /** Access group name. */
+  readonly access_group: string;
+  /** Model names that belong to this access group. */
+  readonly model_names: readonly string[];
+  /** Total number of deployments carrying this access group. */
+  readonly deployment_count: number;
+}
+
+/** Response from `GET /access_group/list`. */
+export interface ListModelAccessGroupsResponse {
+  /** Access groups, sorted by name. */
+  readonly access_groups: readonly ModelAccessGroupInfo[];
+}
+
+/**
+ * Surface for the legacy model access group endpoints (`/access_group/*`).
+ * Distinct from `AccessGroupsNamespace`, which targets the newer unified
+ * access-group ACL API.
+ */
+export interface ModelAccessGroupsNamespace {
+  /** Create a model access group by tagging deployments. */
+  create(
+    req: CreateModelAccessGroupRequest,
+  ): Promise<Result<ModelAccessGroupMutationResponse, ApiError>>;
+  /** List every model access group with deployment counts. */
+  list(): Promise<Result<ListModelAccessGroupsResponse, ApiError>>;
+  /** Retrieve aggregated info for one access group. */
+  info(accessGroup: string): Promise<Result<ModelAccessGroupInfo, ApiError>>;
+  /** Replace the deployment membership for an access group. */
+  update(
+    accessGroup: string,
+    req: UpdateModelAccessGroupRequest,
+  ): Promise<Result<ModelAccessGroupMutationResponse, ApiError>>;
+  /** Remove the access group tag from every deployment. */
+  delete(
+    accessGroup: string,
+  ): Promise<Result<DeleteModelAccessGroupResponse, ApiError>>;
+}
+
 const encode = (s: string) => encodeURIComponent(s);
 
 /** Bind an `AccessGroupsNamespace` to a constructed `Transport`. */
@@ -117,6 +206,44 @@ export const createAccessGroups = (transport: Transport): AccessGroupsNamespace 
     return transport.request<unknown>({
       method: "DELETE",
       path: `/v1/access_group/${encode(accessGroupId)}`,
+    });
+  },
+});
+
+/** Bind a `ModelAccessGroupsNamespace` to a constructed `Transport`. */
+export const createModelAccessGroups = (
+  transport: Transport,
+): ModelAccessGroupsNamespace => ({
+  create(req) {
+    return transport.request<ModelAccessGroupMutationResponse>({
+      method: "POST",
+      path: "/access_group/new",
+      body: req,
+    });
+  },
+  list() {
+    return transport.request<ListModelAccessGroupsResponse>({
+      method: "GET",
+      path: "/access_group/list",
+    });
+  },
+  info(accessGroup) {
+    return transport.request<ModelAccessGroupInfo>({
+      method: "GET",
+      path: `/access_group/${encode(accessGroup)}/info`,
+    });
+  },
+  update(accessGroup, req) {
+    return transport.request<ModelAccessGroupMutationResponse>({
+      method: "PUT",
+      path: `/access_group/${encode(accessGroup)}/update`,
+      body: req,
+    });
+  },
+  delete(accessGroup) {
+    return transport.request<DeleteModelAccessGroupResponse>({
+      method: "DELETE",
+      path: `/access_group/${encode(accessGroup)}/delete`,
     });
   },
 });

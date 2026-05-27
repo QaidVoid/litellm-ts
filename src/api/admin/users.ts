@@ -140,6 +140,109 @@ export interface ListUsersQuery {
   readonly user_role?: UserRole;
 }
 
+/** Metadata for one selectable user role on `/user/available_roles`. */
+export interface AvailableUserRoleEntry {
+  /** Free-form role description. */
+  readonly description: string;
+  /** Display label used by the Admin UI. */
+  readonly ui_label: string;
+}
+
+/**
+ * Response from `GET /user/available_roles`. Keys are role identifiers
+ * (e.g. `"proxy_admin"`), values describe each role.
+ */
+export type AvailableUserRolesResponse = Readonly<Record<string, AvailableUserRoleEntry>>;
+
+/**
+ * Update payload accepted by `/user/bulk_update` when `all_users=true` is set.
+ * Mirrors `UpdateUserRequest` but without the user-identifying fields.
+ */
+export type BulkUserUpdateFields =
+  & Partial<Omit<UpdateUserRequest, "user_id" | "user_email">>
+  & {
+    /** Replace the accumulated spend counter. */
+    readonly spend?: number;
+  };
+
+/** Request body for `POST /user/bulk_update`. */
+export type BulkUpdateUsersRequest =
+  | {
+    /** Per-user update payloads (each carries `user_id` or `user_email`). */
+    readonly users: readonly UpdateUserRequest[];
+    readonly all_users?: false;
+    readonly user_updates?: never;
+  }
+  | {
+    readonly users?: never;
+    /** Apply `user_updates` to every user in the database. */
+    readonly all_users: true;
+    /** Updates broadcast to every user. */
+    readonly user_updates: BulkUserUpdateFields;
+  };
+
+/** Per-user result returned by `/user/bulk_update`. */
+export interface BulkUserUpdateResult {
+  /** Target user id, when supplied or resolved. */
+  readonly user_id?: string;
+  /** Target user email, when supplied. */
+  readonly user_email?: string;
+  /** Whether the per-user update succeeded. */
+  readonly success: boolean;
+  /** Failure reason, when `success` is false. */
+  readonly error?: string;
+  /** Updated user row, when `success` is true. */
+  readonly updated_user?: Readonly<Record<string, unknown>>;
+}
+
+/** Response from `POST /user/bulk_update`. */
+export interface BulkUpdateUsersResponse {
+  /** Per-user results, one entry per attempted update. */
+  readonly results: readonly BulkUserUpdateResult[];
+  /** Number of update entries received. */
+  readonly total_requested: number;
+  /** Count of successful updates. */
+  readonly successful_updates: number;
+  /** Count of failed updates. */
+  readonly failed_updates: number;
+}
+
+/** Query parameters for `GET /user/daily/activity`. */
+export interface UserDailyActivityQuery {
+  /** Inclusive start date `YYYY-MM-DD`. */
+  readonly start_date?: string;
+  /** Inclusive end date `YYYY-MM-DD`. */
+  readonly end_date?: string;
+  /** Filter by model name. */
+  readonly model?: string;
+  /** Filter by virtual key. */
+  readonly api_key?: string;
+  /** Filter by user id. Admins may omit for a global view. */
+  readonly user_id?: string;
+  /** Page number (1-indexed). */
+  readonly page?: number;
+  /** Page size (1-1000). */
+  readonly page_size?: number;
+  /** Timezone offset in minutes from UTC. */
+  readonly timezone?: number;
+}
+
+/** Query parameters for `GET /user/daily/activity/aggregated`. */
+export interface UserDailyActivityAggregatedQuery {
+  /** Inclusive start date `YYYY-MM-DD`. */
+  readonly start_date?: string;
+  /** Inclusive end date `YYYY-MM-DD`. */
+  readonly end_date?: string;
+  /** Filter by model name. */
+  readonly model?: string;
+  /** Filter by virtual key. */
+  readonly api_key?: string;
+  /** Filter by user id. Admins may omit for a global view. */
+  readonly user_id?: string;
+  /** Timezone offset in minutes from UTC. */
+  readonly timezone?: number;
+}
+
 /** Response from `/user/list`. */
 export interface ListUsersResponse {
   /** Users on the current page. */
@@ -162,6 +265,16 @@ export interface UsersNamespace {
   update(req: UpdateUserRequest): Promise<Result<User, ApiError>>;
   /** Soft-delete one or more users. */
   delete(req: DeleteUsersRequest): Promise<Result<{ readonly status: "success" }, ApiError>>;
+  /** Roles the Admin UI exposes when assigning a user role. */
+  availableRoles(): Promise<Result<AvailableUserRolesResponse, ApiError>>;
+  /** Bulk-update users by id/email, or broadcast a payload to every user. */
+  bulkUpdate(req: BulkUpdateUsersRequest): Promise<Result<BulkUpdateUsersResponse, ApiError>>;
+  /** Per-day spend / request counters scoped to a user. */
+  dailyActivity(query: UserDailyActivityQuery): Promise<Result<unknown, ApiError>>;
+  /** Aggregated per-day activity across all dates in the window. */
+  dailyActivityAggregated(
+    query: UserDailyActivityAggregatedQuery,
+  ): Promise<Result<unknown, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -201,6 +314,33 @@ export const createUsers = (transport: Transport): UsersNamespace => ({
       method: "POST",
       path: "/user/delete",
       body: req,
+    });
+  },
+  availableRoles() {
+    return transport.request<AvailableUserRolesResponse>({
+      method: "GET",
+      path: "/user/available_roles",
+    });
+  },
+  bulkUpdate(req) {
+    return transport.request<BulkUpdateUsersResponse>({
+      method: "POST",
+      path: "/user/bulk_update",
+      body: req,
+    });
+  },
+  dailyActivity(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/user/daily/activity",
+      query: filterUndefined(query),
+    });
+  },
+  dailyActivityAggregated(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/user/daily/activity/aggregated",
+      query: filterUndefined(query),
     });
   },
 });

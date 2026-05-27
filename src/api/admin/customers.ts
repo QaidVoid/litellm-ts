@@ -126,6 +126,26 @@ export interface Customer {
   readonly litellm_budget_table?: Readonly<Record<string, unknown>>;
 }
 
+/** Query parameters for `GET /customer/daily/activity`. */
+export interface CustomerDailyActivityQuery {
+  /** Comma-separated end-user ids. */
+  readonly end_user_ids?: string;
+  /** Inclusive start date `YYYY-MM-DD`. */
+  readonly start_date?: string;
+  /** Inclusive end date `YYYY-MM-DD`. */
+  readonly end_date?: string;
+  /** Filter by model name. */
+  readonly model?: string;
+  /** Filter by virtual key. */
+  readonly api_key?: string;
+  /** Page number (1-indexed). */
+  readonly page?: number;
+  /** Page size. */
+  readonly page_size?: number;
+  /** End-user ids to exclude from the aggregation. */
+  readonly exclude_end_user_ids?: string;
+}
+
 /** Surface for customer (end-user) administration on the `Client`. */
 export interface CustomersNamespace {
   /** Create a new customer. */
@@ -142,7 +162,19 @@ export interface CustomersNamespace {
   block(req: BlockCustomersRequest): Promise<Result<readonly Customer[], ApiError>>;
   /** Lift a previous block. */
   unblock(req: BlockCustomersRequest): Promise<Result<readonly Customer[], ApiError>>;
+  /** Per-day spend / request counters for customers (end users). */
+  dailyActivity(query?: CustomerDailyActivityQuery): Promise<Result<unknown, ApiError>>;
 }
+
+const filterUndefined = <T extends object>(
+  q: T,
+): Readonly<Record<string, string | number | boolean>> => {
+  const out: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(q)) {
+    if (v !== undefined) out[k] = v as string | number | boolean;
+  }
+  return out;
+};
 
 /** Bind a `CustomersNamespace` to a constructed `Transport`. */
 export const createCustomers = (transport: Transport): CustomersNamespace => ({
@@ -181,6 +213,13 @@ export const createCustomers = (transport: Transport): CustomersNamespace => ({
       method: "POST",
       path: "/customer/unblock",
       body: req,
+    });
+  },
+  dailyActivity(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/customer/daily/activity",
+      ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },
 });

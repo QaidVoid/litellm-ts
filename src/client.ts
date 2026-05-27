@@ -7,7 +7,12 @@ import { type BudgetsNamespace, createBudgets } from "./api/admin/budgets.ts";
 import { type CacheNamespace, createCache } from "./api/admin/cache.ts";
 import { type CallbacksNamespace, createCallbacks } from "./api/admin/callbacks.ts";
 import { type ConfigNamespace, createConfig } from "./api/admin/config.ts";
-import { type AccessGroupsNamespace, createAccessGroups } from "./api/admin/access_groups.ts";
+import {
+  type AccessGroupsNamespace,
+  createAccessGroups,
+  createModelAccessGroups,
+  type ModelAccessGroupsNamespace,
+} from "./api/admin/access_groups.ts";
 import { type ComplianceNamespace, createCompliance } from "./api/admin/compliance.ts";
 import { createCustomers, type CustomersNamespace } from "./api/admin/customers.ts";
 import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.ts";
@@ -147,6 +152,11 @@ export interface Client {
   readonly router: RouterNamespace;
   /** Access groups (unified ACL across models, MCP servers, agents). */
   readonly accessGroups: AccessGroupsNamespace;
+  /**
+   * Legacy model access groups (`/access_group/*`), used to tag deployments
+   * for routing rather than the unified ACL surface above.
+   */
+  readonly modelAccessGroups: ModelAccessGroupsNamespace;
   /** JWT-claim-to-virtual-key mappings. */
   readonly jwtMappings: JwtMappingsNamespace;
   /** Regulatory compliance checks (EU AI Act, GDPR). */
@@ -237,6 +247,7 @@ export const createClient = (config: TransportConfig): Client => {
     fallbacks: createFallbacks(transport),
     router: createRouter(transport),
     accessGroups: createAccessGroups(transport),
+    modelAccessGroups: createModelAccessGroups(transport),
     jwtMappings: createJwtMappings(transport),
     compliance: createCompliance(transport),
     tools: createTools(transport),

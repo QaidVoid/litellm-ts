@@ -39,6 +39,42 @@ export interface CallbackHealthResponse {
   readonly callbacks: readonly CallbackInfo[];
 }
 
+/**
+ * Schema for one configurable parameter on a logging callback, as returned
+ * by `/callbacks/configs`. Shape mirrors the proxy's `callback_configs.json`
+ * file.
+ */
+export interface CallbackConfigField {
+  /** Backend field name. */
+  readonly field_name?: string;
+  /** Field type tag (e.g. `"String"`, `"Boolean"`). */
+  readonly field_type?: string;
+  /** Human-friendly description. */
+  readonly field_description?: string;
+  /** Default value applied when unset. */
+  readonly field_default?: unknown;
+  /** Whether the field accepts a secret value. */
+  readonly is_secret?: boolean;
+  /** Additional provider-specific fields. */
+  readonly [key: string]: unknown;
+}
+
+/** Per-callback schema entry returned by `/callbacks/configs`. */
+export interface CallbackConfigEntry {
+  /** Callback identifier (e.g. `"langfuse"`). */
+  readonly callback_name?: string;
+  /** Configurable fields for this callback. */
+  readonly fields?: readonly CallbackConfigField[];
+  /** Additional provider-specific fields. */
+  readonly [key: string]: unknown;
+}
+
+/**
+ * Response from `GET /callbacks/configs`. Keys are callback identifiers
+ * (e.g. `"langfuse"`); values are the per-callback configuration schema.
+ */
+export type CallbackConfigsResponse = Readonly<Record<string, CallbackConfigEntry>>;
+
 /** Surface for callback administration on the `Client`. */
 export interface CallbacksNamespace {
   /** List configured callbacks. */
@@ -47,6 +83,8 @@ export interface CallbacksNamespace {
   update(req: UpdateCallbacksRequest): Promise<Result<{ readonly status: "success" }, ApiError>>;
   /** Probe each callback's logging endpoint for liveness. */
   health(): Promise<Result<CallbackHealthResponse, ApiError>>;
+  /** Read the per-callback configuration schema (used by the Admin UI). */
+  configs(): Promise<Result<CallbackConfigsResponse, ApiError>>;
 }
 
 /** Bind a `CallbacksNamespace` to a constructed `Transport`. */
@@ -68,6 +106,12 @@ export const createCallbacks = (transport: Transport): CallbacksNamespace => ({
     return transport.request<CallbackHealthResponse>({
       method: "GET",
       path: "/callback/health",
+    });
+  },
+  configs() {
+    return transport.request<CallbackConfigsResponse>({
+      method: "GET",
+      path: "/callbacks/configs",
     });
   },
 });

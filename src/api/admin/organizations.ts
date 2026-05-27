@@ -118,6 +118,26 @@ export interface ListOrganizationsResponse {
   readonly total_count?: number;
 }
 
+/** Query parameters for `GET /organization/daily/activity`. */
+export interface OrganizationDailyActivityQuery {
+  /** Comma-separated organization ids. */
+  readonly organization_ids?: string;
+  /** Inclusive start date `YYYY-MM-DD`. */
+  readonly start_date?: string;
+  /** Inclusive end date `YYYY-MM-DD`. */
+  readonly end_date?: string;
+  /** Filter by model name. */
+  readonly model?: string;
+  /** Filter by virtual key. */
+  readonly api_key?: string;
+  /** Page number (1-indexed). */
+  readonly page?: number;
+  /** Page size. */
+  readonly page_size?: number;
+  /** Organization ids to exclude from the aggregation. */
+  readonly exclude_organization_ids?: string;
+}
+
 /** Surface for organization administration on the `Client`. */
 export interface OrganizationsNamespace {
   /** Create an organization. */
@@ -142,7 +162,21 @@ export interface OrganizationsNamespace {
   updateMember(
     req: UpdateOrganizationMemberRequest,
   ): Promise<Result<OrganizationMemberSpec, ApiError>>;
+  /** Per-day spend / request counters for organizations. */
+  dailyActivity(
+    query?: OrganizationDailyActivityQuery,
+  ): Promise<Result<unknown, ApiError>>;
 }
+
+const filterUndefined = <T extends object>(
+  q: T,
+): Readonly<Record<string, string | number | boolean>> => {
+  const out: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(q)) {
+    if (v !== undefined) out[k] = v as string | number | boolean;
+  }
+  return out;
+};
 
 /** Bind an `OrganizationsNamespace` to a constructed `Transport`. */
 export const createOrganizations = (transport: Transport): OrganizationsNamespace => ({
@@ -168,14 +202,14 @@ export const createOrganizations = (transport: Transport): OrganizationsNamespac
   },
   update(req) {
     return transport.request<Organization>({
-      method: "POST",
+      method: "PATCH",
       path: "/organization/update",
       body: req,
     });
   },
   delete(req) {
     return transport.request<{ readonly status: "success" }>({
-      method: "POST",
+      method: "DELETE",
       path: "/organization/delete",
       body: req,
     });
@@ -189,16 +223,23 @@ export const createOrganizations = (transport: Transport): OrganizationsNamespac
   },
   deleteMember(req) {
     return transport.request<{ readonly status: "success" }>({
-      method: "POST",
+      method: "DELETE",
       path: "/organization/member_delete",
       body: req,
     });
   },
   updateMember(req) {
     return transport.request<OrganizationMemberSpec>({
-      method: "POST",
+      method: "PATCH",
       path: "/organization/member_update",
       body: req,
+    });
+  },
+  dailyActivity(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/organization/daily/activity",
+      ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },
 });

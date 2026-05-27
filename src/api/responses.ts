@@ -220,6 +220,74 @@ export interface DeleteResponseResponse {
   readonly deleted: boolean;
 }
 
+/** Query parameters for `GET /v1/responses/{id}/input_items`. */
+export interface ListResponseInputItemsQuery {
+  /** Cursor: return items after this id. */
+  readonly after?: string;
+  /** Cursor: return items before this id. */
+  readonly before?: string;
+  /** Page size. */
+  readonly limit?: number;
+  /** Sort direction. */
+  readonly order?: "asc" | "desc";
+  /** Include extra fields on each item (provider-specific). */
+  readonly include?: readonly string[];
+}
+
+/** A single input item attached to a stored response. */
+export interface ResponseInputItem {
+  /** Server-assigned id. */
+  readonly id: string;
+  /** Item kind (e.g. `"message"`, `"function_call"`). */
+  readonly type: string;
+  /** Speaker role when the item is a message. */
+  readonly role?: string;
+  /** Item content; shape varies by `type`. */
+  readonly content?: unknown;
+  /** Additional fields the proxy may surface. */
+  readonly [key: string]: unknown;
+}
+
+/** Response from `GET /v1/responses/{id}/input_items`. */
+export interface ListResponseInputItemsResponse {
+  /** Discriminator, always `"list"`. */
+  readonly object: "list";
+  /** Returned input items. */
+  readonly data: readonly ResponseInputItem[];
+  /** Id of the first record on the page. */
+  readonly first_id?: string;
+  /** Id of the last record on the page. */
+  readonly last_id?: string;
+  /** True when more pages remain. */
+  readonly has_more: boolean;
+}
+
+/** Request body for `POST /v1/responses/compact`. */
+export interface ResponsesCompactRequest {
+  /** Model id used for the compaction pass. */
+  readonly model: ModelId;
+  /** Conversation to compact; same shape as `ResponsesCreateRequest.input`. */
+  readonly input: ResponsesInput;
+  /** Optional instructions guiding the compaction. */
+  readonly instructions?: string;
+  /** Free-form metadata stored with the compaction result. */
+  readonly metadata?: Readonly<Record<string, string>>;
+  /** Additional provider-specific fields. */
+  readonly [key: string]: unknown;
+}
+
+/** Response from `POST /v1/responses/compact`. */
+export interface ResponsesCompactResponse {
+  /** Discriminator, always `"response.compaction"`. */
+  readonly object?: string;
+  /** Server-assigned id for the compaction artifact. */
+  readonly id?: string;
+  /** Opaque, encrypted items the caller can substitute back into the input list. */
+  readonly items?: readonly Readonly<Record<string, unknown>>[];
+  /** Additional provider-specific fields. */
+  readonly [key: string]: unknown;
+}
+
 /** Surface for the Responses endpoint on the `Client`. */
 export interface ResponsesNamespace {
   /** Issue a non-streaming Responses request. */
@@ -234,6 +302,13 @@ export interface ResponsesNamespace {
   cancel(responseId: string): Promise<Result<ResponsesResponse, ApiError>>;
   /** List previously stored responses. */
   list(query?: ListResponsesQuery): Promise<Result<ListResponsesResponse, ApiError>>;
+  /** List input items recorded for a stored response. */
+  listInputItems(
+    responseId: string,
+    query?: ListResponseInputItemsQuery,
+  ): Promise<Result<ListResponseInputItemsResponse, ApiError>>;
+  /** Run a compaction pass over a conversation, returning opaque compacted items. */
+  compact(req: ResponsesCompactRequest): Promise<Result<ResponsesCompactResponse, ApiError>>;
   /** Delete a stored response. */
   delete(responseId: string): Promise<Result<DeleteResponseResponse, ApiError>>;
 }
@@ -311,6 +386,30 @@ export const createResponses = (transport: Transport): ResponsesNamespace => ({
       method: "GET",
       path: "/v1/responses",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),
+    });
+  },
+  listInputItems(responseId, query) {
+    return transport.request<ListResponseInputItemsResponse>({
+      method: "GET",
+      path: `/v1/responses/${encodeURIComponent(responseId)}/input_items`,
+      ...(query === undefined ? {} : {
+        query: (() => {
+          const out: Record<string, string | number | boolean | readonly string[]> = {};
+          for (const [k, v] of Object.entries(query)) {
+            if (v !== undefined) {
+              out[k] = v as string | number | boolean | readonly string[];
+            }
+          }
+          return out;
+        })(),
+      }),
+    });
+  },
+  compact(req) {
+    return transport.request<ResponsesCompactResponse>({
+      method: "POST",
+      path: "/v1/responses/compact",
+      body: req,
     });
   },
   delete(responseId) {

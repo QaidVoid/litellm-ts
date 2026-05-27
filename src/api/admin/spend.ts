@@ -116,6 +116,105 @@ export interface SpendLog {
   readonly metadata?: Readonly<Record<string, unknown>>;
 }
 
+/** Query parameters for `GET /spend/users`. */
+export interface SpendUsersQuery {
+  /** Restrict to a single user (returns one row when set). */
+  readonly user_id?: string;
+}
+
+/** A user row returned by `GET /spend/users` (password stripped). */
+export interface SpendUserRow {
+  /** Server-assigned user id. */
+  readonly user_id?: string;
+  /** Primary email. */
+  readonly user_email?: string;
+  /** Friendly alias. */
+  readonly user_alias?: string;
+  /** Lifetime spend in USD. */
+  readonly spend?: number;
+  /** Hard spend ceiling. */
+  readonly max_budget?: number;
+  /** Other persisted user fields. */
+  readonly [key: string]: unknown;
+}
+
+/** A virtual-key row returned by `GET /spend/keys` ordered by spend. */
+export interface SpendKeyRow {
+  /** Hashed key token. */
+  readonly token?: string;
+  /** Human-friendly alias. */
+  readonly key_alias?: string;
+  /** Lifetime spend in USD. */
+  readonly spend?: number;
+  /** Hard spend ceiling. */
+  readonly max_budget?: number;
+  /** Other persisted key fields. */
+  readonly [key: string]: unknown;
+}
+
+/** Query parameters for `GET /spend/logs/v2`. */
+export interface SpendLogsV2Query {
+  /** Filter by virtual key. */
+  readonly api_key?: string;
+  /** Filter by user. */
+  readonly user_id?: string;
+  /** Filter by request id. */
+  readonly request_id?: string;
+  /** Filter by team. */
+  readonly team_id?: string;
+  /** Lower bound on spend (inclusive). */
+  readonly min_spend?: number;
+  /** Upper bound on spend (inclusive). */
+  readonly max_spend?: number;
+  /** Inclusive start (`YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`). */
+  readonly start_date: string;
+  /** Inclusive end (`YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`). */
+  readonly end_date: string;
+  /** 1-based page number. */
+  readonly page?: number;
+  /** Page size (1-100). */
+  readonly page_size?: number;
+  /** Filter by status (`"success"` or `"failure"`). */
+  readonly status_filter?: string;
+  /** Filter by model name. */
+  readonly model?: string;
+  /** Filter by model deployment id. */
+  readonly model_id?: string;
+  /** Filter by key alias. */
+  readonly key_alias?: string;
+  /** Filter by end-user id. */
+  readonly end_user?: string;
+  /** Filter by error code (e.g. `"404"`). */
+  readonly error_code?: string;
+  /** Partial-match filter on error message. */
+  readonly error_message?: string;
+  /** Sort field. */
+  readonly sort_by?:
+    | "spend"
+    | "total_tokens"
+    | "startTime"
+    | "endTime"
+    | "request_duration_ms"
+    | "model"
+    | "ttft_ms";
+  /** Sort direction. */
+  readonly sort_order?: "asc" | "desc";
+}
+
+/** Response from `GET /spend/logs/v2`. */
+export interface SpendLogsV2Response {
+  /** Log entries on the current page. */
+  readonly data: readonly SpendLog[];
+  /** Total entry count across all pages. */
+  readonly total: number;
+  /** Page number returned. */
+  readonly page: number;
+  /** Page size returned. */
+  readonly page_size: number;
+  /** Total page count. */
+  readonly total_pages: number;
+}
+
 /** Response from `/spend/logs`. */
 export interface SpendLogsResponse {
   /** Log entries on the current page. */
@@ -134,6 +233,12 @@ export interface SpendNamespace {
   tags(query?: SpendTagsQuery): Promise<Result<SpendTagsResponse, ApiError>>;
   /** Paginated raw spend logs with optional filters. */
   logs(query?: SpendLogsQuery): Promise<Result<SpendLogsResponse, ApiError>>;
+  /** All virtual keys ordered by spend. */
+  keys(): Promise<Result<readonly SpendKeyRow[], ApiError>>;
+  /** All users ordered by spend (or a single row when `user_id` is set). */
+  users(query?: SpendUsersQuery): Promise<Result<readonly SpendUserRow[], ApiError>>;
+  /** Paginated spend logs (v2) with rich filtering and sort options. */
+  logsV2(query: SpendLogsV2Query): Promise<Result<SpendLogsV2Response, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -167,6 +272,26 @@ export const createSpend = (transport: Transport): SpendNamespace => ({
       method: "GET",
       path: "/spend/logs",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),
+    });
+  },
+  keys() {
+    return transport.request<readonly SpendKeyRow[]>({
+      method: "GET",
+      path: "/spend/keys",
+    });
+  },
+  users(query) {
+    return transport.request<readonly SpendUserRow[]>({
+      method: "GET",
+      path: "/spend/users",
+      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+    });
+  },
+  logsV2(query) {
+    return transport.request<SpendLogsV2Response>({
+      method: "GET",
+      path: "/spend/logs/v2",
+      query: filterUndefined(query),
     });
   },
 });

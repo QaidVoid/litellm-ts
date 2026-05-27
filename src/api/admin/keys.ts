@@ -235,6 +235,100 @@ export interface ListKeysResponse {
   readonly size: number;
 }
 
+/** Request body for `POST /key/{key}/reset_spend`. */
+export interface ResetKeySpendRequest {
+  /** New spend value (USD) to write. */
+  readonly reset_to: number;
+}
+
+/** Response from `POST /key/{key}/reset_spend`. */
+export interface ResetKeySpendResponse {
+  /** Hashed token of the key whose spend was reset. */
+  readonly key_hash: string;
+  /** Spend after the reset. */
+  readonly spend: number;
+  /** Spend before the reset. */
+  readonly previous_spend: number;
+  /** Hard budget ceiling for the key, when set. */
+  readonly max_budget?: number | null;
+  /** Next scheduled budget reset, when configured. */
+  readonly budget_reset_at?: string | null;
+}
+
+/** Query parameters for `GET /key/aliases`. */
+export interface ListKeyAliasesQuery {
+  /** 1-based page number. */
+  readonly page?: number;
+  /** Page size (1-100). Defaults to 50. */
+  readonly size?: number;
+  /** Case-insensitive substring filter applied to aliases. */
+  readonly search?: string;
+  /** Restrict to aliases for keys belonging to this team. */
+  readonly team_id?: string;
+}
+
+/** Response from `GET /key/aliases`. */
+export interface ListKeyAliasesResponse {
+  /** Distinct alias strings. */
+  readonly aliases: readonly string[];
+  /** Total alias count across all pages. */
+  readonly total_count: number;
+  /** Page number returned. */
+  readonly current_page: number;
+  /** Total page count. */
+  readonly total_pages: number;
+  /** Page size returned. */
+  readonly size: number;
+}
+
+/** A single key-update entry for `/key/bulk_update`. */
+export interface BulkUpdateKeyItem {
+  /** Target key (token). */
+  readonly key: string;
+  /** Replace the attached budget id. */
+  readonly budget_id?: string;
+  /** Hard spend ceiling in USD. */
+  readonly max_budget?: number;
+  /** Replace the attached team id. */
+  readonly team_id?: string;
+  /** Replace the tag list. */
+  readonly tags?: readonly string[];
+}
+
+/** Request body for `POST /key/bulk_update`. */
+export interface BulkUpdateKeysRequest {
+  /** Individual key update entries (max 500 per call). */
+  readonly keys: readonly BulkUpdateKeyItem[];
+}
+
+/** Per-key success record returned by `/key/bulk_update`. */
+export interface BulkKeyUpdateSuccess {
+  /** Key that was updated. */
+  readonly key: string;
+  /** Snapshot of the updated key row. */
+  readonly key_info: Readonly<Record<string, unknown>>;
+}
+
+/** Per-key failure record returned by `/key/bulk_update`. */
+export interface BulkKeyUpdateFailure {
+  /** Key that failed to update. */
+  readonly key: string;
+  /** Snapshot of the original key row, when available. */
+  readonly key_info?: Readonly<Record<string, unknown>>;
+  /** Reason the update was rejected. */
+  readonly failed_reason: string;
+}
+
+/** Response from `POST /key/bulk_update`. */
+export interface BulkUpdateKeysResponse {
+  /** Number of update entries received. */
+  readonly total_requested: number;
+  /** Per-key success records. */
+  readonly successful_updates: readonly BulkKeyUpdateSuccess[];
+  /** Per-key failure records. */
+  readonly failed_updates: readonly BulkKeyUpdateFailure[];
+}
+
 /** Response from `/key/health`. */
 export interface KeyHealthResponse {
   /** Overall key health verdict. */
@@ -264,6 +358,24 @@ export interface KeysNamespace {
   update(req: UpdateKeyRequest): Promise<Result<KeyMetadata, ApiError>>;
   /** Rotate a key, optionally keeping the old value live for `grace_period`. */
   regenerate(req: RegenerateKeyRequest): Promise<Result<KeyMetadata, ApiError>>;
+  /**
+   * Rotate a specific key identified by its value in the URL path. Mirrors
+   * `POST /key/{key}/regenerate`; useful when the proxy enforces path-based
+   * audit checks.
+   */
+  regenerateByPath(
+    key: string,
+    req?: RegenerateKeyRequest,
+  ): Promise<Result<KeyMetadata, ApiError>>;
+  /** Reset a key's accumulated spend counter (`POST /key/{key}/reset_spend`). */
+  resetSpend(
+    key: string,
+    req: ResetKeySpendRequest,
+  ): Promise<Result<ResetKeySpendResponse, ApiError>>;
+  /** Paginated list of key aliases visible to the caller. */
+  aliases(query?: ListKeyAliasesQuery): Promise<Result<ListKeyAliasesResponse, ApiError>>;
+  /** Bulk-update multiple keys in a single round trip (admin only). */
+  bulkUpdate(req: BulkUpdateKeysRequest): Promise<Result<BulkUpdateKeysResponse, ApiError>>;
   /** Delete one or more keys by value or alias. */
   delete(req: DeleteKeysRequest): Promise<Result<DeleteKeysResponse, ApiError>>;
   /** Block a key from making requests. */
@@ -275,6 +387,18 @@ export interface KeysNamespace {
 }
 
 const toQuery = (q: ListKeysQuery): Readonly<Record<string, string | number | boolean>> => {
+  const out: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(q)) {
+    if (v !== undefined) out[k] = v as string | number | boolean;
+  }
+  return out;
+};
+
+const encode = (s: string) => encodeURIComponent(s);
+
+const filterUndefined = <T extends object>(
+  q: T,
+): Readonly<Record<string, string | number | boolean>> => {
   const out: Record<string, string | number | boolean> = {};
   for (const [k, v] of Object.entries(q)) {
     if (v !== undefined) out[k] = v as string | number | boolean;
@@ -323,6 +447,34 @@ export const createKeys = (transport: Transport): KeysNamespace => ({
     return transport.request<KeyMetadata>({
       method: "POST",
       path: "/key/regenerate",
+      body: req,
+    });
+  },
+  regenerateByPath(key, req) {
+    return transport.request<KeyMetadata>({
+      method: "POST",
+      path: `/key/${encode(key)}/regenerate`,
+      ...(req === undefined ? {} : { body: req }),
+    });
+  },
+  resetSpend(key, req) {
+    return transport.request<ResetKeySpendResponse>({
+      method: "POST",
+      path: `/key/${encode(key)}/reset_spend`,
+      body: req,
+    });
+  },
+  aliases(query) {
+    return transport.request<ListKeyAliasesResponse>({
+      method: "GET",
+      path: "/key/aliases",
+      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+    });
+  },
+  bulkUpdate(req) {
+    return transport.request<BulkUpdateKeysResponse>({
+      method: "POST",
+      path: "/key/bulk_update",
       body: req,
     });
   },
