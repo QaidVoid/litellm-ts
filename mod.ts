@@ -537,6 +537,39 @@ export type {
 } from "./src/api/rag.ts";
 
 export type {
+  A2aSendMessageRequest,
+  A2aSendMessageResponse,
+  Agent,
+  AgentCapabilities,
+  AgentCard,
+  AgentObjectPermission,
+  AgentSkill,
+  AgentsNamespace,
+  CreateAgentRequest,
+  ListAgentsQuery,
+  MakeAgentsPublicRequest,
+  MakeAgentsPublicResponse,
+  PatchAgentRequest,
+  UpdateAgentRequest,
+} from "./src/api/agents.ts";
+
+export type {
+  AvailableSearchProvider,
+  AvailableSearchProvidersResponse,
+  CreateSearchToolRequest,
+  ListSearchToolsResponse,
+  SearchNamespace,
+  SearchRequest,
+  SearchResponse,
+  SearchTool,
+  SearchToolInfo,
+  SearchToolLiteLLMParams,
+  SearchToolsNamespace,
+  TestSearchToolConnectionRequest,
+  UpdateSearchToolRequest,
+} from "./src/api/search.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,

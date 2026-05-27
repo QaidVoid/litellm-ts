@@ -17,8 +17,10 @@ import { createScim, type ScimNamespace } from "./api/admin/scim.ts";
 import { createCredentials, type CredentialsNamespace } from "./api/admin/credentials.ts";
 import { type ContainersNamespace, createContainers } from "./api/containers.ts";
 import { createEvals, type EvalsNamespace } from "./api/evals.ts";
+import { type AgentsNamespace, createAgents } from "./api/agents.ts";
 import { createOcr, type OcrNamespace } from "./api/ocr.ts";
 import { createRag, type RagNamespace } from "./api/rag.ts";
+import { createSearch, type SearchNamespace } from "./api/search.ts";
 import { createRouter, type RouterNamespace } from "./api/admin/router.ts";
 import { createTags, type TagsNamespace } from "./api/admin/tags.ts";
 import { createTools, type ToolsNamespace } from "./api/admin/tools.ts";
@@ -73,6 +75,10 @@ export interface Client {
   readonly containers: ContainersNamespace;
   /** OpenAI Evals API (evaluations + runs). */
   readonly evals: EvalsNamespace;
+  /** A2A agents API (CRUD + agent cards + JSON-RPC messaging). */
+  readonly agents: AgentsNamespace;
+  /** Search API (per-provider web search + tool management). */
+  readonly search: SearchNamespace;
   /** Rerank endpoint. */
   readonly rerank: RerankNamespace;
   /** Content moderation endpoint. */
@@ -174,6 +180,8 @@ export const createClient = (config: TransportConfig): Client => {
     rag: createRag(transport),
     containers: createContainers(transport),
     evals: createEvals(transport),
+    agents: createAgents(transport),
+    search: createSearch(transport),
     rerank: createRerank(transport),
     moderation: createModeration(transport),
     files: createFiles(transport),
