@@ -13,11 +13,18 @@ import { createCustomers, type CustomersNamespace } from "./api/admin/customers.
 import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.ts";
 import { createJwtMappings, type JwtMappingsNamespace } from "./api/admin/jwt_mappings.ts";
 import { createMcp, type McpNamespace } from "./api/admin/mcp.ts";
+import { createPrompts, type PromptsNamespace } from "./api/admin/prompts.ts";
 import { createScim, type ScimNamespace } from "./api/admin/scim.ts";
 import { createCredentials, type CredentialsNamespace } from "./api/admin/credentials.ts";
 import { type ContainersNamespace, createContainers } from "./api/containers.ts";
 import { createEvals, type EvalsNamespace } from "./api/evals.ts";
 import { type AgentsNamespace, createAgents } from "./api/agents.ts";
+import {
+  type AssistantsNamespace,
+  createAssistants,
+  createThreads,
+  type ThreadsNamespace,
+} from "./api/assistants.ts";
 import { type AnthropicSkillsNamespace, createAnthropicSkills } from "./api/anthropic_skills.ts";
 import { type ClaudeCodeNamespace, createClaudeCode } from "./api/claude_code.ts";
 import { createGoogleGenai, type GoogleGenaiNamespace } from "./api/google_genai.ts";
@@ -80,6 +87,10 @@ export interface Client {
   readonly evals: EvalsNamespace;
   /** A2A agents API (CRUD + agent cards + JSON-RPC messaging). */
   readonly agents: AgentsNamespace;
+  /** OpenAI Assistants API (assistant CRUD). */
+  readonly assistants: AssistantsNamespace;
+  /** OpenAI Threads API (threads + messages + runs). */
+  readonly threads: ThreadsNamespace;
   /** Search API (per-provider web search + tool management). */
   readonly search: SearchNamespace;
   /** Native Google GenAI shape (`:generateContent`, `:countTokens`, agents, interactions). */
@@ -137,6 +148,8 @@ export interface Client {
   readonly compliance: ComplianceNamespace;
   /** Tool registry and per-tool policy administration. */
   readonly tools: ToolsNamespace;
+  /** Prompt registry administration. */
+  readonly prompts: PromptsNamespace;
   /** MCP server and toolset administration. */
   readonly mcp: McpNamespace;
   /** SCIM v2 identity-provider integration (enterprise only). */
@@ -190,6 +203,8 @@ export const createClient = (config: TransportConfig): Client => {
     containers: createContainers(transport),
     evals: createEvals(transport),
     agents: createAgents(transport),
+    assistants: createAssistants(transport),
+    threads: createThreads(transport),
     search: createSearch(transport),
     googleGenai: createGoogleGenai(transport),
     anthropicSkills: createAnthropicSkills(transport),
@@ -215,6 +230,7 @@ export const createClient = (config: TransportConfig): Client => {
     jwtMappings: createJwtMappings(transport),
     compliance: createCompliance(transport),
     tools: createTools(transport),
+    prompts: createPrompts(transport),
     mcp: createMcp(transport),
     scim: createScim(transport),
     credentials: createCredentials(transport),

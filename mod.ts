@@ -433,6 +433,24 @@ export type {
 } from "./src/api/admin/tools.ts";
 
 export type {
+  CreatePromptRequest,
+  DotpromptFileInput,
+  ListPromptsResponse,
+  PatchPromptRequest,
+  PromptEnvironmentQuery,
+  PromptInfo,
+  PromptInfoResponse,
+  PromptLiteLLMParams,
+  PromptsNamespace,
+  PromptSpec,
+  PromptTemplate,
+  PromptVersionsResponse,
+  SupportedPromptIntegration,
+  TestPromptRequest,
+  UpdatePromptRequest,
+} from "./src/api/admin/prompts.ts";
+
+export type {
   CreateMcpServerRequest,
   CreateMcpToolsetRequest,
   ListMcpServersQuery,
@@ -558,6 +576,27 @@ export type {
   RagVectorStoreOptions,
   RagVertexAIVectorStoreOptions,
 } from "./src/api/rag.ts";
+
+export type {
+  Assistant,
+  AssistantsNamespace,
+  AssistantTool,
+  CreateAssistantRequest,
+  CreateRunRequest,
+  CreateThreadMessageRequest,
+  CreateThreadRequest,
+  DeleteAssistantResponse,
+  ListAssistantsQuery,
+  ListResponse,
+  ListThreadMessagesQuery,
+  Run,
+  Thread,
+  ThreadInitialMessage,
+  ThreadMessage,
+  ThreadMessagesNamespace,
+  ThreadRunsNamespace,
+  ThreadsNamespace,
+} from "./src/api/assistants.ts";
 
 export type {
   A2aSendMessageRequest,
