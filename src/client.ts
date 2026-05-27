@@ -26,6 +26,8 @@ import {
 import { createPolicies, type PoliciesNamespace } from "./api/admin/policies.ts";
 import { createPolicyTemplates, type PolicyTemplatesNamespace } from "./api/admin/policy.ts";
 import { createInvitations, type InvitationsNamespace } from "./api/admin/invitations.ts";
+import { type AuditNamespace, createAudit } from "./api/admin/audit.ts";
+import { createProjects, type ProjectsNamespace } from "./api/admin/projects.ts";
 import {
   createVectorStoresAdmin,
   type VectorStoresAdminNamespace,
@@ -203,6 +205,10 @@ export interface Client {
   readonly policy: PolicyTemplatesNamespace;
   /** Invitation link administration. */
   readonly invitations: InvitationsNamespace;
+  /** Project administration (between teams and keys in the hierarchy). */
+  readonly projects: ProjectsNamespace;
+  /** Audit log read access. */
+  readonly audit: AuditNamespace;
   /**
    * Legacy singular `/vector_store/*` proxy administration. Distinct from
    * `vectorStores` (the OpenAI-shape plural surface).
@@ -325,6 +331,8 @@ export const createClient = (config: TransportConfig): Client => {
     policies: createPolicies(transport),
     policy: createPolicyTemplates(transport),
     invitations: createInvitations(transport),
+    projects: createProjects(transport),
+    audit: createAudit(transport),
     vectorStoresAdmin: createVectorStoresAdmin(transport),
     globalSpend: createGlobalSpend(transport),
     alerting: createAlerting(transport),

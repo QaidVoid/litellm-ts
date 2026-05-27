@@ -123,9 +123,6 @@ export interface ListPassThroughEndpointsQuery {
   readonly endpoint_id?: string;
 }
 
-/** Settings sub-block returned by `/config/pass_through_endpoints/settings`. */
-export type PassThroughEndpointSettings = Readonly<Record<string, unknown>>;
-
 /**
  * Hashicorp Vault override config (`/config_overrides/hashicorp_vault`). All
  * fields are optional on submission: omitted fields keep the persisted value,
@@ -243,8 +240,6 @@ export interface ConfigPassThroughEndpointsNamespace {
   update(endpointId: string, endpoint: PassThroughEndpoint): Promise<Result<unknown, ApiError>>;
   /** Delete a pass-through endpoint by id. */
   delete(endpointId: string): Promise<Result<unknown, ApiError>>;
-  /** Get the global pass-through settings block. */
-  settings(): Promise<Result<PassThroughEndpointSettings, ApiError>>;
 }
 
 /** Surface for global config administration. */
@@ -370,12 +365,6 @@ const createPassThroughEndpoints = (
       method: "DELETE",
       path: "/config/pass_through_endpoint",
       query: { endpoint_id: endpointId },
-    });
-  },
-  settings() {
-    return transport.request<PassThroughEndpointSettings>({
-      method: "GET",
-      path: "/config/pass_through_endpoints/settings",
     });
   },
 });

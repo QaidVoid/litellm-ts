@@ -1,5 +1,7 @@
 import type { ApiError } from "../error.ts";
+import { networkError } from "../error.ts";
 import type { Result } from "../result.ts";
+import { err, ok, tryAsync } from "../result.ts";
 import type { Transport } from "../transport.ts";
 
 /** Expiration policy applied when a container is created. */
@@ -68,6 +70,90 @@ export interface ListContainersResponse {
   readonly has_more: boolean;
 }
 
+/** Bytes accepted by `containers.files.create`. */
+export type ContainerFileInput = Blob | Uint8Array;
+
+/** A single file attached to a container. */
+export interface ContainerFile {
+  /** Server-assigned id. */
+  readonly id: string;
+  /** Discriminator, always `"container.file"`. */
+  readonly object: "container.file";
+  /** Owning container id. */
+  readonly container_id: string;
+  /** Unix epoch seconds when the file was uploaded. */
+  readonly created_at: number;
+  /** Reported size in bytes. */
+  readonly bytes?: number;
+  /** Source path (when known). */
+  readonly path?: string;
+  /** Mime type of the file. */
+  readonly source?: string;
+}
+
+/** Query parameters for `GET /v1/containers/{id}/files`. */
+export interface ListContainerFilesQuery {
+  /** Maximum records per page. */
+  readonly limit?: number;
+  /** Sort direction. */
+  readonly order?: "asc" | "desc";
+  /** Cursor: return records after this id. */
+  readonly after?: string;
+  /** Cursor: return records before this id. */
+  readonly before?: string;
+}
+
+/** Response from `GET /v1/containers/{id}/files`. */
+export interface ListContainerFilesResponse {
+  /** Discriminator, always `"list"`. */
+  readonly object: "list";
+  /** Files on the current page. */
+  readonly data: readonly ContainerFile[];
+  /** Id of the first record on the page. */
+  readonly first_id?: string;
+  /** Id of the last record on the page. */
+  readonly last_id?: string;
+  /** True when more pages remain. */
+  readonly has_more: boolean;
+}
+
+/** Response from `DELETE /v1/containers/{id}/files/{file_id}`. */
+export interface DeleteContainerFileResponse {
+  /** Id of the deleted file. */
+  readonly id: string;
+  /** Discriminator, always `"container.file.deleted"`. */
+  readonly object: "container.file.deleted";
+  /** True when the delete succeeded. */
+  readonly deleted: boolean;
+}
+
+/** Surface for managing files attached to a container. */
+export interface ContainerFilesNamespace {
+  /** Upload a new file into the container. */
+  create(
+    containerId: string,
+    file: ContainerFileInput,
+    filename?: string,
+  ): Promise<Result<ContainerFile, ApiError>>;
+  /** List files attached to a container. */
+  list(
+    containerId: string,
+    query?: ListContainerFilesQuery,
+  ): Promise<Result<ListContainerFilesResponse, ApiError>>;
+  /** Retrieve a single file's metadata. */
+  retrieve(
+    containerId: string,
+    fileId: string,
+  ): Promise<Result<ContainerFile, ApiError>>;
+  /** Download the raw bytes of a container file. */
+  content(containerId: string, fileId: string): Promise<Result<Uint8Array, ApiError>>;
+  /** Delete a file from a container. */
+  delete(
+    containerId: string,
+    fileId: string,
+  ): Promise<Result<DeleteContainerFileResponse, ApiError>>;
+}
+
 /** Response from `DELETE /v1/containers/{id}`. */
 export interface DeleteContainerResponse {
   /** Id of the deleted container. */
@@ -88,6 +174,8 @@ export interface ContainersNamespace {
   retrieve(containerId: string): Promise<Result<Container, ApiError>>;
   /** Delete a container by id. */
   delete(containerId: string): Promise<Result<DeleteContainerResponse, ApiError>>;
+  /** File sub-resource scoped to a container. */
+  readonly files: ContainerFilesNamespace;
 }
 
 const encode = (s: string) => encodeURIComponent(s);
@@ -129,5 +217,48 @@ export const createContainers = (transport: Transport): ContainersNamespace => (
       method: "DELETE",
       path: `/v1/containers/${encode(containerId)}`,
     });
+  },
+  files: {
+    create(containerId, file, filename) {
+      const fd = new FormData();
+      const blob = file instanceof Blob ? file : new Blob([file as BlobPart]);
+      fd.append("file", blob, filename ?? "file");
+      return transport.request<ContainerFile>({
+        method: "POST",
+        path: `/v1/containers/${encode(containerId)}/files`,
+        body: fd,
+      });
+    },
+    list(containerId, query) {
+      return transport.request<ListContainerFilesResponse>({
+        method: "GET",
+        path: `/v1/containers/${encode(containerId)}/files`,
+        ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      });
+    },
+    retrieve(containerId, fileId) {
+      return transport.request<ContainerFile>({
+        method: "GET",
+        path: `/v1/containers/${encode(containerId)}/files/${encode(fileId)}`,
+      });
+    },
+    async content(containerId, fileId) {
+      const res = await transport.fetchRaw({
+        method: "GET",
+        path: `/v1/containers/${encode(containerId)}/files/${encode(fileId)}/content`,
+      });
+      if (!res.ok) return res;
+      const bytes = await tryAsync(async () => new Uint8Array(await res.value.arrayBuffer()));
+      if (!bytes.ok) {
+        return err(networkError(bytes.error, "failed to read container file body"));
+      }
+      return ok(bytes.value);
+    },
+    delete(containerId, fileId) {
+      return transport.request<DeleteContainerFileResponse>({
+        method: "DELETE",
+        path: `/v1/containers/${encode(containerId)}/files/${encode(fileId)}`,
+      });
+    },
   },
 });

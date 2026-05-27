@@ -108,16 +108,6 @@ export interface DeleteEvalResponse {
   readonly deleted: boolean;
 }
 
-/** Response from `POST /v1/evals/{eval_id}/runs/{run_id}/cancel`. */
-export interface CancelEvalRunResponse {
-  /** Id of the cancelled run. */
-  readonly id: string;
-  /** Discriminator, always `"eval.run"`. */
-  readonly object: "eval.run";
-  /** Resulting status, always `"cancelled"`. */
-  readonly status: "cancelled";
-}
-
 /** Response from `POST /v1/evals/{eval_id}/cancel`. */
 export interface CancelEvalResponse {
   /** Id of the cancelled evaluation. */
@@ -256,8 +246,6 @@ export interface EvalRunsNamespace {
     runId: string,
     req: UpdateEvalRunRequest,
   ): Promise<Result<EvalRun, ApiError>>;
-  /** Cancel a running run. */
-  cancel(evalId: string, runId: string): Promise<Result<CancelEvalRunResponse, ApiError>>;
   /** Delete a run by id. */
   delete(evalId: string, runId: string): Promise<Result<DeleteEvalRunResponse, ApiError>>;
 }
@@ -318,12 +306,6 @@ const createRuns = (transport: Transport): EvalRunsNamespace => ({
       method: "POST",
       path: `/v1/evals/${encode(evalId)}/runs/${encode(runId)}`,
       body: req,
-    });
-  },
-  cancel(evalId, runId) {
-    return transport.request<CancelEvalRunResponse>({
-      method: "POST",
-      path: `/v1/evals/${encode(evalId)}/runs/${encode(runId)}/cancel`,
     });
   },
   delete(evalId, runId) {

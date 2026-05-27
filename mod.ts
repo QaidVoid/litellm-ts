@@ -560,6 +560,22 @@ export type {
 } from "./src/api/admin/vector_stores.ts";
 
 export type {
+  AuditLogEntry,
+  AuditNamespace,
+  ListAuditLogsQuery,
+  ListAuditLogsResponse,
+} from "./src/api/admin/audit.ts";
+
+export type {
+  CreateProjectRequest,
+  DeleteProjectRequest,
+  Project,
+  ProjectModelBudget,
+  ProjectsNamespace,
+  UpdateProjectRequest,
+} from "./src/api/admin/projects.ts";
+
+export type {
   CreateInvitationRequest,
   DeleteInvitationRequest,
   Invitation,
@@ -732,16 +748,21 @@ export type { ConfigureGcRequest, DebugNamespace } from "./src/api/admin/debug.t
 export type {
   Container,
   ContainerExpiration,
+  ContainerFile,
+  ContainerFileInput,
+  ContainerFilesNamespace,
   ContainersNamespace,
   CreateContainerRequest,
+  DeleteContainerFileResponse,
   DeleteContainerResponse,
+  ListContainerFilesQuery,
+  ListContainerFilesResponse,
   ListContainersQuery,
   ListContainersResponse,
 } from "./src/api/containers.ts";
 
 export type {
   CancelEvalResponse,
-  CancelEvalRunResponse,
   CreateEvalRequest,
   CreateEvalRunRequest,
   DeleteEvalResponse,
@@ -1029,7 +1050,6 @@ export type {
   ListPassThroughEndpointsQuery,
   ListPassThroughEndpointsResponse,
   PassThroughEndpoint,
-  PassThroughEndpointSettings,
   UpdateConfigRequest,
 } from "./src/api/admin/config.ts";
 
