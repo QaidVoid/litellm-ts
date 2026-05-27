@@ -649,10 +649,33 @@ export type {
 } from "./src/api/admin/callbacks.ts";
 
 export type {
+  ApplyGuardrailRequest,
+  ApplyGuardrailResponse,
+  CreateGuardrailRequest,
+  Guardrail,
+  GuardrailDefinitionLocation,
   GuardrailInfo,
+  GuardrailLitellmParams,
   GuardrailMode,
   GuardrailsNamespace,
+  GuardrailSubmissionsNamespace,
+  GuardrailUsageDetailResponse,
+  GuardrailUsageLogEntry,
+  GuardrailUsageLogsQuery,
+  GuardrailUsageLogsResponse,
+  GuardrailUsageNamespace,
+  GuardrailUsageOverviewResponse,
+  GuardrailUsageOverviewRow,
+  GuardrailUsageQuery,
   ListGuardrailsResponse,
+  ListGuardrailSubmissionsQuery,
+  PatchGuardrailRequest,
+  RegisterGuardrailRequest,
+  TestCustomCodeGuardrailRequest,
+  TestCustomCodeGuardrailResponse,
+  UpdateGuardrailRequest,
+  ValidateBlockedWordsFileRequest,
+  ValidateBlockedWordsFileResponse,
 } from "./src/api/admin/guardrails.ts";
 
 export type {
@@ -662,7 +685,25 @@ export type {
 } from "./src/api/admin/cache.ts";
 
 export type {
+  CallbackDelete,
+  ConfigCostDiscountsNamespace,
+  ConfigCostMarginsNamespace,
+  ConfigFieldDelete,
+  ConfigFieldEntry,
+  ConfigFieldsNamespace,
+  ConfigFieldUpdate,
   ConfigNamespace,
+  ConfigNestedFieldDetail,
+  ConfigPassThroughEndpointsNamespace,
+  ConfigSectionType,
+  CostDiscountConfig,
+  CostDiscountConfigResponse,
+  CostMarginConfig,
+  CostMarginConfigResponse,
+  ListPassThroughEndpointsQuery,
+  ListPassThroughEndpointsResponse,
+  PassThroughEndpoint,
+  PassThroughEndpointSettings,
   ProxyConfigSnapshot,
   UpdateConfigRequest,
 } from "./src/api/admin/config.ts";
