@@ -7,8 +7,12 @@ import { type BudgetsNamespace, createBudgets } from "./api/admin/budgets.ts";
 import { type CacheNamespace, createCache } from "./api/admin/cache.ts";
 import { type CallbacksNamespace, createCallbacks } from "./api/admin/callbacks.ts";
 import { type ConfigNamespace, createConfig } from "./api/admin/config.ts";
+import { type AccessGroupsNamespace, createAccessGroups } from "./api/admin/access_groups.ts";
+import { type ComplianceNamespace, createCompliance } from "./api/admin/compliance.ts";
 import { createCustomers, type CustomersNamespace } from "./api/admin/customers.ts";
 import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.ts";
+import { createJwtMappings, type JwtMappingsNamespace } from "./api/admin/jwt_mappings.ts";
+import { createRouter, type RouterNamespace } from "./api/admin/router.ts";
 import { createTags, type TagsNamespace } from "./api/admin/tags.ts";
 import { createGuardrails, type GuardrailsNamespace } from "./api/admin/guardrails.ts";
 import { createSpend, type SpendNamespace } from "./api/admin/spend.ts";
@@ -89,6 +93,14 @@ export interface Client {
   readonly tags: TagsNamespace;
   /** Fallback configuration per model. */
   readonly fallbacks: FallbacksNamespace;
+  /** Router setting reads (live values and field metadata). */
+  readonly router: RouterNamespace;
+  /** Access groups (unified ACL across models, MCP servers, agents). */
+  readonly accessGroups: AccessGroupsNamespace;
+  /** JWT-claim-to-virtual-key mappings. */
+  readonly jwtMappings: JwtMappingsNamespace;
+  /** Regulatory compliance checks (EU AI Act, GDPR). */
+  readonly compliance: ComplianceNamespace;
   /** Logging callback configuration. */
   readonly callbacks: CallbacksNamespace;
   /** Configured guardrails listing. */
@@ -146,6 +158,10 @@ export const createClient = (config: TransportConfig): Client => {
     customers: createCustomers(transport),
     tags: createTags(transport),
     fallbacks: createFallbacks(transport),
+    router: createRouter(transport),
+    accessGroups: createAccessGroups(transport),
+    jwtMappings: createJwtMappings(transport),
+    compliance: createCompliance(transport),
     callbacks: createCallbacks(transport),
     guardrails: createGuardrails(transport),
     cache: createCache(transport),

@@ -351,6 +351,37 @@ export type {
 } from "./src/api/admin/fallbacks.ts";
 
 export type {
+  RouterFieldsResponse,
+  RouterNamespace,
+  RouterSettingsField,
+  RouterSettingsResponse,
+} from "./src/api/admin/router.ts";
+
+export type {
+  AccessGroup,
+  AccessGroupsNamespace,
+  CreateAccessGroupRequest,
+  UpdateAccessGroupRequest,
+} from "./src/api/admin/access_groups.ts";
+
+export type {
+  CreateJwtMappingRequest,
+  DeleteJwtMappingRequest,
+  JwtMapping,
+  JwtMappingsNamespace,
+  ListJwtMappingsQuery,
+  ListJwtMappingsResponse,
+  UpdateJwtMappingRequest,
+} from "./src/api/admin/jwt_mappings.ts";
+
+export type {
+  ComplianceCheckRequest,
+  ComplianceCheckResult,
+  ComplianceNamespace,
+  ComplianceResponse,
+} from "./src/api/admin/compliance.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,
