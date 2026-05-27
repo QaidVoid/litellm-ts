@@ -318,6 +318,30 @@ export interface VectorStoresNamespace {
     fileId: string,
     req: UpdateVectorStoreFileRequest,
   ): Promise<Result<VectorStoreFile, ApiError>>;
+  /**
+   * Create an index in the proxy index registry. An index is a logical alias
+   * that points at a concrete vector store name plus its provider-side index
+   * id; once registered, it can be referenced from RAG and search pipelines.
+   */
+  createIndex(req: CreateIndexRequest): Promise<Result<unknown, ApiError>>;
+}
+
+/** LiteLLM-side params for `POST /v1/indexes`. */
+export interface CreateIndexLiteLLMParams {
+  /** Provider-side index id (e.g. Azure AI Search index name). */
+  readonly vector_store_index: string;
+  /** Configured vector store name on the proxy. */
+  readonly vector_store_name: string;
+}
+
+/** Request body for `POST /v1/indexes`. */
+export interface CreateIndexRequest {
+  /** Friendly index alias used in subsequent calls. */
+  readonly index_name: string;
+  /** Backend selection and provider-side identifier. */
+  readonly litellm_params: CreateIndexLiteLLMParams;
+  /** Free-form metadata. */
+  readonly index_info?: Readonly<Record<string, unknown>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -410,6 +434,13 @@ export const createVectorStores = (transport: Transport): VectorStoresNamespace 
     return transport.request<VectorStoreFile>({
       method: "POST",
       path: `/v1/vector_stores/${enc(vectorStoreId)}/files/${enc(fileId)}`,
+      body: req,
+    });
+  },
+  createIndex(req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/v1/indexes",
       body: req,
     });
   },

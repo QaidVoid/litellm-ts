@@ -43,6 +43,7 @@ import { createPrompts, type PromptsNamespace } from "./api/admin/prompts.ts";
 import { createWorkflows, type WorkflowsNamespace } from "./api/admin/workflows.ts";
 import { createScim, type ScimNamespace } from "./api/admin/scim.ts";
 import { createCredentials, type CredentialsNamespace } from "./api/admin/credentials.ts";
+import { createDebug, type DebugNamespace } from "./api/admin/debug.ts";
 import { type ContainersNamespace, createContainers } from "./api/containers.ts";
 import { createEvals, type EvalsNamespace } from "./api/evals.ts";
 import { type AgentsNamespace, createAgents } from "./api/agents.ts";
@@ -233,6 +234,8 @@ export interface Client {
   readonly scim: ScimNamespace;
   /** Stored credential administration. */
   readonly credentials: CredentialsNamespace;
+  /** Operator debug surface (memory, asyncio, OTEL, GC). */
+  readonly debug: DebugNamespace;
   /** Logging callback configuration. */
   readonly callbacks: CallbacksNamespace;
   /** Configured guardrails listing. */
@@ -276,7 +279,7 @@ export const createClient = (config: TransportConfig): Client => {
     completions: createCompletions(transport),
     responses: createResponses(transport),
     vectorStores: createVectorStores(transport),
-    realtime: createRealtime(config),
+    realtime: createRealtime(config, transport),
     embeddings: createEmbeddings(transport),
     images: createImages(transport),
     audio: createAudio(transport),
@@ -332,6 +335,7 @@ export const createClient = (config: TransportConfig): Client => {
     mcp: createMcp(transport),
     scim: createScim(transport),
     credentials: createCredentials(transport),
+    debug: createDebug(transport),
     callbacks: createCallbacks(transport),
     guardrails: createGuardrails(transport),
     cache: createCache(transport),

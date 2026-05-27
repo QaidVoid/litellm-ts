@@ -206,6 +206,10 @@ export interface HealthNamespace {
   history(query?: HealthHistoryQuery): Promise<Result<HealthHistoryResponse, ApiError>>;
   /** Most recent health check per model. */
   latest(): Promise<Result<HealthLatestResponse, ApiError>>;
+  /** Lightweight uptime probe (`GET /test`). Returns `"ok"` or similar. */
+  test(): Promise<Result<unknown, ApiError>>;
+  /** List every HTTP route the proxy currently exposes. */
+  routes(): Promise<Result<unknown, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -286,5 +290,11 @@ export const createHealth = (transport: Transport): HealthNamespace => ({
       method: "GET",
       path: "/health/latest",
     });
+  },
+  test() {
+    return transport.request<unknown>({ method: "GET", path: "/test" });
+  },
+  routes() {
+    return transport.request<unknown>({ method: "GET", path: "/routes" });
   },
 });

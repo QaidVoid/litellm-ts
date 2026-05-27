@@ -49,8 +49,10 @@ export interface RerankResponse {
 
 /** Surface for the rerank endpoint on the `Client`. */
 export interface RerankNamespace {
-  /** Re-rank a set of candidate documents against a query. */
+  /** Re-rank a set of candidate documents against a query (Cohere v1 shape). */
   create(req: RerankRequest): Promise<Result<RerankResponse, ApiError>>;
+  /** Re-rank using the newer Cohere v2 shape exposed under `/v2/rerank`. */
+  createV2(req: RerankRequest): Promise<Result<RerankResponse, ApiError>>;
 }
 
 /** Bind a `RerankNamespace` to a constructed `Transport`. */
@@ -59,6 +61,13 @@ export const createRerank = (transport: Transport): RerankNamespace => ({
     return transport.request<RerankResponse>({
       method: "POST",
       path: "/v1/rerank",
+      body: req,
+    });
+  },
+  createV2(req) {
+    return transport.request<RerankResponse>({
+      method: "POST",
+      path: "/v2/rerank",
       body: req,
     });
   },

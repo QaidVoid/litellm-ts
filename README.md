@@ -158,38 +158,47 @@ await client.embeddings.create({ model: "gpt-4o", input: "hi" });
 
 ### Proxy administration
 
-| Namespace                  | Endpoints                    | Notes                                                                                                                      |
-| -------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `client.health`            | `/health/*`                  | liveliness, readiness, services, sharedStatus, license, backlog, history, latest, testConnection.                          |
-| `client.keys`              | `/key/*`                     | Virtual key CRUD plus block, unblock, regenerate (by-path), reset_spend, aliases, bulk_update, health.                     |
-| `client.proxyModels`       | `/model/*`, `/models/*`      | Live registry CRUD plus OpenAI-shape list/retrieve and metrics (regular, exceptions, slow, streaming, settings, cost map). |
-| `client.teams`             | `/team/*`                    | Team CRUD, member management, callbacks, permissions (per-team + bulk), daily activity, my-membership, available teams.    |
-| `client.users`             | `/user/*`                    | Internal user CRUD plus available roles, bulk_update, daily activity.                                                      |
-| `client.organizations`     | `/organization/*`            | Organization CRUD plus member management + daily activity.                                                                 |
-| `client.spend`             | `/spend/*`                   | calculate, tags, logs (v1 + v2), spend by key, spend by user.                                                              |
-| `client.budgets`           | `/budget/*`                  | Budget CRUD plus infoBatch + settings.                                                                                     |
-| `client.callbacks`         | `/callbacks/*`               | List, update, health, configs.                                                                                             |
-| `client.guardrails`        | `/guardrails/*`              | Full CRUD + submissions workflow + apply + custom-code testing + blocked-words validation + usage sub-namespace.           |
-| `client.cache`             | `/cache/*`                   | ping, flushAll, delete, get/update/test settings.                                                                          |
-| `client.config`            | `/config/*`                  | Get, update, yaml, callback delete; fields/costDiscounts/costMargins/passThroughEndpoints sub-namespaces.                  |
-| `client.customers`         | `/customer/*`                | End-user CRUD plus block / unblock / daily activity.                                                                       |
-| `client.tags`              | `/tag/*`                     | Tag CRUD; `analytics` sub-namespace for DAU/WAU/MAU + per-user activity + distinct + summary.                              |
-| `client.fallbacks`         | `/fallback/*`                | Per-model fallback configuration (general, context_window, content_policy).                                                |
-| `client.router`            | `/router/*`                  | Router field metadata and current setting reads.                                                                           |
-| `client.accessGroups`      | `/v1/access_group/*`         | Unified access groups across models, MCP servers, and agents.                                                              |
-| `client.modelAccessGroups` | `/access_group/*`            | Legacy model-only access group CRUD.                                                                                       |
-| `client.jwtMappings`       | `/jwt/key/mapping/*`         | JWT-claim-to-virtual-key mappings.                                                                                         |
-| `client.compliance`        | `/compliance/*`              | EU AI Act and GDPR compliance checks on spend logs.                                                                        |
-| `client.tools`             | `/v1/tool/*`                 | Tool registry and per-tool input/output policy administration.                                                             |
-| `client.mcp`               | `/v1/mcp/*`                  | MCP servers, toolsets, submissions workflow, discovery, user-credentials, programmatic OAuth (authorize, token, register). |
-| `client.scim`              | `/scim/v2/*`                 | SCIM v2 Users + Groups CRUD (enterprise).                                                                                  |
-| `client.credentials`       | `/credentials/*`             | Stored credential CRUD (create, list, getByName, getByModel, update, delete).                                              |
-| `client.claudeCode`        | `/claude-code/*`             | Claude Code marketplace plugins (marketplace, register, list, get, enable, disable, delete).                               |
-| `client.prompts`           | `/prompts/*`                 | Prompt registry: CRUD with environments, versions, render (`test`), dotprompt → JSON converter.                            |
-| `client.policies`          | `/policies/*`                | Policy engine: CRUD, version lifecycle, attachments + estimateImpact, resolve, testPipeline, compare.                      |
-| `client.workflows`         | `/v1/workflows/*`            | Workflow runs with appended events and messages.                                                                           |
-| `client.memory`            | `/v1/memory/*`               | KV store with create, list, get, upsert, delete plus per-user/per-team scoping.                                            |
-| `client.spendConnectors`   | `/vantage/*`, `/cloudzero/*` | Vantage + CloudZero billing-connector administration (settings, init, dryRun, export, delete).                             |
+| Namespace                      | Endpoints                                                   | Notes                                                                                                                      |
+| ------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `client.health`                | `/health/*`                                                 | liveliness, readiness, services, sharedStatus, license, backlog, history, latest, testConnection.                          |
+| `client.keys`                  | `/key/*`                                                    | Virtual key CRUD plus block, unblock, regenerate (by-path), reset_spend, aliases, bulk_update, health.                     |
+| `client.proxyModels`           | `/model/*`, `/models/*`                                     | Live registry CRUD plus OpenAI-shape list/retrieve and metrics (regular, exceptions, slow, streaming, settings, cost map). |
+| `client.teams`                 | `/team/*`                                                   | Team CRUD, member management, callbacks, permissions (per-team + bulk), daily activity, my-membership, available teams.    |
+| `client.users`                 | `/user/*`                                                   | Internal user CRUD plus available roles, bulk_update, daily activity.                                                      |
+| `client.organizations`         | `/organization/*`                                           | Organization CRUD plus member management + daily activity.                                                                 |
+| `client.spend`                 | `/spend/*`                                                  | calculate, tags, logs (v1 + v2), spend by key, spend by user.                                                              |
+| `client.budgets`               | `/budget/*`                                                 | Budget CRUD plus infoBatch + settings.                                                                                     |
+| `client.callbacks`             | `/callbacks/*`                                              | List, update, health, configs.                                                                                             |
+| `client.guardrails`            | `/guardrails/*`                                             | Full CRUD + submissions workflow + apply + custom-code testing + blocked-words validation + usage sub-namespace.           |
+| `client.cache`                 | `/cache/*`                                                  | ping, flushAll, delete, get/update/test settings.                                                                          |
+| `client.config`                | `/config/*`                                                 | Get, update, yaml, callback delete; fields/costDiscounts/costMargins/passThroughEndpoints sub-namespaces.                  |
+| `client.customers`             | `/customer/*`                                               | End-user CRUD plus block / unblock / daily activity.                                                                       |
+| `client.tags`                  | `/tag/*`                                                    | Tag CRUD; `analytics` sub-namespace for DAU/WAU/MAU + per-user activity + distinct + summary.                              |
+| `client.fallbacks`             | `/fallback/*`                                               | Per-model fallback configuration (general, context_window, content_policy).                                                |
+| `client.router`                | `/router/*`                                                 | Router field metadata and current setting reads.                                                                           |
+| `client.accessGroups`          | `/v1/access_group/*`                                        | Unified access groups across models, MCP servers, and agents.                                                              |
+| `client.modelAccessGroups`     | `/access_group/*`                                           | Legacy model-only access group CRUD.                                                                                       |
+| `client.jwtMappings`           | `/jwt/key/mapping/*`                                        | JWT-claim-to-virtual-key mappings.                                                                                         |
+| `client.compliance`            | `/compliance/*`                                             | EU AI Act and GDPR compliance checks on spend logs.                                                                        |
+| `client.tools`                 | `/v1/tool/*`                                                | Tool registry and per-tool input/output policy administration.                                                             |
+| `client.mcp`                   | `/v1/mcp/*`                                                 | MCP servers, toolsets, submissions workflow, discovery, user-credentials, programmatic OAuth (authorize, token, register). |
+| `client.scim`                  | `/scim/v2/*`                                                | SCIM v2 Users + Groups CRUD (enterprise).                                                                                  |
+| `client.credentials`           | `/credentials/*`                                            | Stored credential CRUD (create, list, getByName, getByModel, update, delete).                                              |
+| `client.claudeCode`            | `/claude-code/*`                                            | Claude Code marketplace plugins (marketplace, register, list, get, enable, disable, delete).                               |
+| `client.prompts`               | `/prompts/*`                                                | Prompt registry: CRUD with environments, versions, render (`test`), dotprompt → JSON converter.                            |
+| `client.policies`              | `/policies/*`                                               | Policy engine: CRUD, version lifecycle, attachments + estimateImpact, resolve, testPipeline, compare.                      |
+| `client.workflows`             | `/v1/workflows/*`                                           | Workflow runs with appended events and messages.                                                                           |
+| `client.memory`                | `/v1/memory/*`                                              | KV store with create, list, get, upsert, delete plus per-user/per-team scoping.                                            |
+| `client.spendConnectors`       | `/vantage/*`, `/cloudzero/*`                                | Vantage + CloudZero billing-connector administration (settings, init, dryRun, export, delete).                             |
+| `client.globalSpend`           | `/global/spend/*`, `/global/activity/*`                     | Dashboard analytics: spend by key/model/team/tag/provider, activity, exceptions, cache hits, end users.                    |
+| `client.policy`                | `/policy/*`                                                 | Policy template registry: list, info, test, validate, templates (+ enrich, suggest, stream).                               |
+| `client.invitations`           | `/invitation/*`                                             | Invitation CRUD (new, info, update, delete).                                                                               |
+| `client.vectorStoresAdmin`     | `/vector_store/*`                                           | Legacy proxy-side vector store admin (new, list, info, update, delete).                                                    |
+| `client.maintenance`           | `/schedule/*`, `/reload/*`                                  | Triggered reloads and scheduled model-cost-map / anthropic-beta-headers refreshes.                                         |
+| `client.allowedIps`            | `/get/allowed_ips`, `/add/allowed_ip`, `/delete/allowed_ip` | IP allowlist administration.                                                                                               |
+| `client.alerting`              | `/alerting/settings`                                        | Alerting settings read.                                                                                                    |
+| `client.adaptiveRouter`        | `/adaptive_router/state`                                    | Adaptive router state read.                                                                                                |
+| `client.anthropicEventLogging` | `/api/event_logging/batch`                                  | Anthropic event-logging batch ingest.                                                                                      |
 
 ### Provider passthroughs (native upstream shape)
 

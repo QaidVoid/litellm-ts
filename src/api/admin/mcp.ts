@@ -586,10 +586,64 @@ export interface McpNamespace {
   oauthToken(req: McpOAuthTokenRequest): Promise<Result<McpOAuthTokenResponse, ApiError>>;
   /** Dynamic Client Registration entry point for OAuth2 clients. */
   oauthRegister(req: McpOAuthRegisterRequest): Promise<Result<McpOAuthRegisterResponse, ApiError>>;
+  /**
+   * POST form of the BYOK OAuth2 authorize endpoint. The proxy uses this
+   * to record the user's consent submission once the interactive flow
+   * completes.
+   */
+  oauthAuthorizeSubmit(req: McpOAuthAuthorizeSubmit): Promise<Result<unknown, ApiError>>;
   /** MCP server CRUD, submissions, and approval workflow. */
   readonly servers: McpServersNamespace;
   /** Curated tool-set administration. */
   readonly toolsets: McpToolsetsNamespace;
+  /** REST surface served by the embedded MCP server (`/mcp-rest/*`). */
+  readonly rest: McpRestNamespace;
+}
+
+/** Body submitted to `POST /v1/mcp/oauth/authorize` after the consent screen. */
+export interface McpOAuthAuthorizeSubmit {
+  /** Authorization code returned by the upstream MCP server. */
+  readonly code?: string;
+  /** Opaque state token from the original authorize request. */
+  readonly state?: string;
+  /** Provider-specific extras. */
+  readonly [key: string]: unknown;
+}
+
+/** Query parameters for `GET /mcp-rest/tools/list`. */
+export interface McpRestToolsListQuery {
+  /** Restrict the listing to a single MCP server. */
+  readonly server_id?: string;
+}
+
+/** Response from `GET /mcp-rest/tools/list`. */
+export interface McpRestToolsListResponse {
+  /** Tools discovered across the calling key's allowed MCP servers. */
+  readonly tools: readonly Readonly<Record<string, unknown>>[];
+  /** Error message when the discovery partially failed. */
+  readonly error: string | null;
+  /** Human-readable status summary. */
+  readonly message: string;
+}
+
+/** Request body for `POST /mcp-rest/tools/call`. */
+export interface McpRestToolsCallRequest {
+  /** Name of the tool to invoke. */
+  readonly name: string;
+  /** Arguments passed to the tool. */
+  readonly arguments?: Readonly<Record<string, unknown>>;
+  /** Restrict the call to a single MCP server. */
+  readonly server_id?: string;
+  /** Provider-specific extras forwarded to the upstream tool. */
+  readonly [key: string]: unknown;
+}
+
+/** REST sub-namespace under `client.mcp.rest`. */
+export interface McpRestNamespace {
+  /** Discover available tools across the calling key's MCP servers. */
+  toolsList(query?: McpRestToolsListQuery): Promise<Result<McpRestToolsListResponse, ApiError>>;
+  /** Invoke a tool by name with the supplied arguments. */
+  toolsCall(req: McpRestToolsCallRequest): Promise<Result<unknown, ApiError>>;
 }
 
 const encode = (s: string) => encodeURIComponent(s);
@@ -804,6 +858,41 @@ export const createMcp = (transport: Transport): McpNamespace => ({
       body: req,
     });
   },
+  oauthAuthorizeSubmit(req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/v1/mcp/oauth/authorize",
+      body: req,
+    });
+  },
   servers: createServers(transport),
   toolsets: createToolsets(transport),
+  rest: createRest(transport),
+});
+
+const filterUndefinedScalar = <T extends object>(
+  q: T,
+): Readonly<Record<string, string | number | boolean>> => {
+  const out: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(q)) {
+    if (v !== undefined) out[k] = v as string | number | boolean;
+  }
+  return out;
+};
+
+const createRest = (transport: Transport): McpRestNamespace => ({
+  toolsList(query) {
+    return transport.request<McpRestToolsListResponse>({
+      method: "GET",
+      path: "/mcp-rest/tools/list",
+      ...(query === undefined ? {} : { query: filterUndefinedScalar(query) }),
+    });
+  },
+  toolsCall(req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/mcp-rest/tools/call",
+      body: req,
+    });
+  },
 });

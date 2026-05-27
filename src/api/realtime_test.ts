@@ -26,11 +26,14 @@ Deno.test("realtime.connect returns a session once the mock WebSocket opens", as
     }
   }
 
-  const realtime = createRealtime({
-    baseUrl: "https://api.test",
-    apiKey: "sk-test",
-    websocket: MockSocket as unknown as typeof WebSocket,
-  } as never);
+  const realtime = createRealtime(
+    {
+      baseUrl: "https://api.test",
+      apiKey: "sk-test",
+      websocket: MockSocket as unknown as typeof WebSocket,
+    } as never,
+    {} as never,
+  );
 
   const result = await realtime.connect({
     model: "gemini-live-2.5-flash-preview-native-audio-09-2025",
@@ -54,10 +57,10 @@ Deno.test("realtime.connect returns a session once the mock WebSocket opens", as
 });
 
 Deno.test("realtime.connect surfaces a network error when no WebSocket is available", async () => {
-  const realtime = createRealtime({
-    baseUrl: "https://api.test",
-    apiKey: "sk-test",
-  });
+  const realtime = createRealtime(
+    { baseUrl: "https://api.test", apiKey: "sk-test" },
+    {} as never,
+  );
   const result = await realtime.connect({
     model: "gemini-live-2.5-flash-preview-native-audio-09-2025",
     websocket: undefined as unknown as typeof WebSocket,

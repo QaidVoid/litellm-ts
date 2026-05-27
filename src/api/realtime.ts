@@ -3,7 +3,7 @@ import { networkError, streamError } from "../error.ts";
 import type { ModelsWithMode } from "../models/mod.ts";
 import type { Result } from "../result.ts";
 import { err, ok, trySync } from "../result.ts";
-import type { TransportConfig } from "../transport.ts";
+import type { Transport, TransportConfig } from "../transport.ts";
 
 /** Configuration for opening a realtime session. */
 export interface RealtimeConnectOptions {
@@ -68,6 +68,46 @@ const toWsUrl = (baseUrl: string, path: string): string => {
   return url.toString();
 };
 
+/**
+ * Realtime session-config block. The realtime protocol mirrors OpenAI's
+ * shape so this is left as a permissive bag.
+ */
+export type RealtimeSessionConfig = Readonly<Record<string, unknown>>;
+
+/** Optional expiry policy for an ephemeral client secret. */
+export interface RealtimeExpiresAfter {
+  /** Anchor field the timer counts from. */
+  readonly anchor?: string;
+  /** Seconds after the anchor when the token expires. */
+  readonly seconds?: number;
+}
+
+/** Request body for `POST /v1/realtime/client_secrets`. */
+export interface RealtimeClientSecretRequest {
+  /** Optional expiry policy applied to the issued secret. */
+  readonly expires_after?: RealtimeExpiresAfter;
+  /** Session-config block forwarded to OpenAI. */
+  readonly session?: RealtimeSessionConfig;
+  /** LiteLLM-only routing hint when `session.model` is absent. */
+  readonly model?: ModelsWithMode<"realtime">;
+}
+
+/** Response from `POST /v1/realtime/client_secrets`. */
+export interface RealtimeClientSecretResponse {
+  /** Unix epoch seconds when the secret expires. */
+  readonly expires_at?: number;
+  /** Encrypted ephemeral client-secret value. */
+  readonly value: string;
+  /** Raw session block echoed back (unknown extras preserved). */
+  readonly session?: Readonly<Record<string, unknown>>;
+}
+
+/** Request body for `POST /v1/realtime/calls`. The proxy forwards verbatim. */
+export type RealtimeCallRequest = Readonly<Record<string, unknown>>;
+
+/** Response from `POST /v1/realtime/calls`. */
+export type RealtimeCallResponse = Readonly<Record<string, unknown>>;
+
 /** Surface for opening realtime sessions. */
 export interface RealtimeNamespace {
   /**
@@ -76,10 +116,33 @@ export interface RealtimeNamespace {
    * open.
    */
   connect(opts: RealtimeConnectOptions): Promise<Result<RealtimeSession, ApiError>>;
+  /** Mint an ephemeral realtime client secret via the REST endpoint. */
+  clientSecrets(
+    req: RealtimeClientSecretRequest,
+  ): Promise<Result<RealtimeClientSecretResponse, ApiError>>;
+  /** Bootstrap a server-side realtime call. */
+  calls(req: RealtimeCallRequest): Promise<Result<RealtimeCallResponse, ApiError>>;
 }
 
 /** Build a `RealtimeNamespace` bound to a transport configuration. */
-export const createRealtime = (config: TransportConfig): RealtimeNamespace => ({
+export const createRealtime = (
+  config: TransportConfig,
+  transport: Transport,
+): RealtimeNamespace => ({
+  clientSecrets(req) {
+    return transport.request<RealtimeClientSecretResponse>({
+      method: "POST",
+      path: "/v1/realtime/client_secrets",
+      body: req,
+    });
+  },
+  calls(req) {
+    return transport.request<RealtimeCallResponse>({
+      method: "POST",
+      path: "/v1/realtime/calls",
+      body: req,
+    });
+  },
   connect(opts) {
     const url = new URL(
       toWsUrl(config.baseUrl, `/v1/realtime?model=${encodeURIComponent(opts.model)}`),

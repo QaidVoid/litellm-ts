@@ -296,6 +296,14 @@ export interface BulkUpdateKeyItem {
 }
 
 /** Request body for `POST /key/bulk_update`. */
+/** Request body for `POST /team/key/bulk_update`. */
+export interface BulkUpdateKeysByTeamRequest {
+  /** Target team id. */
+  readonly team_id: string;
+  /** Bulk-update payload applied to every key on the team. */
+  readonly key_updates: BulkUpdateKeysRequest;
+}
+
 export interface BulkUpdateKeysRequest {
   /** Individual key update entries (max 500 per call). */
   readonly keys: readonly BulkUpdateKeyItem[];
@@ -376,6 +384,10 @@ export interface KeysNamespace {
   aliases(query?: ListKeyAliasesQuery): Promise<Result<ListKeyAliasesResponse, ApiError>>;
   /** Bulk-update multiple keys in a single round trip (admin only). */
   bulkUpdate(req: BulkUpdateKeysRequest): Promise<Result<BulkUpdateKeysResponse, ApiError>>;
+  /** Bulk-update keys scoped to a single team (`POST /team/key/bulk_update`). */
+  bulkUpdateByTeam(
+    req: BulkUpdateKeysByTeamRequest,
+  ): Promise<Result<BulkUpdateKeysResponse, ApiError>>;
   /** Delete one or more keys by value or alias. */
   delete(req: DeleteKeysRequest): Promise<Result<DeleteKeysResponse, ApiError>>;
   /** Block a key from making requests. */
@@ -493,6 +505,13 @@ export const createKeys = (transport: Transport): KeysNamespace => ({
     return transport.request<BulkUpdateKeysResponse>({
       method: "POST",
       path: "/key/bulk_update",
+      body: req,
+    });
+  },
+  bulkUpdateByTeam(req) {
+    return transport.request<BulkUpdateKeysResponse>({
+      method: "POST",
+      path: "/team/key/bulk_update",
       body: req,
     });
   },

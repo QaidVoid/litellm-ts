@@ -90,6 +90,8 @@ export interface CacheNamespace {
   testSettings(
     req: TestCacheConnectionRequest,
   ): Promise<Result<TestCacheConnectionResponse, ApiError>>;
+  /** Diagnostic dump of the Redis backend (masked params + connection info). */
+  redisInfo(): Promise<Result<unknown, ApiError>>;
 }
 
 /** Bind a `CacheNamespace` to a constructed `Transport`. */
@@ -129,5 +131,8 @@ export const createCache = (transport: Transport): CacheNamespace => ({
       path: "/cache/settings/test",
       body: req,
     });
+  },
+  redisInfo() {
+    return transport.request<unknown>({ method: "GET", path: "/cache/redis/info" });
   },
 });

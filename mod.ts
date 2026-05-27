@@ -123,15 +123,23 @@ export type {
 } from "./src/api/responses.ts";
 
 export type {
+  RealtimeCallRequest,
+  RealtimeCallResponse,
   RealtimeClientEvent,
+  RealtimeClientSecretRequest,
+  RealtimeClientSecretResponse,
   RealtimeConnectOptions,
+  RealtimeExpiresAfter,
   RealtimeNamespace,
   RealtimeServerEvent,
   RealtimeSession,
+  RealtimeSessionConfig,
 } from "./src/api/realtime.ts";
 
 export type {
   AttachVectorStoreFileRequest,
+  CreateIndexLiteLLMParams,
+  CreateIndexRequest,
   CreateVectorStoreRequest,
   DeleteVectorStoreFileResponse,
   DeleteVectorStoreResponse,
@@ -280,6 +288,7 @@ export type {
   BulkKeyUpdateFailure,
   BulkKeyUpdateSuccess,
   BulkUpdateKeyItem,
+  BulkUpdateKeysByTeamRequest,
   BulkUpdateKeysRequest,
   BulkUpdateKeysResponse,
   DeleteKeysRequest,
@@ -327,8 +336,10 @@ export type {
   ProxyModelInfo,
   ProxyModelsNamespace,
   RegisterModelRequest,
+  UpdateModelHubUsefulLinksRequest,
   UpdateModelLegacyRequest,
   UpdateModelRequest,
+  UsefulLinkEntry,
 } from "./src/api/admin/models.ts";
 
 export type {
@@ -651,6 +662,7 @@ export type {
   McpNamespace,
   McpOauth2Flow,
   McpOAuthAuthorizeQuery,
+  McpOAuthAuthorizeSubmit,
   McpOAuthRegisterRequest,
   McpOAuthRegisterResponse,
   McpOAuthTokenRequest,
@@ -658,6 +670,10 @@ export type {
   McpOAuthUserCredentialStatus,
   McpOpenApiRegistryResponse,
   McpPublicRegistryResponse,
+  McpRestNamespace,
+  McpRestToolsCallRequest,
+  McpRestToolsListQuery,
+  McpRestToolsListResponse,
   McpServer,
   McpServerCommonFields,
   McpServerHealthQuery,
@@ -708,6 +724,8 @@ export type {
   ListCredentialsResponse,
   UpdateCredentialRequest,
 } from "./src/api/admin/credentials.ts";
+
+export type { ConfigureGcRequest, DebugNamespace } from "./src/api/admin/debug.ts";
 
 export type {
   Container,

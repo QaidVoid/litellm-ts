@@ -257,6 +257,21 @@ export interface ModelGroupNamespace {
   info(modelGroupName?: string): Promise<Result<unknown, ApiError>>;
   /** Update the set of model groups exposed by `/public/model_hub`. */
   makePublic(req: MakeModelGroupsPublicRequest): Promise<Result<unknown, ApiError>>;
+  /** Update the model-hub "useful links" sidebar. */
+  updateUsefulLinks(req: UpdateModelHubUsefulLinksRequest): Promise<Result<unknown, ApiError>>;
+}
+
+/** Wire shape for a single useful-link entry. */
+export type UsefulLinkEntry = string | { readonly url: string; readonly index?: number };
+
+/** Request body for `POST /model_hub/update_useful_links`. */
+export interface UpdateModelHubUsefulLinksRequest {
+  /**
+   * Display-name to link map. Accepts the legacy plain-string form
+   * (`{ "Docs": "https://..." }`) or the structured form with optional
+   * ordering (`{ "Docs": { "url": "https://...", "index": 0 } }`).
+   */
+  readonly useful_links: Readonly<Record<string, UsefulLinkEntry>>;
 }
 
 /** Response from `/model/cost_map/source`. */
@@ -345,6 +360,13 @@ const createModelGroup = (transport: Transport): ModelGroupNamespace => ({
     return transport.request<unknown>({
       method: "POST",
       path: "/model_group/make_public",
+      body: req,
+    });
+  },
+  updateUsefulLinks(req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/model_hub/update_useful_links",
       body: req,
     });
   },

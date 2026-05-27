@@ -103,6 +103,10 @@ export interface GlobalSpendNamespace {
   activityCacheHits(
     query?: GlobalDateRangeQuery,
   ): Promise<Result<unknown, ApiError>>;
+  /** Force a refresh of the cached global-spend aggregates. */
+  refresh(): Promise<Result<unknown, ApiError>>;
+  /** Zero the accumulated global-spend counters. */
+  reset(): Promise<Result<unknown, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -217,6 +221,18 @@ export const createGlobalSpend = (transport: Transport): GlobalSpendNamespace =>
       method: "GET",
       path: "/global/activity/cache_hits",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),
+    });
+  },
+  refresh() {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/global/spend/refresh",
+    });
+  },
+  reset() {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/global/spend/reset",
     });
   },
 });
