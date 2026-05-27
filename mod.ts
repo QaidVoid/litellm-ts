@@ -138,6 +138,8 @@ export type {
   VectorStoreChunkingStrategy,
   VectorStoreExpiration,
   VectorStoreFile,
+  VectorStoreFileContentChunk,
+  VectorStoreFileContentResponse,
   VectorStoreFileCounts,
   VectorStoresNamespace,
 } from "./src/api/vector_stores.ts";
@@ -506,6 +508,8 @@ export type { PassthroughNamespace } from "./src/api/passthrough.ts";
 
 export type {
   MessagesContentBlock,
+  MessagesCountTokensRequest,
+  MessagesCountTokensResponse,
   MessagesImageBlock,
   MessagesMessage,
   MessagesNamespace,

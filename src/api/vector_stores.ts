@@ -118,6 +118,23 @@ export interface DeleteVectorStoreFileResponse {
   readonly deleted: boolean;
 }
 
+/** A single chunk of file content returned from the content endpoint. */
+export interface VectorStoreFileContentChunk {
+  /** Wire type tag, typically `"text"` for chunked text content. */
+  readonly type: string;
+  /** Decoded chunk text. */
+  readonly text?: string;
+}
+
+/** Response from `GET /v1/vector_stores/{vs_id}/files/{file_id}/content`. */
+export interface VectorStoreFileContentResponse {
+  readonly object: "vector_store.file_content.page";
+  /** Ordered list of chunks the proxy extracted from the file. */
+  readonly data: readonly VectorStoreFileContentChunk[];
+  readonly has_more: boolean;
+  readonly next_page?: string | null;
+}
+
 /** Surface for the vector stores endpoint on the `Client`. */
 export interface VectorStoresNamespace {
   /** Create a new vector store. */
@@ -153,6 +170,11 @@ export interface VectorStoresNamespace {
     vectorStoreId: string,
     fileId: string,
   ): Promise<Result<DeleteVectorStoreFileResponse, ApiError>>;
+  /** Fetch parsed content chunks for a file attached to a vector store. */
+  fileContent(
+    vectorStoreId: string,
+    fileId: string,
+  ): Promise<Result<VectorStoreFileContentResponse, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -226,6 +248,12 @@ export const createVectorStores = (transport: Transport): VectorStoresNamespace 
     return transport.request<DeleteVectorStoreFileResponse>({
       method: "DELETE",
       path: `/v1/vector_stores/${enc(vectorStoreId)}/files/${enc(fileId)}`,
+    });
+  },
+  fileContent(vectorStoreId, fileId) {
+    return transport.request<VectorStoreFileContentResponse>({
+      method: "GET",
+      path: `/v1/vector_stores/${enc(vectorStoreId)}/files/${enc(fileId)}/content`,
     });
   },
 });

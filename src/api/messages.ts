@@ -168,6 +168,24 @@ export type MessagesStreamEvent =
   | { readonly type: "ping" }
   | { readonly type: "error"; readonly error: { readonly type: string; readonly message: string } };
 
+/** Request body for `/v1/messages/count_tokens`. */
+export interface MessagesCountTokensRequest {
+  /** Model the count is computed for; tokenization is model-specific. */
+  readonly model: ModelId;
+  /** Conversation history, oldest first. */
+  readonly messages: readonly MessagesMessage[];
+  /** Top-level instructions, counted alongside `messages`. */
+  readonly system?: string | readonly MessagesContentBlock[];
+  /** Tools whose schemas are counted toward the prompt total. */
+  readonly tools?: readonly MessagesTool[];
+}
+
+/** Response from `/v1/messages/count_tokens`. */
+export interface MessagesCountTokensResponse {
+  /** Token count the upstream would charge for this prompt. */
+  readonly input_tokens: number;
+}
+
 /** Surface for the Anthropic-shape `/v1/messages` endpoint. */
 export interface MessagesNamespace {
   /** Issue a non-streaming `/v1/messages` request. */
@@ -180,6 +198,14 @@ export interface MessagesNamespace {
   createStream(
     req: MessagesRequest,
   ): AsyncIterable<Result<MessagesStreamEvent, ApiError>>;
+  /**
+   * Count input tokens for an Anthropic-shape request without generating a
+   * response. Accepts the same body as `create` but only requires the prompt
+   * fields.
+   */
+  countTokens(
+    req: MessagesCountTokensRequest,
+  ): Promise<Result<MessagesCountTokensResponse, ApiError>>;
 }
 
 const isErrorFrame = (data: unknown): data is { readonly error: unknown } =>
@@ -231,5 +257,12 @@ export const createMessages = (transport: Transport): MessagesNamespace => ({
   },
   createStream(req) {
     return streamEvents(transport, req);
+  },
+  countTokens(req) {
+    return transport.request<MessagesCountTokensResponse>({
+      method: "POST",
+      path: "/v1/messages/count_tokens",
+      body: req,
+    });
   },
 });
