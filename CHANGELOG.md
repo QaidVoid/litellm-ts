@@ -1,3 +1,29 @@
+## v0.2.0 — 2026-05-27
+
+### Bug Fixes
+
+- Make RealtimeSession.close return a promise resolving on close
+
+### Documentation
+
+- Clarify client.proxy vs provider passthroughs
+- Mark beta-tagged namespaces with @beta JSDoc
+
+### Features
+
+- Add client.throws mirror that throws ApiErrorException
+- Add auto-paginating iterate variants for list endpoints
+- Thread AbortSignal through stream cancellation
+- Add request/response/error hooks on Transport
+- Pluggable backoff strategy on Transport
+- Emit source maps in npm artifact
+- Pretty-print ApiError via custom inspect
+- Add root-level proxy passthrough (client.proxy)
+
+### Refactor
+
+- Type rag.query response as ChatCompletion
+
 ## v0.1.1 — 2026-05-27
 
 ### Bug Fixes
