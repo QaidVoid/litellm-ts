@@ -126,50 +126,60 @@ await client.embeddings.create({ model: "gpt-4o", input: "hi" });
 
 ### LLM and content endpoints
 
-| Namespace             | Endpoint                      | Notes                                                                                                                     |
-| --------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `client.chat`         | `/v1/chat/completions`        | OpenAI shape. `create` + `createStream`. Tool- and vision-gated.                                                          |
-| `client.messages`     | `/v1/messages`                | Anthropic shape. `create` + `createStream`. Any model.                                                                    |
-| `client.responses`    | `/v1/responses`               | OpenAI Responses API. `create` + `createStream` + retrieve/cancel/etc.                                                    |
-| `client.completions`  | `/v1/completions`             | Legacy text completion. `create` + `createStream`.                                                                        |
-| `client.embeddings`   | `/v1/embeddings`              | Mode-gated to embedding models.                                                                                           |
-| `client.images`       | `/v1/images/*`                | `generate`, `edit` (multipart). Mode-gated.                                                                               |
-| `client.audio`        | `/v1/audio/*`                 | `transcribe` (multipart), `speak` (binary). Mode-gated.                                                                   |
-| `client.rerank`       | `/v1/rerank`                  | Cohere shape. Mode-gated to rerank models.                                                                                |
-| `client.moderation`   | `/v1/moderations`             | Mode-gated to moderation models.                                                                                          |
-| `client.files`        | `/v1/files`, `/v1/files/{id}` | `create` (multipart), `list`, `retrieve`, `delete`, `content`.                                                            |
-| `client.batches`      | `/v1/batches`                 | `create`, `retrieve`, `list`, `cancel`.                                                                                   |
-| `client.fineTuning`   | `/v1/fine_tuning/jobs`        | `create`, `retrieve`, `list`, `cancel`, `events`.                                                                         |
-| `client.vectorStores` | `/v1/vector_stores`           | CRUD plus file attach / list / retrieve / delete.                                                                         |
-| `client.realtime`     | `wss:.../v1/realtime`         | WebSocket session. `connect` opens, yields typed server events.                                                           |
-| `client.videos`       | `/v1/videos/*`                | `generate`, `list`, `retrieve`, `content`, `remix`, `edit`, `extend`, `createCharacter`, `retrieveCharacter`. Mode-gated. |
+| Namespace                | Endpoint                      | Notes                                                                                                                     |
+| ------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `client.chat`            | `/v1/chat/completions`        | OpenAI shape. `create` + `createStream`. Tool- and vision-gated.                                                          |
+| `client.messages`        | `/v1/messages`                | Anthropic shape. `create` + `createStream` + `countTokens`. Any model.                                                    |
+| `client.responses`       | `/v1/responses`               | OpenAI Responses API. `create` + `createStream` + retrieve/cancel/etc.                                                    |
+| `client.completions`     | `/v1/completions`             | Legacy text completion. `create` + `createStream`.                                                                        |
+| `client.embeddings`      | `/v1/embeddings`              | Mode-gated to embedding models.                                                                                           |
+| `client.images`          | `/v1/images/*`                | `generate`, `edit` (multipart). Mode-gated.                                                                               |
+| `client.audio`           | `/v1/audio/*`                 | `transcribe` (multipart), `speak` (binary). Mode-gated.                                                                   |
+| `client.rerank`          | `/v1/rerank`                  | Cohere shape. Mode-gated to rerank models.                                                                                |
+| `client.moderation`      | `/v1/moderations`             | Mode-gated to moderation models.                                                                                          |
+| `client.files`           | `/v1/files`, `/v1/files/{id}` | `create` (multipart), `list`, `retrieve`, `delete`, `content`.                                                            |
+| `client.batches`         | `/v1/batches`                 | `create`, `retrieve`, `list`, `cancel`.                                                                                   |
+| `client.fineTuning`      | `/v1/fine_tuning/jobs`        | `create`, `retrieve`, `list`, `cancel`, `events`.                                                                         |
+| `client.vectorStores`    | `/v1/vector_stores`           | CRUD plus file attach / list / retrieve / delete / content.                                                               |
+| `client.realtime`        | `wss:.../v1/realtime`         | WebSocket session. `connect` opens, yields typed server events.                                                           |
+| `client.videos`          | `/v1/videos/*`                | `generate`, `list`, `retrieve`, `content`, `remix`, `edit`, `extend`, `createCharacter`, `retrieveCharacter`. Mode-gated. |
+| `client.ocr`             | `/v1/ocr`                     | `process` (URL or file_id) and `processFile` (multipart). Mode-gated.                                                     |
+| `client.rag`             | `/v1/rag/*`                   | `ingest` + `query`. Vector store backends: OpenAI, Bedrock, Vertex AI, S3 Vectors.                                        |
+| `client.containers`      | `/v1/containers/*`            | OpenAI Containers API (`create`, `list`, `retrieve`, `delete`).                                                           |
+| `client.evals`           | `/v1/evals/*`                 | OpenAI Evals API: eval CRUD + cancel; `runs` sub-namespace for run lifecycle.                                             |
+| `client.agents`          | `/v1/agents/*`, `/v1/a2a/*`   | A2A agents API. CRUD, `agentCard`, `sendMessage`, `makePublic`.                                                           |
+| `client.search`          | `/v1/search/*`                | Web search (`query`, `queryWith`) plus `tools` sub-namespace for search-tool admin.                                       |
+| `client.googleGenai`     | `/v1beta/models/*`            | Native Google GenAI shape: `generateContent`, `streamGenerateContent`, `countTokens`, plus `agents` and `interactions`.   |
+| `client.anthropicSkills` | `/v1/skills/*`                | Anthropic Skills API (beta). `create` (multipart), `list`, `retrieve`, `delete`.                                          |
 
 ### Proxy administration
 
-| Namespace              | Endpoints            | Notes                                                                       |
-| ---------------------- | -------------------- | --------------------------------------------------------------------------- |
-| `client.health`        | `/health/*`          | `liveliness`, `readiness`, `readinessDetails`, `testConnection`.            |
-| `client.keys`          | `/key/*`             | Virtual key CRUD plus `block` / `unblock` / `regenerate` / `health`.        |
-| `client.proxyModels`   | `/model/*`           | Live registry: register, retrieve, list, update, delete.                    |
-| `client.teams`         | `/team/*`            | Team CRUD plus member and model management.                                 |
-| `client.users`         | `/user/*`            | Internal user CRUD.                                                         |
-| `client.organizations` | `/organization/*`    | Organization CRUD plus member management.                                   |
-| `client.spend`         | `/spend/*`           | `calculate`, `tags`, `logs`.                                                |
-| `client.budgets`       | `/budget/*`          | Budget CRUD.                                                                |
-| `client.callbacks`     | `/callbacks/*`       | List, update, health for logging callback configuration.                    |
-| `client.guardrails`    | `/guardrails/*`      | List configured guardrails.                                                 |
-| `client.cache`         | `/cache/*`           | `ping`, `flushAll`, `delete` for the proxy cache backend.                   |
-| `client.config`        | `/config/*`          | `get` and `update` for the proxy's runtime configuration.                   |
-| `client.customers`     | `/customer/*`        | End-user CRUD plus block / unblock.                                         |
-| `client.tags`          | `/tag/*`             | Tag CRUD for routing and spend tracking.                                    |
-| `client.fallbacks`     | `/fallback/*`        | Per-model fallback configuration (general, context_window, content_policy). |
-| `client.router`        | `/router/*`          | Router field metadata and current setting reads.                            |
-| `client.accessGroups`  | `/v1/access_group/*` | Unified access groups across models, MCP servers, and agents.               |
-| `client.jwtMappings`   | `/jwt/key/mapping/*` | JWT-claim-to-virtual-key mappings.                                          |
-| `client.compliance`    | `/compliance/*`      | EU AI Act and GDPR compliance checks on spend logs.                         |
-| `client.tools`         | `/v1/tool/*`         | Tool registry and per-tool input/output policy administration.              |
-| `client.mcp`           | `/v1/mcp/*`          | MCP server CRUD, submissions/approve/reject, toolsets, discovery.           |
-| `client.scim`          | `/scim/v2/*`         | SCIM v2 Users + Groups CRUD (enterprise).                                   |
+| Namespace              | Endpoints            | Notes                                                                                                      |
+| ---------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `client.health`        | `/health/*`          | `liveliness`, `readiness`, `readinessDetails`, `testConnection`.                                           |
+| `client.keys`          | `/key/*`             | Virtual key CRUD plus `block` / `unblock` / `regenerate` / `health`.                                       |
+| `client.proxyModels`   | `/model/*`           | Live registry: register, retrieve, list, update, delete.                                                   |
+| `client.teams`         | `/team/*`            | Team CRUD plus member and model management.                                                                |
+| `client.users`         | `/user/*`            | Internal user CRUD.                                                                                        |
+| `client.organizations` | `/organization/*`    | Organization CRUD plus member management.                                                                  |
+| `client.spend`         | `/spend/*`           | `calculate`, `tags`, `logs`.                                                                               |
+| `client.budgets`       | `/budget/*`          | Budget CRUD.                                                                                               |
+| `client.callbacks`     | `/callbacks/*`       | List, update, health for logging callback configuration.                                                   |
+| `client.guardrails`    | `/guardrails/*`      | List configured guardrails.                                                                                |
+| `client.cache`         | `/cache/*`           | `ping`, `flushAll`, `delete` for the proxy cache backend.                                                  |
+| `client.config`        | `/config/*`          | `get` and `update` for the proxy's runtime configuration.                                                  |
+| `client.customers`     | `/customer/*`        | End-user CRUD plus block / unblock.                                                                        |
+| `client.tags`          | `/tag/*`             | Tag CRUD for routing and spend tracking.                                                                   |
+| `client.fallbacks`     | `/fallback/*`        | Per-model fallback configuration (general, context_window, content_policy).                                |
+| `client.router`        | `/router/*`          | Router field metadata and current setting reads.                                                           |
+| `client.accessGroups`  | `/v1/access_group/*` | Unified access groups across models, MCP servers, and agents.                                              |
+| `client.jwtMappings`   | `/jwt/key/mapping/*` | JWT-claim-to-virtual-key mappings.                                                                         |
+| `client.compliance`    | `/compliance/*`      | EU AI Act and GDPR compliance checks on spend logs.                                                        |
+| `client.tools`         | `/v1/tool/*`         | Tool registry and per-tool input/output policy administration.                                             |
+| `client.mcp`           | `/v1/mcp/*`          | MCP server CRUD, submissions/approve/reject, toolsets, discovery.                                          |
+| `client.scim`          | `/scim/v2/*`         | SCIM v2 Users + Groups CRUD (enterprise).                                                                  |
+| `client.credentials`   | `/credentials/*`     | Stored credential CRUD (`create`, `list`, `getByName`, `getByModel`, `update`, `delete`).                  |
+| `client.claudeCode`    | `/claude-code/*`     | Claude Code marketplace plugins (`marketplace`, `register`, `list`, `get`, `enable`, `disable`, `delete`). |
 
 ### Provider passthroughs (native upstream shape)
 
