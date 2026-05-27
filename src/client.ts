@@ -14,6 +14,11 @@ import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.
 import { createJwtMappings, type JwtMappingsNamespace } from "./api/admin/jwt_mappings.ts";
 import { createMcp, type McpNamespace } from "./api/admin/mcp.ts";
 import { createScim, type ScimNamespace } from "./api/admin/scim.ts";
+import { createCredentials, type CredentialsNamespace } from "./api/admin/credentials.ts";
+import { type ContainersNamespace, createContainers } from "./api/containers.ts";
+import { createEvals, type EvalsNamespace } from "./api/evals.ts";
+import { createOcr, type OcrNamespace } from "./api/ocr.ts";
+import { createRag, type RagNamespace } from "./api/rag.ts";
 import { createRouter, type RouterNamespace } from "./api/admin/router.ts";
 import { createTags, type TagsNamespace } from "./api/admin/tags.ts";
 import { createTools, type ToolsNamespace } from "./api/admin/tools.ts";
@@ -60,6 +65,14 @@ export interface Client {
   readonly audio: AudioNamespace;
   /** Video generation endpoints (mode-gated). */
   readonly videos: VideosNamespace;
+  /** OCR endpoint (mode-gated). */
+  readonly ocr: OcrNamespace;
+  /** RAG ingest + query pipeline. */
+  readonly rag: RagNamespace;
+  /** OpenAI Containers API (code execution sandboxes). */
+  readonly containers: ContainersNamespace;
+  /** OpenAI Evals API (evaluations + runs). */
+  readonly evals: EvalsNamespace;
   /** Rerank endpoint. */
   readonly rerank: RerankNamespace;
   /** Content moderation endpoint. */
@@ -113,6 +126,8 @@ export interface Client {
   readonly mcp: McpNamespace;
   /** SCIM v2 identity-provider integration (enterprise only). */
   readonly scim: ScimNamespace;
+  /** Stored credential administration. */
+  readonly credentials: CredentialsNamespace;
   /** Logging callback configuration. */
   readonly callbacks: CallbacksNamespace;
   /** Configured guardrails listing. */
@@ -155,6 +170,10 @@ export const createClient = (config: TransportConfig): Client => {
     images: createImages(transport),
     audio: createAudio(transport),
     videos: createVideos(transport),
+    ocr: createOcr(transport),
+    rag: createRag(transport),
+    containers: createContainers(transport),
+    evals: createEvals(transport),
     rerank: createRerank(transport),
     moderation: createModeration(transport),
     files: createFiles(transport),
@@ -178,6 +197,7 @@ export const createClient = (config: TransportConfig): Client => {
     tools: createTools(transport),
     mcp: createMcp(transport),
     scim: createScim(transport),
+    credentials: createCredentials(transport),
     callbacks: createCallbacks(transport),
     guardrails: createGuardrails(transport),
     cache: createCache(transport),

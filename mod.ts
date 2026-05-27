@@ -463,6 +463,80 @@ export type {
 } from "./src/api/admin/scim.ts";
 
 export type {
+  CreateCredentialRequest,
+  Credential,
+  CredentialMutationResponse,
+  CredentialsNamespace,
+  ListCredentialsResponse,
+  UpdateCredentialRequest,
+} from "./src/api/admin/credentials.ts";
+
+export type {
+  Container,
+  ContainerExpiration,
+  ContainersNamespace,
+  CreateContainerRequest,
+  DeleteContainerResponse,
+  ListContainersQuery,
+  ListContainersResponse,
+} from "./src/api/containers.ts";
+
+export type {
+  CancelEvalResponse,
+  CancelEvalRunResponse,
+  CreateEvalRequest,
+  CreateEvalRunRequest,
+  DeleteEvalResponse,
+  DeleteEvalRunResponse,
+  Eval,
+  EvalDataSourceConfig,
+  EvalGraderConfig,
+  EvalRun,
+  EvalRunDataSource,
+  EvalRunsNamespace,
+  EvalsNamespace,
+  ListEvalRunsQuery,
+  ListEvalRunsResponse,
+  ListEvalsQuery,
+  ListEvalsResponse,
+  PerTestingCriteriaResult,
+  UpdateEvalRequest,
+  UpdateEvalRunRequest,
+} from "./src/api/evals.ts";
+
+export type {
+  OcrDocument,
+  OcrFileInput,
+  OcrFileRequest,
+  OcrNamespace,
+  OcrPage,
+  OcrPageDimensions,
+  OcrPageImage,
+  OcrRequest,
+  OcrResponse,
+  OcrUsageInfo,
+} from "./src/api/ocr.ts";
+
+export type {
+  RagBedrockVectorStoreOptions,
+  RagChunkingStrategy,
+  RagIngestEmbeddingOptions,
+  RagIngestOcrOptions,
+  RagIngestOptions,
+  RagIngestRequest,
+  RagIngestResponse,
+  RagNamespace,
+  RagOpenAIVectorStoreOptions,
+  RagQueryRequest,
+  RagQueryResponse,
+  RagRerankConfig,
+  RagRetrievalConfig,
+  RagS3VectorsVectorStoreOptions,
+  RagVectorStoreOptions,
+  RagVertexAIVectorStoreOptions,
+} from "./src/api/rag.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,
