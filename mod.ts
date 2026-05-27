@@ -285,7 +285,13 @@ export type {
 } from "./src/api/admin/models.ts";
 
 export type {
+  AddTeamCallbackRequest,
   AddTeamMemberRequest,
+  BulkAddTeamMembersRequest,
+  BulkAddTeamMembersResponse,
+  BulkTeamMemberAddResult,
+  BulkUpdateTeamMemberPermissionsRequest,
+  BulkUpdateTeamMemberPermissionsResponse,
   CreateTeamRequest,
   DeleteTeamMemberRequest,
   DeleteTeamsRequest,
@@ -293,12 +299,17 @@ export type {
   MemberIdentity,
   Team,
   TeamBudgetLimit,
+  TeamCallbacksResponse,
+  TeamDailyActivityQuery,
   TeamIdRequest,
+  TeamMemberMeResponse,
+  TeamMemberPermissionsResponse,
   TeamMemberRole,
   TeamMembership,
   TeamMemberSpec,
   TeamModelsRequest,
   TeamsNamespace,
+  UpdateTeamMemberPermissionsRequest,
   UpdateTeamMemberRequest,
   UpdateTeamRequest,
 } from "./src/api/admin/teams.ts";

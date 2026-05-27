@@ -213,6 +213,145 @@ export interface TeamModelsRequest {
   readonly models: readonly string[];
 }
 
+/** Body for `/team/bulk_member_add`. */
+export interface BulkAddTeamMembersRequest {
+  /** Target team id. */
+  readonly team_id: string;
+  /** Members to add (mutually exclusive with `all_users`). */
+  readonly members?: readonly (MemberIdentity & {
+    /** Role inside the team. */
+    readonly role: TeamMemberRole;
+  })[];
+  /** Add every user on the proxy to the team. */
+  readonly all_users?: boolean;
+  /** Per-member spend ceiling shared by every added member. */
+  readonly max_budget_in_team?: number;
+}
+
+/** Per-member outcome row in `BulkAddTeamMembersResponse.results`. */
+export interface BulkTeamMemberAddResult {
+  /** Resolved user id, when known. */
+  readonly user_id?: string;
+  /** Email used to look the user up. */
+  readonly user_email?: string;
+  /** True when the member was added successfully. */
+  readonly success: boolean;
+  /** Error string when `success === false`. */
+  readonly error?: string;
+  /** Updated user row (when success). */
+  readonly updated_user?: Readonly<Record<string, unknown>>;
+  /** Updated team-membership row (when success). */
+  readonly updated_team_membership?: Readonly<Record<string, unknown>>;
+}
+
+/** Response from `/team/bulk_member_add`. */
+export interface BulkAddTeamMembersResponse {
+  /** Target team id. */
+  readonly team_id: string;
+  /** Per-member outcomes in request order. */
+  readonly results: readonly BulkTeamMemberAddResult[];
+  /** Total members requested. */
+  readonly total_requested: number;
+  /** Number of successful additions. */
+  readonly successful_additions: number;
+  /** Number of failed additions. */
+  readonly failed_additions: number;
+  /** Refreshed team row after the bulk operation. */
+  readonly updated_team?: Readonly<Record<string, unknown>>;
+}
+
+/** Response from `GET /team/{id}/members/me`. */
+export interface TeamMemberMeResponse {
+  /** Calling user id. */
+  readonly user_id?: string;
+  /** Calling user's email. */
+  readonly user_email?: string;
+  /** Role inside the team. */
+  readonly role?: string;
+  /** Friendly team alias. */
+  readonly team_alias?: string;
+  /** Per-member spend ceiling. */
+  readonly max_budget_in_team?: number;
+  /** Other membership fields the proxy may include. */
+  readonly [key: string]: unknown;
+}
+
+/** Body for `POST /team/{id}/callback`. */
+export interface AddTeamCallbackRequest {
+  /** Logging callback identifier (e.g. `"langfuse"`). */
+  readonly callback_name: string;
+  /** Stage the callback fires in. Default `"success_and_failure"`. */
+  readonly callback_type?: "success" | "failure" | "success_and_failure";
+  /** Provider-specific configuration variables. */
+  readonly callback_vars: Readonly<Record<string, string>>;
+}
+
+/** Response from `GET /team/{id}/callback`. */
+export interface TeamCallbacksResponse {
+  /** Configured callbacks. */
+  readonly callbacks: readonly Readonly<Record<string, unknown>>[];
+  /** Other top-level fields the proxy may include. */
+  readonly [key: string]: unknown;
+}
+
+/** Response from `GET /team/permissions_list`. */
+export interface TeamMemberPermissionsResponse {
+  /** Team id the permissions apply to. */
+  readonly team_id: string;
+  /** Permissions currently granted to team members. */
+  readonly team_member_permissions: readonly string[];
+  /** Catalog of permissions the proxy knows about. */
+  readonly all_available_permissions: readonly string[];
+}
+
+/** Body for `POST /team/permissions_update`. */
+export interface UpdateTeamMemberPermissionsRequest {
+  /** Target team id. */
+  readonly team_id: string;
+  /** Replacement permission set. */
+  readonly team_member_permissions: readonly string[];
+}
+
+/** Body for `POST /team/permissions_bulk_update`. */
+export interface BulkUpdateTeamMemberPermissionsRequest {
+  /** Permissions appended to each target team (duplicates skipped). */
+  readonly permissions: readonly string[];
+  /** Specific team ids to update. Required unless `apply_to_all_teams` is `true`. */
+  readonly team_ids?: readonly string[];
+  /** When `true`, apply to every team. Mutually exclusive with `team_ids`. */
+  readonly apply_to_all_teams?: boolean;
+}
+
+/** Response from `POST /team/permissions_bulk_update`. */
+export interface BulkUpdateTeamMemberPermissionsResponse {
+  /** Human-readable summary. */
+  readonly message: string;
+  /** Number of teams that received the update. */
+  readonly teams_updated: number;
+  /** Permissions appended (after dedup). */
+  readonly permissions_appended?: readonly string[];
+}
+
+/** Query parameters for `GET /team/daily/activity`. */
+export interface TeamDailyActivityQuery {
+  /** Comma-separated team ids. */
+  readonly team_ids?: string;
+  /** Inclusive start date `YYYY-MM-DD`. */
+  readonly start_date?: string;
+  /** Inclusive end date `YYYY-MM-DD`. */
+  readonly end_date?: string;
+  /** Filter by model name. */
+  readonly model?: string;
+  /** Filter by virtual key. */
+  readonly api_key?: string;
+  /** Page number (1-indexed). */
+  readonly page?: number;
+  /** Page size. */
+  readonly page_size?: number;
+  /** Team ids to exclude from the aggregation. */
+  readonly exclude_team_ids?: string;
+}
+
 /** Response from `/team/list`. */
 export interface ListTeamsResponse {
   /** Returned teams. */
@@ -251,6 +390,37 @@ export interface TeamsNamespace {
   addModels(req: TeamModelsRequest): Promise<Result<Team, ApiError>>;
   /** Remove models from a team's allowed model list. */
   deleteModels(req: TeamModelsRequest): Promise<Result<Team, ApiError>>;
+  /** Bulk-add members to a team (with optional per-member budget). */
+  bulkAddMembers(
+    req: BulkAddTeamMembersRequest,
+  ): Promise<Result<BulkAddTeamMembersResponse, ApiError>>;
+  /** List teams the caller has access to (auth-context-derived). */
+  available(): Promise<Result<readonly Team[], ApiError>>;
+  /** Return the caller's membership row inside a team. */
+  myMembership(teamId: string): Promise<Result<TeamMemberMeResponse, ApiError>>;
+  /** Get the configured logging callbacks for a team. */
+  getCallbacks(teamId: string): Promise<Result<TeamCallbacksResponse, ApiError>>;
+  /** Add a logging callback to a team. */
+  addCallback(
+    teamId: string,
+    req: AddTeamCallbackRequest,
+  ): Promise<Result<unknown, ApiError>>;
+  /** Disable per-request logging for a team. */
+  disableLogging(teamId: string): Promise<Result<unknown, ApiError>>;
+  /** Get team member permissions for a team. */
+  getMemberPermissions(
+    teamId: string,
+  ): Promise<Result<TeamMemberPermissionsResponse, ApiError>>;
+  /** Replace team member permissions for a team. */
+  updateMemberPermissions(
+    req: UpdateTeamMemberPermissionsRequest,
+  ): Promise<Result<unknown, ApiError>>;
+  /** Append permissions across many teams (or all teams). */
+  bulkUpdateMemberPermissions(
+    req: BulkUpdateTeamMemberPermissionsRequest,
+  ): Promise<Result<BulkUpdateTeamMemberPermissionsResponse, ApiError>>;
+  /** Per-day spend / request counters for a team. */
+  dailyActivity(query?: TeamDailyActivityQuery): Promise<Result<unknown, ApiError>>;
 }
 
 /** Bind a `TeamsNamespace` to a constructed `Transport`. */
@@ -310,5 +480,72 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
   },
   deleteModels(req) {
     return transport.request<Team>({ method: "POST", path: "/team/model/delete", body: req });
+  },
+  bulkAddMembers(req) {
+    return transport.request<BulkAddTeamMembersResponse>({
+      method: "POST",
+      path: "/team/bulk_member_add",
+      body: req,
+    });
+  },
+  available() {
+    return transport.request<readonly Team[]>({ method: "GET", path: "/team/available" });
+  },
+  myMembership(teamId) {
+    return transport.request<TeamMemberMeResponse>({
+      method: "GET",
+      path: `/team/${encodeURIComponent(teamId)}/members/me`,
+    });
+  },
+  getCallbacks(teamId) {
+    return transport.request<TeamCallbacksResponse>({
+      method: "GET",
+      path: `/team/${encodeURIComponent(teamId)}/callback`,
+    });
+  },
+  addCallback(teamId, req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: `/team/${encodeURIComponent(teamId)}/callback`,
+      body: req,
+    });
+  },
+  disableLogging(teamId) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: `/team/${encodeURIComponent(teamId)}/disable_logging`,
+    });
+  },
+  getMemberPermissions(teamId) {
+    return transport.request<TeamMemberPermissionsResponse>({
+      method: "GET",
+      path: "/team/permissions_list",
+      query: { team_id: teamId },
+    });
+  },
+  updateMemberPermissions(req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/team/permissions_update",
+      body: req,
+    });
+  },
+  bulkUpdateMemberPermissions(req) {
+    return transport.request<BulkUpdateTeamMemberPermissionsResponse>({
+      method: "POST",
+      path: "/team/permissions_bulk_update",
+      body: req,
+    });
+  },
+  dailyActivity(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/team/daily/activity",
+      ...(query === undefined ? {} : {
+        query: Object.fromEntries(
+          Object.entries(query).filter(([, v]) => v !== undefined) as [string, string | number][],
+        ),
+      }),
+    });
   },
 });
