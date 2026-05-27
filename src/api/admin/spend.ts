@@ -215,6 +215,64 @@ export interface SpendLogsV2Response {
   readonly total_pages: number;
 }
 
+/** Request body for `POST /cost/estimate`. */
+export interface CostEstimateRequest {
+  /** Model name (resolved through `/model_group/info` aliases). */
+  readonly model: string;
+  /** Expected input tokens per request. */
+  readonly input_tokens: number;
+  /** Expected output tokens per request. */
+  readonly output_tokens: number;
+  /** Optional request count to compute a daily projection. */
+  readonly num_requests_per_day?: number;
+  /** Optional request count to compute a monthly projection. */
+  readonly num_requests_per_month?: number;
+}
+
+/** Response from `POST /cost/estimate`. */
+export interface CostEstimateResponse {
+  /** Echo of the input model name. */
+  readonly model: string;
+  /** Echo of the input token count. */
+  readonly input_tokens: number;
+  /** Echo of the output token count. */
+  readonly output_tokens: number;
+  /** Echo of the daily request count. */
+  readonly num_requests_per_day?: number | null;
+  /** Echo of the monthly request count. */
+  readonly num_requests_per_month?: number | null;
+  /** Total cost per request, including margin. */
+  readonly cost_per_request: number;
+  /** Input-token cost per request, before margin. */
+  readonly input_cost_per_request: number;
+  /** Output-token cost per request, before margin. */
+  readonly output_cost_per_request: number;
+  /** Margin or fee added per request. */
+  readonly margin_cost_per_request: number;
+  /** Total daily cost (when `num_requests_per_day` is set). */
+  readonly daily_cost?: number | null;
+  /** Daily input-token cost. */
+  readonly daily_input_cost?: number | null;
+  /** Daily output-token cost. */
+  readonly daily_output_cost?: number | null;
+  /** Daily margin total. */
+  readonly daily_margin_cost?: number | null;
+  /** Total monthly cost (when `num_requests_per_month` is set). */
+  readonly monthly_cost?: number | null;
+  /** Monthly input-token cost. */
+  readonly monthly_input_cost?: number | null;
+  /** Monthly output-token cost. */
+  readonly monthly_output_cost?: number | null;
+  /** Monthly margin total. */
+  readonly monthly_margin_cost?: number | null;
+  /** Per-token input price from the cost map. */
+  readonly input_cost_per_token?: number | null;
+  /** Per-token output price from the cost map. */
+  readonly output_cost_per_token?: number | null;
+  /** Provider id resolved during cost lookup. */
+  readonly provider?: string | null;
+}
+
 /** Response from `/spend/logs`. */
 export interface SpendLogsResponse {
   /** Log entries on the current page. */
@@ -239,6 +297,14 @@ export interface SpendNamespace {
   users(query?: SpendUsersQuery): Promise<Result<readonly SpendUserRow[], ApiError>>;
   /** Paginated spend logs (v2) with rich filtering and sort options. */
   logsV2(query: SpendLogsV2Query): Promise<Result<SpendLogsV2Response, ApiError>>;
+  /**
+   * Forward-looking cost projection (`POST /cost/estimate`). Differs from
+   * `calculate` in that the inputs are raw token counts rather than a
+   * request body or completion response.
+   */
+  costEstimate(
+    req: CostEstimateRequest,
+  ): Promise<Result<CostEstimateResponse, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -292,6 +358,13 @@ export const createSpend = (transport: Transport): SpendNamespace => ({
       method: "GET",
       path: "/spend/logs/v2",
       query: filterUndefined(query),
+    });
+  },
+  costEstimate(req) {
+    return transport.request<CostEstimateResponse>({
+      method: "POST",
+      path: "/cost/estimate",
+      body: req,
     });
   },
 });

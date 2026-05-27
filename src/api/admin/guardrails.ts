@@ -324,6 +324,13 @@ export interface GuardrailUsageNamespace {
   logs(
     query?: GuardrailUsageLogsQuery,
   ): Promise<Result<GuardrailUsageLogsResponse, ApiError>>;
+  /**
+   * Policy-level usage overview (`/policies/usage/overview`). Same payload
+   * shape as `overview` but rows describe policies rather than guardrails.
+   */
+  policiesOverview(
+    query?: GuardrailUsageQuery,
+  ): Promise<Result<GuardrailUsageOverviewResponse, ApiError>>;
 }
 
 /** Surface for guardrail administration on the `Client`. */
@@ -427,6 +434,13 @@ const createUsage = (transport: Transport): GuardrailUsageNamespace => ({
     return transport.request<GuardrailUsageLogsResponse>({
       method: "GET",
       path: "/guardrails/usage/logs",
+      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+    });
+  },
+  policiesOverview(query) {
+    return transport.request<GuardrailUsageOverviewResponse>({
+      method: "GET",
+      path: "/policies/usage/overview",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },

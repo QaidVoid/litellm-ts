@@ -286,6 +286,7 @@ export type {
   DeleteKeysResponse,
   GenerateKeyRequest,
   KeyHealthResponse,
+  KeyInfoBatchRequest,
   KeyMetadata,
   KeysNamespace,
   KeyTempBudgetBump,
@@ -306,12 +307,15 @@ export type {
   DeleteModelRequest,
   DeleteModelResponse,
   ListModelsResponse,
+  ListModelsV2Query,
   ListOpenAIModelsQuery,
   ListOpenAIModelsResponse,
   LiteLLMParams,
+  MakeModelGroupsPublicRequest,
   ModelCostMapSourceResponse,
   ModelExceptionRow,
   ModelExceptionsResponse,
+  ModelGroupNamespace,
   ModelMetricsQuery,
   ModelMetricsResponse,
   ModelSettingsResponse,
@@ -339,6 +343,7 @@ export type {
   DeleteTeamMemberRequest,
   DeleteTeamsRequest,
   ListTeamsResponse,
+  ListTeamsV2Query,
   MemberIdentity,
   Team,
   TeamBudgetLimit,
@@ -380,6 +385,8 @@ export type {
 export type {
   CalculateSpendRequest,
   CalculateSpendResponse,
+  CostEstimateRequest,
+  CostEstimateResponse,
   SpendCompletionResponse,
   SpendKeyRow,
   SpendLog,
@@ -511,6 +518,60 @@ export type {
   UpdateToolPolicyResponse,
   UpdateToolPolicyScope,
 } from "./src/api/admin/tools.ts";
+
+export type {
+  GlobalDateRangeQuery,
+  GlobalSpendEndUsersRequest,
+  GlobalSpendKeysQuery,
+  GlobalSpendLogsQuery,
+  GlobalSpendModelsQuery,
+  GlobalSpendNamespace,
+  GlobalSpendReportQuery,
+  GlobalSpendTagsQuery,
+} from "./src/api/admin/global_spend.ts";
+
+export type {
+  CreateManagedVectorStoreRequest,
+  CreateManagedVectorStoreResponse,
+  DeleteManagedVectorStoreRequest,
+  DeleteManagedVectorStoreResponse,
+  ListManagedVectorStoresQuery,
+  ListManagedVectorStoresResponse,
+  ManagedVectorStore,
+  ManagedVectorStoreInfoRequest,
+  ManagedVectorStoreInfoResponse,
+  UpdateManagedVectorStoreRequest,
+  VectorStoresAdminNamespace,
+} from "./src/api/admin/vector_stores.ts";
+
+export type {
+  CreateInvitationRequest,
+  DeleteInvitationRequest,
+  Invitation,
+  InvitationsNamespace,
+  UpdateInvitationRequest,
+} from "./src/api/admin/invitations.ts";
+
+export type {
+  PolicyGuardrailsResponse,
+  PolicyInfoResponse,
+  PolicyListResponse,
+  PolicyMatchContext,
+  PolicyScopeResponse,
+  PolicySummaryItem,
+  PolicyTemplateEnrichRequest,
+  PolicyTemplateEnrichResponse,
+  PolicyTemplatesNamespace,
+  PolicyTemplateSuggestRequest,
+  PolicyTemplateTestRequest,
+  PolicyTemplateTestResponse,
+  PolicyTemplateTestResultEntry,
+  PolicyTestResponse,
+  PolicyValidateRequest,
+  PolicyValidationError,
+  PolicyValidationErrorType,
+  PolicyValidationResponse,
+} from "./src/api/admin/policy.ts";
 
 export type {
   CreatePolicyAttachmentRequest,
@@ -742,6 +803,7 @@ export type {
   Agent,
   AgentCapabilities,
   AgentCard,
+  AgentDailyActivityQuery,
   AgentObjectPermission,
   AgentSkill,
   AgentsNamespace,
@@ -934,12 +996,17 @@ export type {
   ConfigFieldUpdate,
   ConfigNamespace,
   ConfigNestedFieldDetail,
+  ConfigOverrideMutationResponse,
+  ConfigOverrideSettingsResponse,
+  ConfigOverridesHashicorpVaultNamespace,
+  ConfigOverridesNamespace,
   ConfigPassThroughEndpointsNamespace,
   ConfigSectionType,
   CostDiscountConfig,
   CostDiscountConfigResponse,
   CostMarginConfig,
   CostMarginConfigResponse,
+  HashicorpVaultConfigRequest,
   ListPassThroughEndpointsQuery,
   ListPassThroughEndpointsResponse,
   PassThroughEndpoint,
@@ -949,6 +1016,32 @@ export type {
 } from "./src/api/admin/config.ts";
 
 export type { PassthroughNamespace } from "./src/api/passthrough.ts";
+
+export type {
+  AnthropicEventLoggingBatchRequest,
+  AnthropicEventLoggingBatchResponse,
+  AnthropicEventLoggingNamespace,
+} from "./src/api/anthropic_event_logging.ts";
+
+export type {
+  AlertingNamespace,
+  AlertingSettingField,
+  AlertingSettingsResponse,
+} from "./src/api/admin/alerting.ts";
+
+export type {
+  AdaptiveRouterNamespace,
+  AdaptiveRouterStateResponse,
+} from "./src/api/admin/adaptive_router.ts";
+
+export type {
+  AllowedIpMutationRequest,
+  AllowedIpMutationResponse,
+  AllowedIpsListResponse,
+  AllowedIpsNamespace,
+} from "./src/api/admin/allowed_ips.ts";
+
+export type { MaintenanceNamespace, ScheduleReloadQuery } from "./src/api/admin/maintenance.ts";
 
 export type {
   MessagesContentBlock,

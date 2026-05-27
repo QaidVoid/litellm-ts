@@ -24,6 +24,21 @@ import {
   type SpendConnectorsNamespace,
 } from "./api/admin/spend_connectors.ts";
 import { createPolicies, type PoliciesNamespace } from "./api/admin/policies.ts";
+import { createPolicyTemplates, type PolicyTemplatesNamespace } from "./api/admin/policy.ts";
+import { createInvitations, type InvitationsNamespace } from "./api/admin/invitations.ts";
+import {
+  createVectorStoresAdmin,
+  type VectorStoresAdminNamespace,
+} from "./api/admin/vector_stores.ts";
+import { createGlobalSpend, type GlobalSpendNamespace } from "./api/admin/global_spend.ts";
+import {
+  type AnthropicEventLoggingNamespace,
+  createAnthropicEventLogging,
+} from "./api/anthropic_event_logging.ts";
+import { type AlertingNamespace, createAlerting } from "./api/admin/alerting.ts";
+import { type AdaptiveRouterNamespace, createAdaptiveRouter } from "./api/admin/adaptive_router.ts";
+import { type AllowedIpsNamespace, createAllowedIps } from "./api/admin/allowed_ips.ts";
+import { createMaintenance, type MaintenanceNamespace } from "./api/admin/maintenance.ts";
 import { createPrompts, type PromptsNamespace } from "./api/admin/prompts.ts";
 import { createWorkflows, type WorkflowsNamespace } from "./api/admin/workflows.ts";
 import { createScim, type ScimNamespace } from "./api/admin/scim.ts";
@@ -179,6 +194,37 @@ export interface Client {
   readonly prompts: PromptsNamespace;
   /** Policy-engine administration (policies + versions + attachments + resolve). */
   readonly policies: PoliciesNamespace;
+  /**
+   * In-memory policy templates and validation surface (`/policy/*`,
+   * `/policy/templates/*`). Distinct from `policies`, which manages the
+   * persisted policy CRUD lifecycle.
+   */
+  readonly policy: PolicyTemplatesNamespace;
+  /** Invitation link administration. */
+  readonly invitations: InvitationsNamespace;
+  /**
+   * Legacy singular `/vector_store/*` proxy administration. Distinct from
+   * `vectorStores` (the OpenAI-shape plural surface).
+   */
+  readonly vectorStoresAdmin: VectorStoresAdminNamespace;
+  /**
+   * Global spend and activity analytics (`/global/spend/*` and
+   * `/global/activity/*`). All responses are dashboard-shaped and are
+   * returned as `unknown`.
+   */
+  readonly globalSpend: GlobalSpendNamespace;
+  /** Alerting administration (`/alerting/settings`). */
+  readonly alerting: AlertingNamespace;
+  /** Adaptive-router diagnostics (`/adaptive_router/state`). */
+  readonly adaptiveRouter: AdaptiveRouterNamespace;
+  /** Proxy IP allowlist administration. */
+  readonly allowedIps: AllowedIpsNamespace;
+  /**
+   * Background-reload maintenance endpoints (`/reload/*`,
+   * `/schedule/*`). Covers the model cost map and Anthropic beta headers
+   * reload jobs.
+   */
+  readonly maintenance: MaintenanceNamespace;
   /** Workflow run administration (runs + events + messages). */
   readonly workflows: WorkflowsNamespace;
   /** MCP server and toolset administration. */
@@ -197,6 +243,12 @@ export interface Client {
   readonly config: ConfigNamespace;
   /** Native-shape passthrough to Anthropic via the LiteLLM proxy. */
   readonly anthropic: PassthroughNamespace;
+  /**
+   * Anthropic-spec event-logging endpoints (`/api/event_logging/*`).
+   * Currently exposes the stubbed `batch` ingest used by Claude Code
+   * clients for telemetry.
+   */
+  readonly anthropicEventLogging: AnthropicEventLoggingNamespace;
   /** Native-shape passthrough to OpenAI. */
   readonly openai: PassthroughNamespace;
   /** Native-shape passthrough to Google Gemini. */
@@ -268,6 +320,14 @@ export const createClient = (config: TransportConfig): Client => {
     tools: createTools(transport),
     prompts: createPrompts(transport),
     policies: createPolicies(transport),
+    policy: createPolicyTemplates(transport),
+    invitations: createInvitations(transport),
+    vectorStoresAdmin: createVectorStoresAdmin(transport),
+    globalSpend: createGlobalSpend(transport),
+    alerting: createAlerting(transport),
+    adaptiveRouter: createAdaptiveRouter(transport),
+    allowedIps: createAllowedIps(transport),
+    maintenance: createMaintenance(transport),
     workflows: createWorkflows(transport),
     mcp: createMcp(transport),
     scim: createScim(transport),
@@ -277,6 +337,7 @@ export const createClient = (config: TransportConfig): Client => {
     cache: createCache(transport),
     config: createConfig(transport),
     anthropic: createPassthrough(transport, "/anthropic"),
+    anthropicEventLogging: createAnthropicEventLogging(transport),
     openai: createPassthrough(transport, "/openai"),
     gemini: createPassthrough(transport, "/gemini"),
     vertexAi: createPassthrough(transport, "/vertex-ai"),

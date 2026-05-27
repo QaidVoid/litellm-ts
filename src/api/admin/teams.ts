@@ -421,6 +421,37 @@ export interface TeamsNamespace {
   ): Promise<Result<BulkUpdateTeamMemberPermissionsResponse, ApiError>>;
   /** Per-day spend / request counters for a team. */
   dailyActivity(query?: TeamDailyActivityQuery): Promise<Result<unknown, ApiError>>;
+  /**
+   * Paginated team listing with rich filtering (`GET /v2/team/list`).
+   * Distinct from `list`, which returns every accessible team without
+   * pagination. Returned as `unknown` because the v2 response includes
+   * pagination metadata the v1 shape lacks.
+   */
+  listV2(query?: ListTeamsV2Query): Promise<Result<unknown, ApiError>>;
+}
+
+/** Query parameters for `GET /v2/team/list`. */
+export interface ListTeamsV2Query {
+  /** Restrict to teams a particular user belongs to. */
+  readonly user_id?: string;
+  /** Restrict to a single organization. */
+  readonly organization_id?: string;
+  /** Restrict to a single team id. */
+  readonly team_id?: string;
+  /** Partial-match filter on `team_alias`. */
+  readonly team_alias?: string;
+  /** Combined `team_id` / `team_alias` substring filter. */
+  readonly search?: string;
+  /** 1-based page number. Default 1. */
+  readonly page?: number;
+  /** Page size (1-100). Default 10. */
+  readonly page_size?: number;
+  /** Sort column (`"team_id"`, `"team_alias"`, `"created_at"`). */
+  readonly sort_by?: string;
+  /** Sort direction (`"asc"` or `"desc"`). Default `"asc"`. */
+  readonly sort_order?: "asc" | "desc";
+  /** Filter by status. Currently only `"deleted"` is supported. */
+  readonly status?: string;
 }
 
 /** Bind a `TeamsNamespace` to a constructed `Transport`. */
@@ -541,6 +572,17 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
     return transport.request<unknown>({
       method: "GET",
       path: "/team/daily/activity",
+      ...(query === undefined ? {} : {
+        query: Object.fromEntries(
+          Object.entries(query).filter(([, v]) => v !== undefined) as [string, string | number][],
+        ),
+      }),
+    });
+  },
+  listV2(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/v2/team/list",
       ...(query === undefined ? {} : {
         query: Object.fromEntries(
           Object.entries(query).filter(([, v]) => v !== undefined) as [string, string | number][],

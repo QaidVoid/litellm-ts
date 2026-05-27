@@ -107,6 +107,12 @@ export type BudgetSettingsResponse = readonly BudgetSettingsField[];
 
 /** Surface for budget administration on the `Client`. */
 export interface BudgetsNamespace {
+  /**
+   * Read provider-level budget routing state (per-provider budget, current
+   * spend, and reset timestamp). Returned as `unknown` since the shape can
+   * be extended by enterprise builds.
+   */
+  providerBudgets(): Promise<Result<unknown, ApiError>>;
   /** Create a new budget. */
   create(req: CreateBudgetRequest): Promise<Result<Budget, ApiError>>;
   /** Retrieve a budget by id. */
@@ -128,6 +134,9 @@ export interface BudgetsNamespace {
 
 /** Bind a `BudgetsNamespace` to a constructed `Transport`. */
 export const createBudgets = (transport: Transport): BudgetsNamespace => ({
+  providerBudgets() {
+    return transport.request<unknown>({ method: "GET", path: "/provider/budgets" });
+  },
   create(req) {
     return transport.request<Budget>({ method: "POST", path: "/budget/new", body: req });
   },

@@ -275,6 +275,14 @@ export interface UsersNamespace {
   dailyActivityAggregated(
     query: UserDailyActivityAggregatedQuery,
   ): Promise<Result<unknown, ApiError>>;
+  /**
+   * Lightweight user lookup (`GET /v2/user/info`). Returns only the user
+   * row, without the eager-loaded keys and teams that the v1 endpoint
+   * carries. Omit `user_id` to look up the calling user. Returned as
+   * `unknown` because the proxy's `UserInfoV2Response` is a thin wrapper
+   * around the raw user table row.
+   */
+  infoV2(query?: { readonly user_id?: string }): Promise<Result<unknown, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -341,6 +349,13 @@ export const createUsers = (transport: Transport): UsersNamespace => ({
       method: "GET",
       path: "/user/daily/activity/aggregated",
       query: filterUndefined(query),
+    });
+  },
+  infoV2(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/v2/user/info",
+      ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },
 });

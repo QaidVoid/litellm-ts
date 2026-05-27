@@ -134,6 +134,54 @@ export interface ListPassThroughEndpointsQuery {
 /** Settings sub-block returned by `/config/pass_through_endpoints/settings`. */
 export type PassThroughEndpointSettings = Readonly<Record<string, unknown>>;
 
+/**
+ * Hashicorp Vault override config (`/config_overrides/hashicorp_vault`). All
+ * fields are optional on submission: omitted fields keep the persisted value,
+ * empty strings clear it.
+ */
+export interface HashicorpVaultConfigRequest {
+  /** Vault server address (e.g. `"https://vault.example.com:8200"`). */
+  readonly vault_addr?: string;
+  /** Direct token for token-based authentication. */
+  readonly vault_token?: string;
+  /** Role id for AppRole authentication. */
+  readonly approle_role_id?: string;
+  /** Secret id for AppRole authentication. */
+  readonly approle_secret_id?: string;
+  /** Mount path for the AppRole auth method (default `"approle"`). */
+  readonly approle_mount_path?: string;
+  /** Path to a client TLS certificate (cert-based auth). */
+  readonly client_cert?: string;
+  /** Path to the client TLS private key (cert-based auth). */
+  readonly client_key?: string;
+  /** Certificate role name for TLS cert auth. */
+  readonly vault_cert_role?: string;
+  /** Vault namespace (multi-tenant Vault). */
+  readonly vault_namespace?: string;
+  /** KV engine mount name (default `"secret"`). */
+  readonly vault_mount_name?: string;
+  /** Path prefix prepended to secret reads. */
+  readonly vault_path_prefix?: string;
+}
+
+/** Response from `GET /config_overrides/hashicorp_vault`. */
+export interface ConfigOverrideSettingsResponse {
+  /** Override type, always `"hashicorp_vault"`. */
+  readonly config_type: string;
+  /** Currently stored values (sensitive fields are masked server-side). */
+  readonly values: Readonly<Record<string, unknown>>;
+  /** Schema metadata used by the Admin UI to render the form. */
+  readonly field_schema: Readonly<Record<string, unknown>>;
+}
+
+/** Response from mutation endpoints under `/config_overrides/hashicorp_vault`. */
+export interface ConfigOverrideMutationResponse {
+  /** Result tag. */
+  readonly status: "success";
+  /** Human-readable status message. */
+  readonly message: string;
+}
+
 /** Field administration sub-namespace under `client.config.fields`. */
 export interface ConfigFieldsNamespace {
   /** List configurable fields and their current values. */
@@ -160,6 +208,33 @@ export interface ConfigCostMarginsNamespace {
   get(): Promise<Result<CostMarginConfigResponse, ApiError>>;
   /** Replace the cost-margin map. */
   update(values: CostMarginConfig): Promise<Result<unknown, ApiError>>;
+}
+
+/**
+ * Sub-namespace for the Hashicorp Vault config override block, mounted at
+ * `client.config.configOverrides.hashicorpVault`. Mutations are restricted
+ * to proxy admins on the server.
+ */
+export interface ConfigOverridesHashicorpVaultNamespace {
+  /** Read the currently stored vault override (values masked, schema attached). */
+  get(): Promise<Result<ConfigOverrideSettingsResponse, ApiError>>;
+  /** Replace the vault override; omitted fields keep their current value. */
+  set(
+    req: HashicorpVaultConfigRequest,
+  ): Promise<Result<ConfigOverrideMutationResponse, ApiError>>;
+  /** Delete the stored vault override (idempotent). */
+  delete(): Promise<Result<ConfigOverrideMutationResponse, ApiError>>;
+  /**
+   * Probe the currently configured Vault by authenticating and calling
+   * `token/lookup-self`. Takes no body; reuses the in-memory client.
+   */
+  testConnection(): Promise<Result<ConfigOverrideMutationResponse, ApiError>>;
+}
+
+/** Aggregate sub-namespace under `client.config.configOverrides`. */
+export interface ConfigOverridesNamespace {
+  /** Hashicorp Vault override administration. */
+  readonly hashicorpVault: ConfigOverridesHashicorpVaultNamespace;
 }
 
 /** Pass-through endpoint sub-namespace under `client.config.passThroughEndpoints`. */
@@ -198,6 +273,8 @@ export interface ConfigNamespace {
   readonly costMargins: ConfigCostMarginsNamespace;
   /** Pass-through endpoint administration. */
   readonly passThroughEndpoints: ConfigPassThroughEndpointsNamespace;
+  /** Per-integration config-override administration (Hashicorp Vault, etc.). */
+  readonly configOverrides: ConfigOverridesNamespace;
 }
 
 const encode = (s: string) => encodeURIComponent(s);
@@ -310,6 +387,40 @@ const createPassThroughEndpoints = (
   },
 });
 
+const createConfigOverridesHashicorpVault = (
+  transport: Transport,
+): ConfigOverridesHashicorpVaultNamespace => ({
+  get() {
+    return transport.request<ConfigOverrideSettingsResponse>({
+      method: "GET",
+      path: "/config_overrides/hashicorp_vault",
+    });
+  },
+  set(req) {
+    return transport.request<ConfigOverrideMutationResponse>({
+      method: "POST",
+      path: "/config_overrides/hashicorp_vault",
+      body: req,
+    });
+  },
+  delete() {
+    return transport.request<ConfigOverrideMutationResponse>({
+      method: "DELETE",
+      path: "/config_overrides/hashicorp_vault",
+    });
+  },
+  testConnection() {
+    return transport.request<ConfigOverrideMutationResponse>({
+      method: "POST",
+      path: "/config_overrides/hashicorp_vault/test_connection",
+    });
+  },
+});
+
+const createConfigOverrides = (transport: Transport): ConfigOverridesNamespace => ({
+  hashicorpVault: createConfigOverridesHashicorpVault(transport),
+});
+
 /** Bind a `ConfigNamespace` to a constructed `Transport`. */
 export const createConfig = (transport: Transport): ConfigNamespace => ({
   get() {
@@ -336,4 +447,5 @@ export const createConfig = (transport: Transport): ConfigNamespace => ({
   costDiscounts: createCostDiscounts(transport),
   costMargins: createCostMargins(transport),
   passThroughEndpoints: createPassThroughEndpoints(transport),
+  configOverrides: createConfigOverrides(transport),
 });

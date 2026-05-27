@@ -85,6 +85,19 @@ export interface CallbacksNamespace {
   health(): Promise<Result<CallbackHealthResponse, ApiError>>;
   /** Read the per-callback configuration schema (used by the Admin UI). */
   configs(): Promise<Result<CallbackConfigsResponse, ApiError>>;
+  /**
+   * Diagnostic dump of the currently-active in-process callbacks
+   * (`GET /active/callbacks`). The payload mirrors the proxy's runtime
+   * `litellm.callbacks` / `litellm.success_callback` lists and is exposed
+   * as `unknown` since it carries implementation details.
+   */
+  activeCallbacks(): Promise<Result<unknown, ApiError>>;
+  /**
+   * Admin-UI view of the configured callbacks plus the environment
+   * variables each callback needs (`GET /get/config/callbacks`). Shape is
+   * Admin-UI-specific.
+   */
+  configCallbacks(): Promise<Result<unknown, ApiError>>;
 }
 
 /** Bind a `CallbacksNamespace` to a constructed `Transport`. */
@@ -112,6 +125,18 @@ export const createCallbacks = (transport: Transport): CallbacksNamespace => ({
     return transport.request<CallbackConfigsResponse>({
       method: "GET",
       path: "/callbacks/configs",
+    });
+  },
+  activeCallbacks() {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/active/callbacks",
+    });
+  },
+  configCallbacks() {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/get/config/callbacks",
     });
   },
 });

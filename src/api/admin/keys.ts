@@ -384,6 +384,24 @@ export interface KeysNamespace {
   unblock(req: KeyTokenRequest): Promise<Result<KeyMetadata, ApiError>>;
   /** Probe the logging callbacks configured for the calling key. */
   health(): Promise<Result<KeyHealthResponse, ApiError>>;
+  /**
+   * Batched key info via `POST /v2/key/info`. Accepts an explicit list of
+   * `keys` and/or `key_aliases`; the response carries an `info` array with
+   * one row per resolved key. Returned as `unknown` since the proxy
+   * forwards each key's raw row from the database verbatim.
+   */
+  infoV2(req: KeyInfoBatchRequest): Promise<Result<unknown, ApiError>>;
+}
+
+/**
+ * Request body for `POST /v2/key/info`. At least one of `keys` or
+ * `key_aliases` must be supplied; the proxy validates this server-side.
+ */
+export interface KeyInfoBatchRequest {
+  /** Key token values to look up. */
+  readonly keys?: readonly string[];
+  /** Key aliases to resolve to tokens server-side. */
+  readonly key_aliases?: readonly string[];
 }
 
 const toQuery = (q: ListKeysQuery): Readonly<Record<string, string | number | boolean>> => {
@@ -503,6 +521,13 @@ export const createKeys = (transport: Transport): KeysNamespace => ({
     return transport.request<KeyHealthResponse>({
       method: "POST",
       path: "/key/health",
+    });
+  },
+  infoV2(req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/v2/key/info",
+      body: req,
     });
   },
 });

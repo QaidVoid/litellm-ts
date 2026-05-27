@@ -219,6 +219,26 @@ export interface A2aSendMessageResponse {
   readonly usage?: Readonly<Record<string, unknown>>;
 }
 
+/** Query parameters for `GET /agent/daily/activity`. */
+export interface AgentDailyActivityQuery {
+  /** Comma-separated agent ids to include. */
+  readonly agent_ids?: string;
+  /** Inclusive start date (`YYYY-MM-DD`). */
+  readonly start_date?: string;
+  /** Inclusive end date (`YYYY-MM-DD`). */
+  readonly end_date?: string;
+  /** Restrict to a single model name. */
+  readonly model?: string;
+  /** Restrict to a single virtual key (hashed token). */
+  readonly api_key?: string;
+  /** 1-based page number. Default 1. */
+  readonly page?: number;
+  /** Page size. Default 10. */
+  readonly page_size?: number;
+  /** Comma-separated agent ids to exclude. */
+  readonly exclude_agent_ids?: string;
+}
+
 /** Surface for the A2A agents API on the `Client`. */
 export interface AgentsNamespace {
   /** List agents accessible to the calling key. */
@@ -260,6 +280,14 @@ export interface AgentsNamespace {
    * follows the A2A request envelope (typically a JSON-RPC body).
    */
   invoke(agentId: string, req: unknown): Promise<Result<unknown, ApiError>>;
+  /**
+   * Paginated daily activity (spend / tokens / request counts) for the
+   * caller's accessible agents. The response is dashboard-shaped and is
+   * returned as `unknown`.
+   */
+  dailyActivity(
+    query?: AgentDailyActivityQuery,
+  ): Promise<Result<unknown, ApiError>>;
 }
 
 const encode = (s: string) => encodeURIComponent(s);
@@ -350,6 +378,13 @@ export const createAgents = (transport: Transport): AgentsNamespace => ({
       method: "POST",
       path: `/a2a/${encode(agentId)}`,
       body: req,
+    });
+  },
+  dailyActivity(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/agent/daily/activity",
+      ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },
 });

@@ -215,6 +215,50 @@ export interface ProviderInfo {
 /** Response from `/model/settings`. */
 export type ModelSettingsResponse = readonly ProviderInfo[];
 
+/** Query parameters for `GET /v2/model/info`. */
+export interface ListModelsV2Query {
+  /** Restrict to a single model name. */
+  readonly model?: string;
+  /** Only include models the calling user added. */
+  readonly user_models_only?: boolean;
+  /** Include models from every team the caller belongs to. */
+  readonly include_team_models?: boolean;
+  /** Verbose debugging metadata in the response. */
+  readonly debug?: boolean;
+  /** 1-based page number. */
+  readonly page?: number;
+  /** Page size. Default 50. */
+  readonly size?: number;
+  /** Case-insensitive partial-match filter on model name. */
+  readonly search?: string;
+  /** Look up a single model by deployment id. */
+  readonly modelId?: string;
+  /** Restrict to a single team id. */
+  readonly teamId?: string;
+  /** Sort field (`"model_name"`, `"created_at"`, `"updated_at"`, `"costs"`, `"status"`). */
+  readonly sortBy?: string;
+  /** Sort direction (`"asc"` or `"desc"`). */
+  readonly sortOrder?: "asc" | "desc";
+}
+
+/** Request body for `POST /model_group/make_public`. */
+export interface MakeModelGroupsPublicRequest {
+  /** Model group names to flag as public. */
+  readonly model_groups: readonly string[];
+}
+
+/** Sub-namespace under `client.proxyModels.modelGroup`. */
+export interface ModelGroupNamespace {
+  /**
+   * Fetch model group metadata (or every group when `modelGroupName` is
+   * omitted). Returned shape is the proxy's dashboard payload and is
+   * exposed as `unknown` because it varies by deployment.
+   */
+  info(modelGroupName?: string): Promise<Result<unknown, ApiError>>;
+  /** Update the set of model groups exposed by `/public/model_hub`. */
+  makePublic(req: MakeModelGroupsPublicRequest): Promise<Result<unknown, ApiError>>;
+}
+
 /** Response from `/model/cost_map/source`. */
 export interface ModelCostMapSourceResponse {
   /** Either `"local"` (bundled) or `"remote"` (fetched). */
@@ -267,6 +311,14 @@ export interface ProxyModelsNamespace {
   settings(): Promise<Result<ModelSettingsResponse, ApiError>>;
   /** Diagnostic info about where the model cost map was loaded from. */
   costMapSource(): Promise<Result<ModelCostMapSourceResponse, ApiError>>;
+  /** Model-group administration (info + make_public). */
+  readonly modelGroup: ModelGroupNamespace;
+  /**
+   * Beta `/v2/model/info` listing with extra filtering, search, and
+   * pagination. Returned as `unknown` because the proxy explicitly warns
+   * the shape can change; use `list` / `retrieve` for stable surfaces.
+   */
+  listV2(query?: ListModelsV2Query): Promise<Result<unknown, ApiError>>;
 }
 
 const encode = (s: string) => encodeURIComponent(s);
@@ -280,6 +332,23 @@ const filterUndefined = <T extends object>(
   }
   return out;
 };
+
+const createModelGroup = (transport: Transport): ModelGroupNamespace => ({
+  info(modelGroupName) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/model_group/info",
+      ...(modelGroupName === undefined ? {} : { query: { model_group: modelGroupName } }),
+    });
+  },
+  makePublic(req) {
+    return transport.request<unknown>({
+      method: "POST",
+      path: "/model_group/make_public",
+      body: req,
+    });
+  },
+});
 
 /** Bind a `ProxyModelsNamespace` to a constructed `Transport`. */
 export const createProxyModels = (transport: Transport): ProxyModelsNamespace => ({
@@ -375,6 +444,14 @@ export const createProxyModels = (transport: Transport): ProxyModelsNamespace =>
     return transport.request<ModelCostMapSourceResponse>({
       method: "GET",
       path: "/model/cost_map/source",
+    });
+  },
+  modelGroup: createModelGroup(transport),
+  listV2(query) {
+    return transport.request<unknown>({
+      method: "GET",
+      path: "/v2/model/info",
+      ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },
 });
