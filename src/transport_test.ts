@@ -313,3 +313,29 @@ Deno.test("fetchRaw still surfaces non-2xx as ApiError", async () => {
     assertStrictEquals(result.error.kind, "http");
   }
 });
+
+Deno.test("custom backoff strategy receives attempt + error", async () => {
+  const seen: Array<{ attempt: number; kind: string }> = [];
+  const { fetch } = recordingFetch([
+    () => new Response("boom", { status: 500 }),
+    () => new Response("boom", { status: 500 }),
+    () => json({ ok: true }),
+  ]);
+  const t = createTransport(
+    baseConfig({
+      fetch,
+      maxRetries: 2,
+      backoff: (attempt, error) => {
+        seen.push({ attempt, kind: error.kind });
+        return 0;
+      },
+    }),
+  );
+
+  const result = await t.request<{ ok: boolean }>({ method: "GET", path: "/x" });
+  assertEquals(result, { ok: true, value: { ok: true } });
+  assertStrictEquals(seen.length, 2);
+  assertStrictEquals(seen[0]?.attempt, 1);
+  assertStrictEquals(seen[1]?.attempt, 2);
+  assertStrictEquals(seen[0]?.kind, "http");
+});

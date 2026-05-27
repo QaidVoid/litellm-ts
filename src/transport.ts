@@ -13,6 +13,17 @@ import { err, ok, trySync } from "./result.ts";
 /** HTTP methods the transport accepts. */
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+/**
+ * Function called on every retryable failure to compute the wait before
+ * the next attempt. `attempt` is 1-based: the first retry passes `1`,
+ * the second passes `2`, and so on.
+ *
+ * The default uses full-jitter exponential backoff capped at 5 s,
+ * honoring `RateLimitedError.retryAfterMs` when present. Override to
+ * implement a tighter SLA, a stricter cap, or no jitter at all.
+ */
+export type BackoffStrategy = (attempt: number, error: ApiError) => number;
+
 /** Configuration for `createTransport`. */
 export interface TransportConfig {
   /** Base URL of the LiteLLM proxy or compatible endpoint. */
@@ -25,6 +36,12 @@ export interface TransportConfig {
   readonly timeoutMs?: number;
   /** Number of additional attempts on retryable failures. Defaults to 1. */
   readonly maxRetries?: number;
+  /**
+   * Wait time before the next retry. Defaults to full-jitter exponential
+   * backoff (500 ms base, 5 s cap, 0-200 ms jitter), respecting any
+   * `Retry-After` header parsed off a 429.
+   */
+  readonly backoff?: BackoffStrategy;
   /** Custom fetch implementation. Defaults to `globalThis.fetch`. Injected for testing. */
   readonly fetch?: typeof fetch;
 }
@@ -230,6 +247,7 @@ export const createTransport = (config: TransportConfig): Transport => {
   const fetchFn = config.fetch ?? globalThis.fetch;
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxRetries = config.maxRetries ?? DEFAULT_MAX_RETRIES;
+  const backoff = config.backoff ?? computeBackoffMs;
 
   const runWithRetry = async (
     opts: RequestOptions,
@@ -252,7 +270,7 @@ export const createTransport = (config: TransportConfig): Transport => {
       if (attempt >= maxRetries) return result;
       if (!isRetryable(result.error)) return result;
       attempt++;
-      await sleep(computeBackoffMs(attempt, result.error));
+      await sleep(backoff(attempt, result.error));
     }
   };
 
