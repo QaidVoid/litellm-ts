@@ -332,6 +332,16 @@ export type {
 } from "./src/api/admin/customers.ts";
 
 export type {
+  CreateTagRequest,
+  DeleteTagRequest,
+  ListTagsQuery,
+  TagConfig,
+  TagInfoRequest,
+  TagsNamespace,
+  UpdateTagRequest,
+} from "./src/api/admin/tags.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,
