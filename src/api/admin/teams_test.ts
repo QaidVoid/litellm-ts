@@ -57,7 +57,7 @@ Deno.test("teams.info passes team_id as a query parameter", async () => {
   assertStrictEquals(url.searchParams.get("team_id"), "team-1");
 });
 
-Deno.test("teams.addMember POSTs to /team/member/add", async () => {
+Deno.test("teams.addMember POSTs to /team/member_add", async () => {
   const { fetch, calls } = recordingFetch([
     () =>
       new Response(
@@ -70,7 +70,7 @@ Deno.test("teams.addMember POSTs to /team/member/add", async () => {
     team_id: "team-1",
     member: { user_email: "alice@x", role: "admin" },
   });
-  assertStrictEquals(calls[0]?.input, "https://api.test/team/member/add");
+  assertStrictEquals(calls[0]?.input, "https://api.test/team/member_add");
   const body = JSON.parse(calls[0]?.init?.body as string);
   assertStrictEquals(body.member.role, "admin");
 });

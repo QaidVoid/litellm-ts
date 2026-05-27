@@ -155,7 +155,7 @@ export interface TeamIdRequest {
   readonly team_id: string;
 }
 
-/** Body for `/team/member/add`. */
+/** Body for `/team/member_add`. */
 /**
  * Member identity used when adding to a team. Discriminated by which of
  * `user_id` or `user_email` is supplied; the proxy raises `ValueError` when
@@ -179,7 +179,7 @@ export interface AddTeamMemberRequest {
   readonly allowed_models?: readonly string[];
 }
 
-/** Body for `/team/member/delete`. */
+/** Body for `/team/member_delete`. */
 export interface DeleteTeamMemberRequest {
   /** Target team id. */
   readonly team_id: string;
@@ -187,7 +187,7 @@ export interface DeleteTeamMemberRequest {
   readonly user_id: string;
 }
 
-/** Body for `/team/member/update`. */
+/** Body for `/team/member_update`. */
 export interface UpdateTeamMemberRequest {
   /** Target team id. */
   readonly team_id: string;
@@ -287,21 +287,21 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
   addMember(req) {
     return transport.request<TeamMembership>({
       method: "POST",
-      path: "/team/member/add",
+      path: "/team/member_add",
       body: req,
     });
   },
   deleteMember(req) {
     return transport.request<{ readonly status: "success" }>({
       method: "POST",
-      path: "/team/member/delete",
+      path: "/team/member_delete",
       body: req,
     });
   },
   updateMember(req) {
     return transport.request<TeamMembership>({
       method: "POST",
-      path: "/team/member/update",
+      path: "/team/member_update",
       body: req,
     });
   },
