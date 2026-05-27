@@ -72,6 +72,21 @@ export interface CreateUserRequest {
 }
 
 /** A single internal user record. */
+/**
+ * Wrapper returned by `GET /user/info`: the user id plus a `user_info`
+ * block with the row, alongside the user's keys and team memberships.
+ */
+export interface UserInfoResponse {
+  /** Server-assigned user id. */
+  readonly user_id: string;
+  /** The user row itself. */
+  readonly user_info: User;
+  /** Keys owned by this user. */
+  readonly keys: readonly Readonly<Record<string, unknown>>[];
+  /** Team memberships the user belongs to. */
+  readonly teams: readonly Readonly<Record<string, unknown>>[];
+}
+
 export interface User {
   /** Server-assigned id. */
   readonly user_id: string;
@@ -248,9 +263,13 @@ export interface ListUsersResponse {
   /** Users on the current page. */
   readonly users: readonly User[];
   /** Total user count across all pages. */
-  readonly total_count?: number;
+  readonly total?: number;
   /** Page number returned. */
   readonly page?: number;
+  /** Page size used. */
+  readonly page_size?: number;
+  /** Total page count. */
+  readonly total_pages?: number;
 }
 
 /** Surface for user administration on the `Client`. */
@@ -258,7 +277,9 @@ export interface UsersNamespace {
   /** Create an internal user. */
   create(req: CreateUserRequest): Promise<Result<User, ApiError>>;
   /** Retrieve a user by id or email. */
-  info(query: { user_id?: string; user_email?: string }): Promise<Result<User, ApiError>>;
+  info(
+    query: { user_id?: string; user_email?: string },
+  ): Promise<Result<UserInfoResponse, ApiError>>;
   /** List internal users. */
   list(query?: ListUsersQuery): Promise<Result<ListUsersResponse, ApiError>>;
   /** Partially update a user. */
@@ -301,7 +322,7 @@ export const createUsers = (transport: Transport): UsersNamespace => ({
     return transport.request<User>({ method: "POST", path: "/user/new", body: req });
   },
   info(query) {
-    return transport.request<User>({
+    return transport.request<UserInfoResponse>({
       method: "GET",
       path: "/user/info",
       query: filterUndefined(query),

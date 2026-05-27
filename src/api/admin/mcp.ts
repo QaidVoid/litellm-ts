@@ -511,28 +511,6 @@ export interface McpOAuthTokenResponse {
   readonly [key: string]: unknown;
 }
 
-/** Request body for `POST /v1/mcp/oauth/register` (Dynamic Client Registration). */
-export interface McpOAuthRegisterRequest {
-  /** Application name for the registering client. */
-  readonly client_name?: string;
-  /** Redirect URIs the client owns. */
-  readonly redirect_uris?: readonly string[];
-  /** Additional DCR fields per RFC 7591. */
-  readonly [key: string]: unknown;
-}
-
-/** Response from `POST /v1/mcp/oauth/register`. */
-export interface McpOAuthRegisterResponse {
-  /** Issued OAuth2 client id. */
-  readonly client_id: string;
-  /** Issued client secret (when applicable). */
-  readonly client_secret?: string;
-  /** Echoed redirect URIs. */
-  readonly redirect_uris?: readonly string[];
-  /** Additional DCR fields. */
-  readonly [key: string]: unknown;
-}
-
 /** Surface for MCP server / toolset administration on the `Client`. */
 export interface McpNamespace {
   /** List all MCP tools available to the calling key. */
@@ -584,8 +562,6 @@ export interface McpNamespace {
   oauthAuthorize(query: McpOAuthAuthorizeQuery): Promise<Result<unknown, ApiError>>;
   /** Exchange an authorization code for a BYOK session token. */
   oauthToken(req: McpOAuthTokenRequest): Promise<Result<McpOAuthTokenResponse, ApiError>>;
-  /** Dynamic Client Registration entry point for OAuth2 clients. */
-  oauthRegister(req: McpOAuthRegisterRequest): Promise<Result<McpOAuthRegisterResponse, ApiError>>;
   /**
    * POST form of the BYOK OAuth2 authorize endpoint. The proxy uses this
    * to record the user's consent submission once the interactive flow
@@ -848,13 +824,6 @@ export const createMcp = (transport: Transport): McpNamespace => ({
     return transport.request<McpOAuthTokenResponse>({
       method: "POST",
       path: "/v1/mcp/oauth/token",
-      body: req,
-    });
-  },
-  oauthRegister(req) {
-    return transport.request<McpOAuthRegisterResponse>({
-      method: "POST",
-      path: "/v1/mcp/oauth/register",
       body: req,
     });
   },

@@ -100,6 +100,21 @@ export interface CreateTeamRequest {
 }
 
 /** Full team record returned by create/info/update. */
+/**
+ * Wrapper returned by `GET /team/info`: the team id plus a `team_info`
+ * block with the row, alongside the team's keys and membership records.
+ */
+export interface TeamInfoResponse {
+  /** Server-assigned team id. */
+  readonly team_id: string;
+  /** The team row itself. */
+  readonly team_info: Team;
+  /** Keys scoped to this team. */
+  readonly keys: readonly Readonly<Record<string, unknown>>[];
+  /** Per-member membership records. */
+  readonly team_memberships: readonly Readonly<Record<string, unknown>>[];
+}
+
 export interface Team {
   /** Server-assigned id. */
   readonly team_id: string;
@@ -353,21 +368,15 @@ export interface TeamDailyActivityQuery {
 }
 
 /** Response from `/team/list`. */
-export interface ListTeamsResponse {
-  /** Returned teams. */
-  readonly teams: readonly Team[];
-  /** Total team count across all pages. */
-  readonly total_count?: number;
-  /** Page number returned. */
-  readonly page?: number;
-}
+/** Response from `/team/list`. The proxy returns a flat array. */
+export type ListTeamsResponse = readonly Team[];
 
 /** Surface for team administration on the `Client`. */
 export interface TeamsNamespace {
   /** Create a team. */
   create(req: CreateTeamRequest): Promise<Result<Team, ApiError>>;
   /** Retrieve a team by id. */
-  info(teamId: string): Promise<Result<Team, ApiError>>;
+  info(teamId: string): Promise<Result<TeamInfoResponse, ApiError>>;
   /** List teams accessible to the caller. */
   list(): Promise<Result<ListTeamsResponse, ApiError>>;
   /** Partially update a team. */
@@ -460,7 +469,7 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
     return transport.request<Team>({ method: "POST", path: "/team/new", body: req });
   },
   info(teamId) {
-    return transport.request<Team>({
+    return transport.request<TeamInfoResponse>({
       method: "GET",
       path: "/team/info",
       query: { team_id: teamId },

@@ -2,14 +2,6 @@ import type { ApiError } from "../../error.ts";
 import type { Result } from "../../result.ts";
 import type { Transport } from "../../transport.ts";
 
-/**
- * Top-level proxy configuration snapshot returned by `/config/get`. The
- * shape is the YAML configuration the proxy was launched with, deserialized
- * to JSON. Field set is intentionally open since LiteLLM extends it over
- * time and many fields are optional.
- */
-export type ProxyConfigSnapshot = Readonly<Record<string, unknown>>;
-
 /** Request body for `/config/update`. */
 export interface UpdateConfigRequest {
   /** Settings under `router_settings:` in the proxy YAML. */
@@ -257,8 +249,6 @@ export interface ConfigPassThroughEndpointsNamespace {
 
 /** Surface for global config administration. */
 export interface ConfigNamespace {
-  /** Retrieve the proxy's current configuration snapshot. */
-  get(): Promise<Result<ProxyConfigSnapshot, ApiError>>;
   /**
    * Partially update the proxy's runtime configuration. Returns an
    * implementation-defined shape (`{message}` or `{}` or a row dict).
@@ -426,9 +416,6 @@ const createConfigOverrides = (transport: Transport): ConfigOverridesNamespace =
 
 /** Bind a `ConfigNamespace` to a constructed `Transport`. */
 export const createConfig = (transport: Transport): ConfigNamespace => ({
-  get() {
-    return transport.request<ProxyConfigSnapshot>({ method: "GET", path: "/config/get" });
-  },
   update(req) {
     return transport.request<unknown>({
       method: "POST",

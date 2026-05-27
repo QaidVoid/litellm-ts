@@ -110,13 +110,8 @@ export interface UpdateOrganizationMemberRequest {
   readonly role?: OrganizationMemberRole;
 }
 
-/** Response from `/organization/list`. */
-export interface ListOrganizationsResponse {
-  /** Returned organizations. */
-  readonly organizations: readonly Organization[];
-  /** Total organization count across all pages. */
-  readonly total_count?: number;
-}
+/** Response from `/organization/list`. The proxy returns a flat array. */
+export type ListOrganizationsResponse = readonly Organization[];
 
 /** Query parameters for `GET /organization/daily/activity`. */
 export interface OrganizationDailyActivityQuery {

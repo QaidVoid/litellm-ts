@@ -108,6 +108,16 @@ export interface DeleteEvalResponse {
   readonly deleted: boolean;
 }
 
+/** Response from `POST /v1/evals/{eval_id}/runs/{run_id}/cancel`. */
+export interface CancelEvalRunResponse {
+  /** Id of the cancelled run. */
+  readonly id: string;
+  /** Discriminator, always `"eval.run"`. */
+  readonly object: "eval.run";
+  /** Resulting status, always `"cancelled"`. */
+  readonly status: "cancelled";
+}
+
 /** Response from `POST /v1/evals/{eval_id}/cancel`. */
 export interface CancelEvalResponse {
   /** Id of the cancelled evaluation. */
@@ -217,16 +227,6 @@ export interface ListEvalRunsResponse {
   readonly last_id?: string;
   /** True when more pages remain. */
   readonly has_more: boolean;
-}
-
-/** Response from `POST /v1/evals/{eval_id}/runs/{run_id}/cancel` (via POST update). */
-export interface CancelEvalRunResponse {
-  /** Id of the cancelled run. */
-  readonly id: string;
-  /** Discriminator, always `"eval.run"`. */
-  readonly object: "eval.run";
-  /** Resulting status, always `"cancelled"`. */
-  readonly status: "cancelled";
 }
 
 /** Response from `DELETE /v1/evals/{eval_id}/runs/{run_id}`. */

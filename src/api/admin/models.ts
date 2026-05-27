@@ -1,5 +1,7 @@
 import type { ApiError } from "../../error.ts";
+import { httpError } from "../../error.ts";
 import type { Result } from "../../result.ts";
+import { err, ok } from "../../result.ts";
 import type { Transport } from "../../transport.ts";
 
 /**
@@ -381,12 +383,22 @@ export const createProxyModels = (transport: Transport): ProxyModelsNamespace =>
       body: req,
     });
   },
-  retrieve(modelId) {
-    return transport.request<ProxyModel>({
+  async retrieve(modelId) {
+    // `/model/info` ignores the `model_id` query param entirely (returns
+    // the full fleet); filtering only happens with `litellm_model_id`.
+    // The response is also wrapped in `{data: [...]}`, so peel the first
+    // (and only) match or surface a 404.
+    const result = await transport.request<ListModelsResponse>({
       method: "GET",
       path: "/model/info",
-      query: { model_id: modelId },
+      query: { litellm_model_id: modelId },
     });
+    if (!result.ok) return result;
+    const first = result.value.data[0];
+    if (first === undefined) {
+      return err(httpError({ status: 404, statusText: "Not Found", body: { model_id: modelId } }));
+    }
+    return ok(first);
   },
   list() {
     return transport.request<ListModelsResponse>({

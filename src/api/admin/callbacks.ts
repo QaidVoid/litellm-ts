@@ -33,12 +33,6 @@ export interface UpdateCallbacksRequest {
   readonly [key: string]: unknown;
 }
 
-/** Response from `/callback/health`. */
-export interface CallbackHealthResponse {
-  /** Probed callbacks with current verdicts. */
-  readonly callbacks: readonly CallbackInfo[];
-}
-
 /**
  * Schema for one configurable parameter on a logging callback, as returned
  * by `/callbacks/configs`. Shape mirrors the proxy's `callback_configs.json`
@@ -86,8 +80,6 @@ export interface CallbacksNamespace {
    * raw DB row, or `{}`).
    */
   update(req: UpdateCallbacksRequest): Promise<Result<unknown, ApiError>>;
-  /** Probe each callback's logging endpoint for liveness. */
-  health(): Promise<Result<CallbackHealthResponse, ApiError>>;
   /** Read the per-callback configuration schema (used by the Admin UI). */
   configs(): Promise<Result<CallbackConfigsResponse, ApiError>>;
   /**
@@ -118,12 +110,6 @@ export const createCallbacks = (transport: Transport): CallbacksNamespace => ({
       method: "POST",
       path: "/config/update",
       body: { router_settings: req },
-    });
-  },
-  health() {
-    return transport.request<CallbackHealthResponse>({
-      method: "GET",
-      path: "/callback/health",
     });
   },
   configs() {

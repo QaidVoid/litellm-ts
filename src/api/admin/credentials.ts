@@ -29,12 +29,16 @@ export type CreateCredentialRequest =
   }
   & CredentialValuesSource;
 
-/** Request body for `PATCH /credentials/{name}`. */
+/**
+ * Request body for `PATCH /credentials/{name}`. The proxy requires both
+ * `credential_values` and `credential_info` even when only one is
+ * effectively changing; re-pass the unchanged value verbatim.
+ */
 export interface UpdateCredentialRequest {
   /** Required by the upstream even when only `credential_values` change. */
   readonly credential_name: string;
   /** Replacement provider key/value pairs. */
-  readonly credential_values?: Readonly<Record<string, unknown>>;
+  readonly credential_values: Readonly<Record<string, unknown>>;
   /** Replacement metadata. */
   readonly credential_info: Readonly<Record<string, unknown>>;
 }

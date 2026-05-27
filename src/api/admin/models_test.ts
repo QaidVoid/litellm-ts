@@ -1,4 +1,4 @@
-import { assertEquals, assertStrictEquals } from "@std/assert";
+import { assert, assertEquals, assertStrictEquals } from "@std/assert";
 import { createClient } from "../../client.ts";
 import type { ProxyModel } from "./models.ts";
 
@@ -47,19 +47,36 @@ Deno.test("proxyModels.register posts the model definition to /model/new", async
   assertStrictEquals(body.litellm_params.model, "openai/gpt-4o");
 });
 
-Deno.test("proxyModels.retrieve passes model_id as a query parameter", async () => {
+Deno.test("proxyModels.retrieve filters /model/info by litellm_model_id and unwraps data[0]", async () => {
   const { fetch, calls } = recordingFetch([
     () =>
-      new Response(JSON.stringify(sampleModel), {
+      new Response(JSON.stringify({ data: [sampleModel] }), {
         status: 200,
         headers: { "content-type": "application/json" },
       }),
   ]);
   const client = baseClient(fetch);
-  await client.proxyModels.retrieve("m-1");
+  const result = await client.proxyModels.retrieve("m-1");
   const url = new URL(calls[0]?.input as string);
   assertStrictEquals(url.pathname, "/model/info");
-  assertStrictEquals(url.searchParams.get("model_id"), "m-1");
+  assertStrictEquals(url.searchParams.get("litellm_model_id"), "m-1");
+  assert(result.ok);
+  assertStrictEquals(result.value.model_id, sampleModel.model_id);
+});
+
+Deno.test("proxyModels.retrieve surfaces 404 when /model/info returns an empty data array", async () => {
+  const { fetch } = recordingFetch([
+    () =>
+      new Response('{"data": []}', {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+  ]);
+  const client = baseClient(fetch);
+  const result = await client.proxyModels.retrieve("missing");
+  assert(!result.ok);
+  assertStrictEquals(result.error.kind, "http");
+  if (result.error.kind === "http") assertStrictEquals(result.error.status, 404);
 });
 
 Deno.test("proxyModels.update PATCHes /model/{id}/update", async () => {
