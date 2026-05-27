@@ -1,0 +1,120 @@
+import type { ApiError } from "../error.ts";
+import type { Result } from "../result.ts";
+import type { Transport } from "../transport.ts";
+
+/** Bytes-style input for skill bundle uploads. `Uint8Array`s are wrapped in a `Blob`. */
+export type SkillFileInput = Blob | Uint8Array;
+
+/** Request body for `POST /v1/skills` (multipart). */
+export interface CreateSkillRequest {
+  /** Display title shown in the Anthropic console. */
+  readonly display_title: string;
+  /** One or more zipped skill bundles to upload. */
+  readonly files: readonly SkillFileInput[];
+  /** Filenames attached to each bundle in order. Defaults to `"skill.zip"`. */
+  readonly filenames?: readonly string[];
+  /** Multi-account routing (e.g. `"claude-account-1"`). */
+  readonly model?: string;
+}
+
+/** Query parameters for `GET /v1/skills`. */
+export interface ListSkillsQuery {
+  readonly limit?: number;
+  readonly after_id?: string;
+  readonly before_id?: string;
+  readonly beta?: boolean;
+}
+
+/** A single skill record. */
+export interface Skill {
+  readonly id: string;
+  readonly created_at: string;
+  readonly display_title?: string;
+  readonly latest_version?: string;
+  /** Origin of the skill, e.g. `"custom"` or `"anthropic"`. */
+  readonly source: string;
+  readonly type: "skill";
+}
+
+/** Response from `GET /v1/skills`. */
+export interface ListSkillsResponse {
+  readonly data: readonly Skill[];
+  readonly next_page?: string;
+  readonly has_more: boolean;
+}
+
+/** Response from `DELETE /v1/skills/{skill_id}`. */
+export interface DeleteSkillResponse {
+  readonly id: string;
+  readonly type: "skill_deleted";
+}
+
+/** Surface for the Anthropic Skills API on the `Client`. */
+export interface AnthropicSkillsNamespace {
+  /** Create a new skill from one or more zipped bundles. */
+  create(req: CreateSkillRequest): Promise<Result<Skill, ApiError>>;
+  /** List skills with cursor pagination. */
+  list(query?: ListSkillsQuery): Promise<Result<ListSkillsResponse, ApiError>>;
+  /** Retrieve a skill by id. */
+  retrieve(skillId: string): Promise<Result<Skill, ApiError>>;
+  /** Delete a skill by id. */
+  delete(skillId: string): Promise<Result<DeleteSkillResponse, ApiError>>;
+}
+
+const encode = (s: string) => encodeURIComponent(s);
+
+const filterUndefined = <T extends object>(
+  q: T,
+): Readonly<Record<string, string | number | boolean>> => {
+  const out: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(q)) {
+    if (v !== undefined) out[k] = v as string | number | boolean;
+  }
+  return out;
+};
+
+const toBlob = (input: SkillFileInput): Blob =>
+  input instanceof Blob ? input : new Blob([input as BlobPart]);
+
+const buildSkillForm = (req: CreateSkillRequest): FormData => {
+  const fd = new FormData();
+  fd.append("display_title", req.display_title);
+  if (req.model !== undefined) fd.append("model", req.model);
+  req.files.forEach((file, i) => {
+    fd.append("files[]", toBlob(file), req.filenames?.[i] ?? "skill.zip");
+  });
+  return fd;
+};
+
+/** Bind an `AnthropicSkillsNamespace` to a constructed `Transport`. */
+export const createAnthropicSkills = (transport: Transport): AnthropicSkillsNamespace => ({
+  create(req) {
+    return transport.request<Skill>({
+      method: "POST",
+      path: "/v1/skills",
+      body: buildSkillForm(req),
+      query: { beta: true },
+    });
+  },
+  list(query) {
+    return transport.request<ListSkillsResponse>({
+      method: "GET",
+      path: "/v1/skills",
+      query: { beta: true, ...filterUndefined(query ?? {}) },
+    });
+  },
+  retrieve(skillId) {
+    return transport.request<Skill>({
+      method: "GET",
+      path: `/v1/skills/${encode(skillId)}`,
+      query: { beta: true },
+    });
+  },
+  delete(skillId) {
+    return transport.request<DeleteSkillResponse>({
+      method: "DELETE",
+      path: `/v1/skills/${encode(skillId)}`,
+      query: { beta: true },
+    });
+  },
+});

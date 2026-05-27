@@ -18,6 +18,9 @@ import { createCredentials, type CredentialsNamespace } from "./api/admin/creden
 import { type ContainersNamespace, createContainers } from "./api/containers.ts";
 import { createEvals, type EvalsNamespace } from "./api/evals.ts";
 import { type AgentsNamespace, createAgents } from "./api/agents.ts";
+import { type AnthropicSkillsNamespace, createAnthropicSkills } from "./api/anthropic_skills.ts";
+import { type ClaudeCodeNamespace, createClaudeCode } from "./api/claude_code.ts";
+import { createGoogleGenai, type GoogleGenaiNamespace } from "./api/google_genai.ts";
 import { createOcr, type OcrNamespace } from "./api/ocr.ts";
 import { createRag, type RagNamespace } from "./api/rag.ts";
 import { createSearch, type SearchNamespace } from "./api/search.ts";
@@ -79,6 +82,12 @@ export interface Client {
   readonly agents: AgentsNamespace;
   /** Search API (per-provider web search + tool management). */
   readonly search: SearchNamespace;
+  /** Native Google GenAI shape (`:generateContent`, `:countTokens`, agents, interactions). */
+  readonly googleGenai: GoogleGenaiNamespace;
+  /** Anthropic Skills API (beta). */
+  readonly anthropicSkills: AnthropicSkillsNamespace;
+  /** Claude Code plugin marketplace administration. */
+  readonly claudeCode: ClaudeCodeNamespace;
   /** Rerank endpoint. */
   readonly rerank: RerankNamespace;
   /** Content moderation endpoint. */
@@ -182,6 +191,9 @@ export const createClient = (config: TransportConfig): Client => {
     evals: createEvals(transport),
     agents: createAgents(transport),
     search: createSearch(transport),
+    googleGenai: createGoogleGenai(transport),
+    anthropicSkills: createAnthropicSkills(transport),
+    claudeCode: createClaudeCode(transport),
     rerank: createRerank(transport),
     moderation: createModeration(transport),
     files: createFiles(transport),

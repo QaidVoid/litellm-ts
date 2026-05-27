@@ -570,6 +570,50 @@ export type {
 } from "./src/api/search.ts";
 
 export type {
+  CountTokensRequest,
+  CountTokensResponse,
+  CreateInteractionRequest,
+  DeleteGoogleAgentResponse,
+  GenerateContentChunk,
+  GenerateContentRequest,
+  GenerateContentResponse,
+  GoogleAgent,
+  GoogleAgentCreateRequest,
+  GoogleAgentsNamespace,
+  GoogleGenaiNamespace,
+  GoogleInteractionsNamespace,
+  Interaction,
+  ListAgentVersionsResponse,
+  ListGoogleAgentsQuery,
+  ListGoogleAgentsResponse,
+} from "./src/api/google_genai.ts";
+
+export type {
+  AnthropicSkillsNamespace,
+  CreateSkillRequest,
+  DeleteSkillResponse,
+  ListSkillsQuery,
+  ListSkillsResponse,
+  Skill,
+  SkillFileInput,
+} from "./src/api/anthropic_skills.ts";
+
+export type {
+  ClaudeCodeMutationResponse,
+  ClaudeCodeNamespace,
+  ListPluginsResponse,
+  MarketplacePluginEntry,
+  MarketplaceResponse,
+  PluginAuthor,
+  PluginInfo,
+  PluginListItem,
+  PluginOwner,
+  PluginSource,
+  RegisterPluginRequest,
+  RegisterPluginResponse,
+} from "./src/api/claude_code.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,
