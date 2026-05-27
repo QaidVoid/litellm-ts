@@ -186,7 +186,12 @@ export interface MessagesCountTokensResponse {
   readonly input_tokens: number;
 }
 
-/** Surface for the Anthropic-shape `/v1/messages` endpoint. */
+/**
+ * Surface for the Anthropic-shape `/v1/messages` endpoint.
+ *
+ * @beta The proxy tags this endpoint as beta; shapes may change between
+ * LiteLLM versions.
+ */
 export interface MessagesNamespace {
   /** Issue a non-streaming `/v1/messages` request. */
   create(req: MessagesRequest): Promise<Result<MessagesResponse, ApiError>>;

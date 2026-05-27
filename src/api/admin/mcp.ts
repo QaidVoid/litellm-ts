@@ -511,7 +511,12 @@ export interface McpOAuthTokenResponse {
   readonly [key: string]: unknown;
 }
 
-/** Surface for MCP server / toolset administration on the `Client`. */
+/**
+ * Surface for MCP server / toolset administration on the `Client`.
+ *
+ * @beta The proxy tags every `/v1/mcp/*` endpoint as beta; shapes may
+ * change between LiteLLM versions.
+ */
 export interface McpNamespace {
   /** List all MCP tools available to the calling key. */
   tools(): Promise<

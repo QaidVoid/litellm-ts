@@ -239,7 +239,12 @@ export interface AgentDailyActivityQuery {
   readonly exclude_agent_ids?: string;
 }
 
-/** Surface for the A2A agents API on the `Client`. */
+/**
+ * Surface for the A2A agents API on the `Client`.
+ *
+ * @beta The proxy tags every `/v1/agents/*` and `/a2a/*` endpoint as
+ * beta; shapes may change between LiteLLM versions.
+ */
 export interface AgentsNamespace {
   /** List agents accessible to the calling key. */
   list(query?: ListAgentsQuery): Promise<Result<readonly Agent[], ApiError>>;

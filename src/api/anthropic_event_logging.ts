@@ -15,7 +15,12 @@ export interface AnthropicEventLoggingBatchResponse {
   readonly status: string;
 }
 
-/** Surface for the Anthropic event-logging endpoints on the `Client`. */
+/**
+ * Surface for the Anthropic event-logging endpoints on the `Client`.
+ *
+ * @beta The proxy tags `/api/event_logging/*` as beta; shapes may
+ * change between LiteLLM versions.
+ */
 export interface AnthropicEventLoggingNamespace {
   /**
    * Forward an Anthropic event-logging batch. The proxy currently accepts

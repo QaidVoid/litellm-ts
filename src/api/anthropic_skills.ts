@@ -63,7 +63,12 @@ export interface DeleteSkillResponse {
   readonly type: "skill_deleted";
 }
 
-/** Surface for the Anthropic Skills API on the `Client`. */
+/**
+ * Surface for the Anthropic Skills API on the `Client`.
+ *
+ * @beta The proxy tags `/v1/skills/*` as beta; shapes may change
+ * between LiteLLM versions.
+ */
 export interface AnthropicSkillsNamespace {
   /** Create a new skill from one or more zipped bundles. */
   create(req: CreateSkillRequest): Promise<Result<Skill, ApiError>>;
