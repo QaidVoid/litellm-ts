@@ -382,6 +382,25 @@ export type {
 } from "./src/api/admin/compliance.ts";
 
 export type {
+  DeleteToolOverrideScope,
+  ListToolsQuery,
+  ToolDetailResponse,
+  ToolInputPolicy,
+  ToolListResponse,
+  ToolLogsQuery,
+  ToolOutputPolicy,
+  ToolPolicyOption,
+  ToolPolicyOptionsResponse,
+  ToolPolicyOverride,
+  ToolRow,
+  ToolsNamespace,
+  ToolUsageLogEntry,
+  ToolUsageLogsResponse,
+  UpdateToolPolicyRequest,
+  UpdateToolPolicyResponse,
+} from "./src/api/admin/tools.ts";
+
+export type {
   AddOrganizationMemberRequest,
   CreateOrganizationRequest,
   DeleteOrganizationMemberRequest,

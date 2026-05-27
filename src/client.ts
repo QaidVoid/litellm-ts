@@ -14,6 +14,7 @@ import { createFallbacks, type FallbacksNamespace } from "./api/admin/fallbacks.
 import { createJwtMappings, type JwtMappingsNamespace } from "./api/admin/jwt_mappings.ts";
 import { createRouter, type RouterNamespace } from "./api/admin/router.ts";
 import { createTags, type TagsNamespace } from "./api/admin/tags.ts";
+import { createTools, type ToolsNamespace } from "./api/admin/tools.ts";
 import { createGuardrails, type GuardrailsNamespace } from "./api/admin/guardrails.ts";
 import { createSpend, type SpendNamespace } from "./api/admin/spend.ts";
 import { createUsers, type UsersNamespace } from "./api/admin/users.ts";
@@ -101,6 +102,8 @@ export interface Client {
   readonly jwtMappings: JwtMappingsNamespace;
   /** Regulatory compliance checks (EU AI Act, GDPR). */
   readonly compliance: ComplianceNamespace;
+  /** Tool registry and per-tool policy administration. */
+  readonly tools: ToolsNamespace;
   /** Logging callback configuration. */
   readonly callbacks: CallbacksNamespace;
   /** Configured guardrails listing. */
@@ -162,6 +165,7 @@ export const createClient = (config: TransportConfig): Client => {
     accessGroups: createAccessGroups(transport),
     jwtMappings: createJwtMappings(transport),
     compliance: createCompliance(transport),
+    tools: createTools(transport),
     callbacks: createCallbacks(transport),
     guardrails: createGuardrails(transport),
     cache: createCache(transport),
