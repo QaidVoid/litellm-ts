@@ -13,3 +13,27 @@ e2eTest("admin.callbacks.configs returns the configurable callback catalog", asy
   // proxy with at least one provider registered.
   assert(typeof result.value === "object" && result.value !== null);
 });
+
+e2eTest(
+  "admin.callbacks.activeCallbacks dumps the in-process active list",
+  async ({ client }) => {
+    const result = await client.callbacks.activeCallbacks();
+    if (!result.ok) {
+      if (result.error.kind === "http" && result.error.status >= 400) return;
+      if (result.error.kind === "auth") return;
+      throw new Error(`activeCallbacks failed: ${JSON.stringify(result.error)}`);
+    }
+  },
+);
+
+e2eTest(
+  "admin.callbacks.configCallbacks returns the admin-UI view",
+  async ({ client }) => {
+    const result = await client.callbacks.configCallbacks();
+    if (!result.ok) {
+      if (result.error.kind === "http" && result.error.status >= 400) return;
+      if (result.error.kind === "auth") return;
+      throw new Error(`configCallbacks failed: ${JSON.stringify(result.error)}`);
+    }
+  },
+);

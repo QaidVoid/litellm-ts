@@ -123,7 +123,7 @@ e2eTest("admin.guardrails.apply runs a guardrail synchronously (tolerant)", asyn
 
 e2eTest("admin.guardrails.testCustomCode runs a snippet (tolerant)", async ({ client }) => {
   const result = await client.guardrails.testCustomCode({
-    custom_code: "def apply_guardrail(*args, **kwargs):\n    return {\"action\": \"allow\"}",
+    custom_code: 'def apply_guardrail(*args, **kwargs):\n    return {"action": "allow"}',
     test_input: { texts: ["hello"] },
   });
   // The proxy returns { success: true|false } either way - the SDK
@@ -157,15 +157,18 @@ e2eTest(
 
 // --- submissions sub-namespace ---
 
-e2eTest("admin.guardrails.submissions.list returns the pending queue (tolerant)", async ({ client }) => {
-  const result = await client.guardrails.submissions.list();
-  if (!result.ok) {
-    assert(
-      result.error.kind === "http" || result.error.kind === "auth",
-      `unexpected submissions.list error: ${JSON.stringify(result.error)}`,
-    );
-  }
-});
+e2eTest(
+  "admin.guardrails.submissions.list returns the pending queue (tolerant)",
+  async ({ client }) => {
+    const result = await client.guardrails.submissions.list();
+    if (!result.ok) {
+      assert(
+        result.error.kind === "http" || result.error.kind === "auth",
+        `unexpected submissions.list error: ${JSON.stringify(result.error)}`,
+      );
+    }
+  },
+);
 
 e2eTest(
   "admin.guardrails.submissions.get / approve / reject surface 404 for unknown ids",
@@ -210,22 +213,25 @@ e2eTest("admin.guardrails.usage.overview returns the rollup", async ({ client })
   assert(typeof result.value.totalRequests === "number");
 });
 
-e2eTest("admin.guardrails.usage.detail returns the per-guardrail detail (tolerant)", async ({ client }) => {
-  // Use the overview to find a real guardrail id, otherwise fall back to
-  // a synthetic id and tolerate the 404.
-  const overview = await client.guardrails.usage.overview();
-  const guardrailId = overview.ok && overview.value.rows.length > 0
-    ? overview.value.rows[0]!.id
-    : `e2e-unknown-${Date.now()}`;
+e2eTest(
+  "admin.guardrails.usage.detail returns the per-guardrail detail (tolerant)",
+  async ({ client }) => {
+    // Use the overview to find a real guardrail id, otherwise fall back to
+    // a synthetic id and tolerate the 404.
+    const overview = await client.guardrails.usage.overview();
+    const guardrailId = overview.ok && overview.value.rows.length > 0
+      ? overview.value.rows[0]!.id
+      : `e2e-unknown-${Date.now()}`;
 
-  const result = await client.guardrails.usage.detail(guardrailId);
-  if (!result.ok) {
-    assert(
-      result.error.kind === "http" || result.error.kind === "auth",
-      `unexpected usage.detail error: ${JSON.stringify(result.error)}`,
-    );
-  }
-});
+    const result = await client.guardrails.usage.detail(guardrailId);
+    if (!result.ok) {
+      assert(
+        result.error.kind === "http" || result.error.kind === "auth",
+        `unexpected usage.detail error: ${JSON.stringify(result.error)}`,
+      );
+    }
+  },
+);
 
 e2eTest("admin.guardrails.usage.logs returns paginated evaluation rows", async ({ client }) => {
   const result = await client.guardrails.usage.logs({ page: 1, page_size: 10 });

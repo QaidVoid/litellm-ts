@@ -167,15 +167,18 @@ e2eTest("mcp.oauthUserCredentialStatus probes OAuth2 BYOK status", async ({ clie
   tolerant(result);
 });
 
-e2eTest("mcp.storeOAuthUserCredential + deleteOAuthUserCredential round-trip", async ({ client }) => {
-  const stored = await client.mcp.storeOAuthUserCredential("e2e-server-id-missing", {
-    access_token: "fake-token",
-    expires_in: 3600,
-  });
-  tolerant(stored);
-  const removed = await client.mcp.deleteOAuthUserCredential("e2e-server-id-missing");
-  tolerant(removed);
-});
+e2eTest(
+  "mcp.storeOAuthUserCredential + deleteOAuthUserCredential round-trip",
+  async ({ client }) => {
+    const stored = await client.mcp.storeOAuthUserCredential("e2e-server-id-missing", {
+      access_token: "fake-token",
+      expires_in: 3600,
+    });
+    tolerant(stored);
+    const removed = await client.mcp.deleteOAuthUserCredential("e2e-server-id-missing");
+    tolerant(removed);
+  },
+);
 
 e2eTest("mcp.oauthAuthorize returns or rejects the consent screen", async ({ client }) => {
   const result = await client.mcp.oauthAuthorize({
@@ -209,4 +212,86 @@ e2eTest("mcp.makePublic flips servers to public", async ({ client }) => {
   // Use an empty list; this lets the call round-trip without mutating anything.
   const result = await client.mcp.makePublic({ mcp_server_ids: [] });
   tolerant(result);
+});
+
+e2eTest("mcp.servers.update round-trips on a created server", async ({ client }) => {
+  const name = `e2e_mcp_upd_${Date.now()}`;
+  const created = await client.mcp.servers.create({
+    server_name: name,
+    transport: "http",
+    url: "https://example.invalid/mcp",
+    auth_type: "none",
+  });
+  if (!created.ok && created.error.kind === "auth") return;
+  if (!created.ok && created.error.kind === "http" && created.error.status === 403) return;
+  assert(created.ok, `create failed: ${JSON.stringify(created)}`);
+  const serverId = created.value.server_id;
+
+  try {
+    const updated = await client.mcp.servers.update({
+      server_id: serverId,
+      transport: "http",
+      url: "https://example.invalid/mcp-v2",
+      auth_type: "none",
+      description: "updated",
+    });
+    if (!updated.ok) {
+      assert(
+        updated.error.kind === "http" || updated.error.kind === "auth",
+        `unexpected update error: ${JSON.stringify(updated.error)}`,
+      );
+    }
+  } finally {
+    await client.mcp.servers.delete(serverId);
+  }
+});
+
+e2eTest("mcp.servers.register submits a server for review", async ({ client }) => {
+  const name = `e2e_mcp_reg_${Date.now()}`;
+  const result = await client.mcp.servers.register({
+    server_name: name,
+    transport: "http",
+    url: "https://example.invalid/mcp",
+    auth_type: "none",
+  });
+  if (!result.ok) {
+    tolerant(result);
+    return;
+  }
+  // If the registration succeeded, try to clean up the submitted server.
+  await client.mcp.servers.delete(result.value.server_id);
+});
+
+e2eTest("mcp.servers.approve smoke-runs against a missing server", async ({ client }) => {
+  const result = await client.mcp.servers.approve(`e2e-missing-server-${Date.now()}`);
+  tolerant(result);
+});
+
+e2eTest("mcp.servers.reject smoke-runs against a missing server", async ({ client }) => {
+  const result = await client.mcp.servers.reject(`e2e-missing-server-${Date.now()}`);
+  tolerant(result);
+});
+
+e2eTest("mcp.toolsets.update round-trips on a created toolset", async ({ client }) => {
+  const name = `e2e_ts_upd_${Date.now()}`;
+  const created = await client.mcp.toolsets.create({ toolset_name: name });
+  if (!created.ok && created.error.kind === "auth") return;
+  if (!created.ok && created.error.kind === "http" && created.error.status === 403) return;
+  assert(created.ok, `create failed: ${JSON.stringify(created)}`);
+  const toolsetId = created.value.toolset_id;
+
+  try {
+    const updated = await client.mcp.toolsets.update({
+      toolset_id: toolsetId,
+      description: "updated",
+    });
+    if (!updated.ok) {
+      assert(
+        updated.error.kind === "http" || updated.error.kind === "auth",
+        `unexpected update error: ${JSON.stringify(updated.error)}`,
+      );
+    }
+  } finally {
+    await client.mcp.toolsets.delete(toolsetId);
+  }
 });

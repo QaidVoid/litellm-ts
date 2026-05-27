@@ -37,14 +37,17 @@ e2eTest("admin.debug.memoryUsageInMemCache returns the in-mem cache usage", asyn
   }
 });
 
-e2eTest("admin.debug.memoryUsageInMemCacheItems returns per-key cache usage", async ({ client }) => {
-  const result = await client.debug.memoryUsageInMemCacheItems();
-  if (!result.ok) {
-    if (result.error.kind === "http" && acceptDebugGating(result.error.status)) return;
-    if (result.error.kind === "auth" && result.error.status === 403) return;
-    throw new Error(`memoryUsageInMemCacheItems failed: ${JSON.stringify(result.error)}`);
-  }
-});
+e2eTest(
+  "admin.debug.memoryUsageInMemCacheItems returns per-key cache usage",
+  async ({ client }) => {
+    const result = await client.debug.memoryUsageInMemCacheItems();
+    if (!result.ok) {
+      if (result.error.kind === "http" && acceptDebugGating(result.error.status)) return;
+      if (result.error.kind === "auth" && result.error.status === 403) return;
+      throw new Error(`memoryUsageInMemCacheItems failed: ${JSON.stringify(result.error)}`);
+    }
+  },
+);
 
 e2eTest("admin.debug.memorySummary returns the worker memory summary", async ({ client }) => {
   const result = await client.debug.memorySummary();

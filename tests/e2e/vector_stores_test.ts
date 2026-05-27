@@ -5,7 +5,9 @@ import { e2eTest } from "./_helpers.ts";
 // provider (OpenAI). Without an upstream API key configured, every call
 // returns 401 with an "Incorrect API key" body. We verify each method
 // routes and surfaces a structured failure.
-const tolerantUpstream = (result: { ok: boolean; error?: { kind: string; status?: number } }): void => {
+const tolerantUpstream = (
+  result: { ok: boolean; error?: { kind: string; status?: number } },
+): void => {
   if (result.ok) return;
   const err = result.error!;
   if (err.kind === "auth") return;

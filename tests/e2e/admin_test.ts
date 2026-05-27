@@ -407,11 +407,14 @@ e2eTest(
   },
 );
 
-e2eTest("admin.proxyModels.metricsSlowResponses returns slow-response counts", async ({ client }) => {
-  const result = await client.proxyModels.metricsSlowResponses();
-  assert(result.ok, `metricsSlowResponses failed: ${JSON.stringify(result)}`);
-  assert(Array.isArray(result.value));
-});
+e2eTest(
+  "admin.proxyModels.metricsSlowResponses returns slow-response counts",
+  async ({ client }) => {
+    const result = await client.proxyModels.metricsSlowResponses();
+    assert(result.ok, `metricsSlowResponses failed: ${JSON.stringify(result)}`);
+    assert(Array.isArray(result.value));
+  },
+);
 
 e2eTest("admin.proxyModels.streamingMetrics returns the TTFT rollup", async ({ client }) => {
   const result = await client.proxyModels.streamingMetrics();
@@ -429,10 +432,13 @@ e2eTest("admin.proxyModels.costMapSource describes the loaded cost map", async (
   assert(typeof result.value.model_count === "number");
 });
 
-e2eTest("admin.proxyModels.modelGroup.info returns the group info dashboard", async ({ client }) => {
-  const result = await client.proxyModels.modelGroup.info();
-  assert(result.ok, `modelGroup.info failed: ${JSON.stringify(result)}`);
-});
+e2eTest(
+  "admin.proxyModels.modelGroup.info returns the group info dashboard",
+  async ({ client }) => {
+    const result = await client.proxyModels.modelGroup.info();
+    assert(result.ok, `modelGroup.info failed: ${JSON.stringify(result)}`);
+  },
+);
 
 e2eTest(
   "admin.proxyModels.modelGroup.makePublic flags a group public (tolerant)",
@@ -468,6 +474,37 @@ e2eTest("admin.proxyModels.listV2 returns the v2 model listing", async ({ client
   const result = await client.proxyModels.listV2({ page: 1, size: 5 });
   assert(result.ok, `listV2 failed: ${JSON.stringify(result)}`);
 });
+
+e2eTest(
+  "admin.proxyModels.updateLegacy updates via POST /model/update",
+  async ({ client }) => {
+    // Register a throwaway deployment so we have a stable id to update.
+    const name = `e2e-legacy-model-${Date.now()}`;
+    const registered = await client.proxyModels.register({
+      model_name: name,
+      litellm_params: { model: "openai/gpt-4o-mini", api_key: "sk-fake" },
+    });
+    assert(registered.ok, `register failed: ${JSON.stringify(registered)}`);
+    const id = registered.value.model_id;
+
+    try {
+      const result = await client.proxyModels.updateLegacy({
+        model_name: name,
+        litellm_params: { model: "openai/gpt-4o-mini", api_key: "sk-fake-rotated" },
+        model_info: { id },
+      });
+      if (!result.ok) {
+        // Some builds restrict the legacy update path; tolerate 4xx/5xx.
+        assert(
+          result.error.kind === "http" || result.error.kind === "auth",
+          `unexpected updateLegacy error: ${JSON.stringify(result.error)}`,
+        );
+      }
+    } finally {
+      await client.proxyModels.delete(id);
+    }
+  },
+);
 
 e2eTest(
   "admin.proxyModels.retrieveOpenAI returns the OpenAI-shape model entry",

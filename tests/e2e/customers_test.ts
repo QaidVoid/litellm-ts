@@ -48,3 +48,18 @@ e2eTest("admin.customers CRUD + block round-trip", async ({ client }) => {
     assert(deleted.ok, `delete failed: ${JSON.stringify(deleted)}`);
   }
 });
+
+e2eTest("admin.customers.dailyActivity round-trips with a date window", async ({ client }) => {
+  const result = await client.customers.dailyActivity({
+    start_date: "2026-05-20",
+    end_date: "2026-05-27",
+  });
+  if (!result.ok) {
+    if (
+      result.error.kind === "http" &&
+      result.error.status >= 400 && result.error.status < 600
+    ) return;
+    if (result.error.kind === "auth") return;
+    throw new Error(`dailyActivity failed: ${JSON.stringify(result.error)}`);
+  }
+});

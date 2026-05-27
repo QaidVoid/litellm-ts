@@ -32,7 +32,14 @@ e2eTest("images.edit sends multipart to /v1/images/edits", async ({ client, mode
   // multipart code path; upstream will reject the bytes but the SDK's job
   // ends at "request was sent".
   const png = new Uint8Array([
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
     ...new Array(64).fill(0),
   ]);
   const result = await client.images.edit({

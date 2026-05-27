@@ -145,35 +145,38 @@ e2eTest("admin.agents.agentCard fetches the public card (tolerant)", async ({ cl
   }
 });
 
-e2eTest("admin.agents.sendMessage round-trips a JSON-RPC envelope (tolerant)", async ({ client }) => {
-  const agentId = await createThrowawayAgent(client, "msg");
-  try {
-    const result = await client.agents.sendMessage(agentId, {
-      id: "1",
-      jsonrpc: "2.0",
-      method: "message/send",
-      params: {
-        message: {
-          role: "user",
-          parts: [{ kind: "text", text: "hello" }],
-          messageId: "m1",
+e2eTest(
+  "admin.agents.sendMessage round-trips a JSON-RPC envelope (tolerant)",
+  async ({ client }) => {
+    const agentId = await createThrowawayAgent(client, "msg");
+    try {
+      const result = await client.agents.sendMessage(agentId, {
+        id: "1",
+        jsonrpc: "2.0",
+        method: "message/send",
+        params: {
+          message: {
+            role: "user",
+            parts: [{ kind: "text", text: "hello" }],
+            messageId: "m1",
+          },
         },
-      },
-    });
-    // The throwaway agent's URL points at example.test, so the proxy
-    // can't actually reach it. We only assert the SDK route + envelope
-    // are wired; the upstream failure is fine.
-    if (!result.ok) {
-      assert(
-        result.error.kind === "http" || result.error.kind === "auth" ||
-          result.error.kind === "network",
-        `unexpected sendMessage error: ${JSON.stringify(result.error)}`,
-      );
+      });
+      // The throwaway agent's URL points at example.test, so the proxy
+      // can't actually reach it. We only assert the SDK route + envelope
+      // are wired; the upstream failure is fine.
+      if (!result.ok) {
+        assert(
+          result.error.kind === "http" || result.error.kind === "auth" ||
+            result.error.kind === "network",
+          `unexpected sendMessage error: ${JSON.stringify(result.error)}`,
+        );
+      }
+    } finally {
+      await client.agents.delete(agentId);
     }
-  } finally {
-    await client.agents.delete(agentId);
-  }
-});
+  },
+);
 
 e2eTest("admin.agents.invoke posts a generic A2A body (tolerant)", async ({ client }) => {
   const agentId = await createThrowawayAgent(client, "inv");

@@ -5,28 +5,32 @@ import { e2eTest } from "./_helpers.ts";
 // real provider credentials the proxy returns 500. We assert the request
 // shape (multipart upload, JSON body) and accept upstream failures.
 
-e2eTest("audio.transcribe sends multipart and tolerates upstream gaps", async ({ client, models }) => {
-  // 8000 zero bytes is enough to exercise the multipart code path; the
-  // upstream STT will reject it but the SDK doesn't care.
-  const file = new Blob([new Uint8Array(8000)], { type: "audio/wav" });
-  const result = await client.audio.transcribe({
-    model: models.chat,
-    file,
-    filename: "silence.wav",
-  });
+e2eTest(
+  "audio.transcribe sends multipart and tolerates upstream gaps",
+  async ({ client, models }) => {
+    // 8000 zero bytes is enough to exercise the multipart code path; the
+    // upstream STT will reject it but the SDK doesn't care.
+    const file = new Blob([new Uint8Array(8000)], { type: "audio/wav" });
+    const result = await client.audio.transcribe({
+      model: models.chat,
+      file,
+      filename: "silence.wav",
+    });
 
-  if (!result.ok) {
-    assertStrictEquals(result.error.kind, "http");
-    if (result.error.kind === "http") {
-      assert(
-        result.error.status === 500 || result.error.status === 400,
-        `unexpected status: ${result.error.status}`,
-      );
+    if (!result.ok) {
+      assertStrictEquals(result.error.kind, "http");
+      if (result.error.kind === "http") {
+        assert(
+          result.error.status === 500 || result.error.status === 400,
+          `unexpected status: ${result.error.status}`,
+        );
+      }
+      return;
     }
-    return;
-  }
-  assertStrictEquals(typeof result.value.text, "string");
-}, { requires: ["chat"] });
+    assertStrictEquals(typeof result.value.text, "string");
+  },
+  { requires: ["chat"] },
+);
 
 e2eTest("audio.transcribe accepts Uint8Array input directly", async ({ client, models }) => {
   const result = await client.audio.transcribe({

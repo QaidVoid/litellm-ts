@@ -4,6 +4,16 @@ import { e2eTest } from "./_helpers.ts";
 // Companion to `errors_test.ts` which only covers `health.liveliness`.
 // Exercises the remaining methods on the namespace.
 
+e2eTest("admin.health.liveness (k8s alias) returns the alive probe", async ({ client }) => {
+  const result = await client.health.liveness();
+  if (!result.ok) {
+    // Some proxy builds only expose `/health/liveliness` (with the typo) and
+    // 404 on the k8s alias.
+    if (result.error.kind === "http" && result.error.status === 404) return;
+    throw new Error(`liveness failed: ${JSON.stringify(result.error)}`);
+  }
+});
+
 e2eTest("admin.health.readiness reports the lifecycle state", async ({ client }) => {
   const result = await client.health.readiness();
   assert(result.ok, `readiness failed: ${JSON.stringify(result)}`);

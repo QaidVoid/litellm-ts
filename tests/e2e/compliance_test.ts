@@ -17,7 +17,10 @@ e2eTest("admin.compliance.euAiAct evaluates a sample request", async ({ client }
     throw new Error(`euAiAct failed: ${JSON.stringify(result.error)}`);
   }
   assert(typeof result.value.compliant === "boolean", "expected compliant boolean");
-  assert(result.value.regulation === "EU AI Act", `unexpected regulation: ${result.value.regulation}`);
+  assert(
+    result.value.regulation === "EU AI Act",
+    `unexpected regulation: ${result.value.regulation}`,
+  );
   assert(Array.isArray(result.value.checks), "expected checks array");
 });
 

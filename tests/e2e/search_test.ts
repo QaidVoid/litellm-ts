@@ -1,7 +1,9 @@
 import { assert } from "@std/assert";
 import { e2eTest } from "./_helpers.ts";
 
-const tolerantUpstream = (result: { ok: boolean; error?: { kind: string; status?: number } }): void => {
+const tolerantUpstream = (
+  result: { ok: boolean; error?: { kind: string; status?: number } },
+): void => {
   if (result.ok) return;
   const err = result.error!;
   if (err.kind === "auth") return;
