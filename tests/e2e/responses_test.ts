@@ -61,7 +61,10 @@ e2eTest(
 
     // Backends that don't implement the Responses storage layer (e.g.
     // Ollama) surface 5xx on retrieve/list. Treat 4xx/5xx as expected.
-    const tolerate = (label: string, r: { ok: boolean; error?: { kind: string; status?: number } }) => {
+    const tolerate = (
+      label: string,
+      r: { ok: boolean; error?: { kind: string; status?: number } },
+    ) => {
       if (r.ok) return true;
       const e = r.error!;
       if (e.kind === "http" || e.kind === "auth") return false;
