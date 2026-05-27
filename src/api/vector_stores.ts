@@ -1,4 +1,5 @@
 import type { ApiError } from "../error.ts";
+import { paginate } from "../pagination.ts";
 import type { Result } from "../result.ts";
 import type { Transport } from "../transport.ts";
 
@@ -280,6 +281,12 @@ export interface VectorStoresNamespace {
   ): Promise<Result<VectorStore, ApiError>>;
   /** List vector stores. */
   list(query?: ListVectorStoresQuery): Promise<Result<ListVectorStoresResponse, ApiError>>;
+  /**
+   * Auto-paginate `list`: advance `after` from each page's `last_id`
+   * until `has_more` is false. Pass `limit`/`order` in `query` and they
+   * are reused for every page.
+   */
+  iterate(query?: ListVectorStoresQuery): AsyncIterable<Result<VectorStore, ApiError>>;
   /** Delete a vector store. */
   delete(vectorStoreId: string): Promise<Result<DeleteVectorStoreResponse, ApiError>>;
   /** Attach an existing uploaded file to a vector store. */
@@ -292,6 +299,11 @@ export interface VectorStoresNamespace {
     vectorStoreId: string,
     query?: ListVectorStoresQuery,
   ): Promise<Result<ListVectorStoreFilesResponse, ApiError>>;
+  /** Auto-paginate `listFiles` and yield one attachment record at a time. */
+  iterateFiles(
+    vectorStoreId: string,
+    query?: ListVectorStoresQuery,
+  ): AsyncIterable<Result<VectorStoreFile, ApiError>>;
   /** Retrieve a single file attachment record. */
   retrieveFile(
     vectorStoreId: string,
@@ -385,6 +397,23 @@ export const createVectorStores = (transport: Transport): VectorStoresNamespace 
       ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },
+  iterate(query) {
+    return paginate<VectorStore, string>(query?.after, async (after) => {
+      const merged: ListVectorStoresQuery = {
+        ...(query ?? {}),
+        ...(after === undefined ? {} : { after }),
+      };
+      const page = await this.list(merged);
+      if (!page.ok) return page;
+      return {
+        ok: true,
+        value: {
+          items: page.value.data,
+          next: page.value.has_more ? page.value.last_id : undefined,
+        },
+      };
+    });
+  },
   delete(vectorStoreId) {
     return transport.request<DeleteVectorStoreResponse>({
       method: "DELETE",
@@ -403,6 +432,23 @@ export const createVectorStores = (transport: Transport): VectorStoresNamespace 
       method: "GET",
       path: `/v1/vector_stores/${enc(vectorStoreId)}/files`,
       ...(query === undefined ? {} : { query: filterUndefined(query) }),
+    });
+  },
+  iterateFiles(vectorStoreId, query) {
+    return paginate<VectorStoreFile, string>(query?.after, async (after) => {
+      const merged: ListVectorStoresQuery = {
+        ...(query ?? {}),
+        ...(after === undefined ? {} : { after }),
+      };
+      const page = await this.listFiles(vectorStoreId, merged);
+      if (!page.ok) return page;
+      return {
+        ok: true,
+        value: {
+          items: page.value.data,
+          next: page.value.has_more ? page.value.last_id : undefined,
+        },
+      };
     });
   },
   retrieveFile(vectorStoreId, fileId) {

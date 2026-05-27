@@ -1,4 +1,5 @@
 import type { ApiError } from "../error.ts";
+import { paginate } from "../pagination.ts";
 import type { Result } from "../result.ts";
 import type { Transport } from "../transport.ts";
 
@@ -131,6 +132,14 @@ export interface BatchesNamespace {
   retrieve(batchId: string): Promise<Result<Batch, ApiError>>;
   /** Page through previously submitted batches. */
   list(query?: ListBatchesQuery): Promise<Result<ListBatchesResponse, ApiError>>;
+  /**
+   * Auto-paginate `list` and yield one `Result<Batch, ApiError>` per
+   * record. The cursor (`after`) is advanced from `last_id` on every
+   * page until `has_more` is false; a failed page surfaces as a single
+   * error and ends iteration. Pass a starting `limit` to control page
+   * size; the same `limit` is used for every page.
+   */
+  iterate(query?: ListBatchesQuery): AsyncIterable<Result<Batch, ApiError>>;
   /** Request cancellation of an in-progress batch. */
   cancel(batchId: string): Promise<Result<Batch, ApiError>>;
 }
@@ -161,6 +170,23 @@ export const createBatches = (transport: Transport): BatchesNamespace => ({
       method: "GET",
       path: "/v1/batches",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),
+    });
+  },
+  iterate(query) {
+    return paginate<Batch, string>(query?.after, async (after) => {
+      const merged: ListBatchesQuery = {
+        ...(query ?? {}),
+        ...(after === undefined ? {} : { after }),
+      };
+      const page = await this.list(merged);
+      if (!page.ok) return page;
+      return {
+        ok: true,
+        value: {
+          items: page.value.data,
+          next: page.value.has_more ? page.value.last_id : undefined,
+        },
+      };
     });
   },
   cancel(batchId) {

@@ -1,4 +1,5 @@
 import type { ApiError } from "../error.ts";
+import { paginate } from "../pagination.ts";
 import type { Result } from "../result.ts";
 import type { Transport } from "../transport.ts";
 
@@ -74,6 +75,11 @@ export interface AnthropicSkillsNamespace {
   create(req: CreateSkillRequest): Promise<Result<Skill, ApiError>>;
   /** List skills with cursor pagination. */
   list(query?: ListSkillsQuery): Promise<Result<ListSkillsResponse, ApiError>>;
+  /**
+   * Auto-paginate `list` by feeding `next_page` back as `after_id` until
+   * `has_more` is false. Yields one record at a time.
+   */
+  iterate(query?: ListSkillsQuery): AsyncIterable<Result<Skill, ApiError>>;
   /** Retrieve a skill by id. */
   retrieve(skillId: string): Promise<Result<Skill, ApiError>>;
   /** Delete a skill by id. */
@@ -120,6 +126,23 @@ export const createAnthropicSkills = (transport: Transport): AnthropicSkillsName
       method: "GET",
       path: "/v1/skills",
       query: { beta: true, ...filterUndefined(query ?? {}) },
+    });
+  },
+  iterate(query) {
+    return paginate<Skill, string>(query?.after_id, async (afterId) => {
+      const merged: ListSkillsQuery = {
+        ...(query ?? {}),
+        ...(afterId === undefined ? {} : { after_id: afterId }),
+      };
+      const page = await this.list(merged);
+      if (!page.ok) return page;
+      return {
+        ok: true,
+        value: {
+          items: page.value.data,
+          next: page.value.has_more ? page.value.next_page : undefined,
+        },
+      };
     });
   },
   retrieve(skillId) {

@@ -21,6 +21,10 @@ export {
   validationError,
 } from "./src/error.ts";
 
+export type { PaginationPage } from "./src/pagination.ts";
+
+export { paginate } from "./src/pagination.ts";
+
 export type { Result } from "./src/result.ts";
 
 export {
