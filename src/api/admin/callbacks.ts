@@ -2,25 +2,18 @@ import type { ApiError } from "../../error.ts";
 import type { Result } from "../../result.ts";
 import type { Transport } from "../../transport.ts";
 
-/** Lifecycle states of a configured callback. */
-export type CallbackStatus = "healthy" | "unhealthy" | "not_configured";
-
-/** A single configured callback. */
-export interface CallbackInfo {
-  /** Callback identifier (e.g. `"langfuse"`). */
-  readonly callback_name: string;
-  /** Which events the callback fires on. */
-  readonly callback_type?: "success" | "failure" | "success_and_failure";
-  /** Last health check verdict. */
-  readonly status?: CallbackStatus;
-  /** Diagnostic detail when unhealthy. */
-  readonly details?: string;
-}
-
-/** Response from `/callbacks/list` (and provider-specific variants). */
+/**
+ * Response from `GET /callbacks/list`: configured callback names grouped by
+ * the events they fire on. (The proxy returns callback name strings, not
+ * objects with status metadata.)
+ */
 export interface ListCallbacksResponse {
-  /** Configured callbacks. */
-  readonly callbacks: readonly CallbackInfo[];
+  /** Callbacks fired on successful responses. */
+  readonly success: readonly string[];
+  /** Callbacks fired on failed responses. */
+  readonly failure: readonly string[];
+  /** Callbacks fired on both success and failure. */
+  readonly success_and_failure: readonly string[];
 }
 
 /** Request body for updating callback configuration. */

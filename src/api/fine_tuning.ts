@@ -124,42 +124,6 @@ export interface ListFineTuningJobsResponse {
   readonly has_more: boolean;
 }
 
-/** A single event in a fine-tuning job's stream of progress messages. */
-export interface FineTuningJobEvent {
-  /** Server-assigned event id. */
-  readonly id: string;
-  /** Discriminator, always `"fine_tuning.job.event"`. */
-  readonly object: "fine_tuning.job.event";
-  /** Unix epoch seconds when the event was emitted. */
-  readonly created_at: number;
-  /** Severity level. */
-  readonly level: "info" | "warn" | "error";
-  /** Human-readable event message. */
-  readonly message: string;
-  /** Optional structured payload (e.g. metrics). */
-  readonly data?: Readonly<Record<string, unknown>>;
-  /** Event kind. */
-  readonly type?: "message" | "metrics";
-}
-
-/** Query parameters for `GET /v1/fine_tuning/jobs/{job_id}/events`. */
-export interface ListFineTuningEventsQuery {
-  /** Cursor: return events after this id. */
-  readonly after?: string;
-  /** Maximum records per page. */
-  readonly limit?: number;
-}
-
-/** Response from the events endpoint. */
-export interface ListFineTuningEventsResponse {
-  /** Discriminator, always `"list"`. */
-  readonly object: "list";
-  /** Events on the current page. */
-  readonly data: readonly FineTuningJobEvent[];
-  /** True when more pages remain. */
-  readonly has_more: boolean;
-}
-
 /** Surface for fine-tuning endpoints on the `Client`. */
 export interface FineTuningNamespace {
   /** Submit a new fine-tuning job. */
@@ -170,11 +134,6 @@ export interface FineTuningNamespace {
   list(query?: ListFineTuningJobsQuery): Promise<Result<ListFineTuningJobsResponse, ApiError>>;
   /** Cancel a running fine-tuning job. */
   cancel(jobId: string): Promise<Result<FineTuningJob, ApiError>>;
-  /** Stream events emitted by a fine-tuning job. */
-  events(
-    jobId: string,
-    query?: ListFineTuningEventsQuery,
-  ): Promise<Result<ListFineTuningEventsResponse, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -213,13 +172,6 @@ export const createFineTuning = (transport: Transport): FineTuningNamespace => (
     return transport.request<FineTuningJob>({
       method: "POST",
       path: `/v1/fine_tuning/jobs/${encodeURIComponent(jobId)}/cancel`,
-    });
-  },
-  events(jobId, query) {
-    return transport.request<ListFineTuningEventsResponse>({
-      method: "GET",
-      path: `/v1/fine_tuning/jobs/${encodeURIComponent(jobId)}/events`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },
 });

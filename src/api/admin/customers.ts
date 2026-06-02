@@ -154,6 +154,18 @@ export interface CustomerDailyActivityQuery {
   readonly exclude_end_user_ids?: string;
 }
 
+/** Response from `/customer/block`: the customer rows that were blocked. */
+export interface BlockCustomersResponse {
+  /** The blocked customer records. */
+  readonly blocked_users: readonly Customer[];
+}
+
+/** Response from `/customer/unblock`: the user ids still blocked after the call. */
+export interface UnblockCustomersResponse {
+  /** Ids of users that remain blocked. */
+  readonly blocked_users: readonly string[];
+}
+
 /** Surface for customer (end-user) administration on the `Client`. */
 export interface CustomersNamespace {
   /** Create a new customer. */
@@ -167,9 +179,9 @@ export interface CustomersNamespace {
   /** Delete one or more customers. Returns the deleted rows plus a status message. */
   delete(req: DeleteCustomersRequest): Promise<Result<DeleteCustomersResponse, ApiError>>;
   /** Block the given customers from making requests. */
-  block(req: BlockCustomersRequest): Promise<Result<readonly Customer[], ApiError>>;
+  block(req: BlockCustomersRequest): Promise<Result<BlockCustomersResponse, ApiError>>;
   /** Lift a previous block. */
-  unblock(req: BlockCustomersRequest): Promise<Result<readonly Customer[], ApiError>>;
+  unblock(req: BlockCustomersRequest): Promise<Result<UnblockCustomersResponse, ApiError>>;
   /** Per-day spend / request counters for customers (end users). */
   dailyActivity(query?: CustomerDailyActivityQuery): Promise<Result<unknown, ApiError>>;
 }
@@ -210,14 +222,14 @@ export const createCustomers = (transport: Transport): CustomersNamespace => ({
     });
   },
   block(req) {
-    return transport.request<readonly Customer[]>({
+    return transport.request<BlockCustomersResponse>({
       method: "POST",
       path: "/customer/block",
       body: req,
     });
   },
   unblock(req) {
-    return transport.request<readonly Customer[]>({
+    return transport.request<UnblockCustomersResponse>({
       method: "POST",
       path: "/customer/unblock",
       body: req,

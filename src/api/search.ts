@@ -58,8 +58,8 @@ export interface UpdateSearchToolRequest {
 
 /** Request body for `POST /search_tools/test_connection`. */
 export interface TestSearchToolConnectionRequest {
-  /** Tool configuration to probe. */
-  readonly search_tool: SearchTool;
+  /** Provider configuration to probe (the same shape as `SearchTool.litellm_params`). */
+  readonly litellm_params: SearchToolLiteLLMParams;
 }
 
 /** A single available provider in the discovery endpoint. */

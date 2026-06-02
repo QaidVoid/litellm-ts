@@ -193,7 +193,9 @@ e2eTest("mcp.oauthAuthorize returns or rejects the consent screen", async ({ cli
 
 e2eTest("mcp.oauthAuthorizeSubmit records consent", async ({ client }) => {
   const result = await client.mcp.oauthAuthorizeSubmit({
-    code: "fake-code",
+    redirect_uri: "https://example.com/callback",
+    code_challenge: "fake-challenge",
+    api_key: "sk-fake",
     state: "xyz",
   });
   tolerant(result);

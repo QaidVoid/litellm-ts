@@ -7,9 +7,15 @@ export interface CachePingResponse {
   /** Overall health verdict. */
   readonly status: "healthy" | "unhealthy";
   /** Configured cache backend (e.g. `"redis"`). */
-  readonly cache_type?: string;
-  /** Diagnostic detail when `status` is `"unhealthy"`. */
-  readonly details?: string;
+  readonly cache_type: string;
+  /** Result of the read-back ping against the cache. */
+  readonly ping_response?: boolean;
+  /** Result of the write probe against the cache. */
+  readonly set_cache_response?: string;
+  /** Serialized cache configuration the proxy is using. */
+  readonly litellm_cache_params?: string;
+  /** Masked cache health-check parameters. */
+  readonly health_check_cache_params?: Readonly<Record<string, unknown>>;
 }
 
 /** Request body for `/cache/delete` (selective invalidation). */

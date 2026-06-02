@@ -21,6 +21,39 @@ export interface TeamMembership {
   readonly allowed_models?: readonly string[];
 }
 
+/**
+ * Response from `/team/member_add`: the updated team record plus the user
+ * and membership rows the add created or updated. (The endpoint does NOT
+ * return a single membership.)
+ */
+export interface TeamMemberAddResponse extends Team {
+  /** User rows created or updated by the add. */
+  readonly updated_users: readonly Readonly<Record<string, unknown>>[];
+  /** Team-membership rows created or updated by the add. */
+  readonly updated_team_memberships: readonly Readonly<Record<string, unknown>>[];
+}
+
+/**
+ * Response from `/team/member_update`. Note there is no `role` field: the
+ * endpoint echoes the member's budget/limit settings, not their role.
+ */
+export interface TeamMemberUpdateResponse {
+  /** User identifier. */
+  readonly user_id: string;
+  /** User email, when known. */
+  readonly user_email?: string;
+  /** Team the membership belongs to. */
+  readonly team_id: string;
+  /** Per-member spend ceiling within the team. */
+  readonly max_budget_in_team?: number;
+  /** Per-member tokens-per-minute ceiling. */
+  readonly tpm_limit?: number;
+  /** Per-member requests-per-minute ceiling. */
+  readonly rpm_limit?: number;
+  /** Per-member model allowlist override. */
+  readonly allowed_models?: readonly string[];
+}
+
 /** Budget window descriptor used in `budget_limits` arrays. */
 export interface TeamBudgetLimit {
   /** Rolling window duration. */
@@ -388,13 +421,13 @@ export interface TeamsNamespace {
   /** Unblock a previously blocked team. */
   unblock(req: TeamIdRequest): Promise<Result<Team, ApiError>>;
   /** Add a member to a team. */
-  addMember(req: AddTeamMemberRequest): Promise<Result<TeamMembership, ApiError>>;
+  addMember(req: AddTeamMemberRequest): Promise<Result<TeamMemberAddResponse, ApiError>>;
   /** Remove a member from a team. Returns the updated team. */
   deleteMember(
     req: DeleteTeamMemberRequest,
   ): Promise<Result<Team, ApiError>>;
   /** Update a member's role or per-member limits. */
-  updateMember(req: UpdateTeamMemberRequest): Promise<Result<TeamMembership, ApiError>>;
+  updateMember(req: UpdateTeamMemberRequest): Promise<Result<TeamMemberUpdateResponse, ApiError>>;
   /** Append models to a team's allowed model list. */
   addModels(req: TeamModelsRequest): Promise<Result<Team, ApiError>>;
   /** Remove models from a team's allowed model list. */
@@ -495,7 +528,7 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
     return transport.request<Team>({ method: "POST", path: "/team/unblock", body: req });
   },
   addMember(req) {
-    return transport.request<TeamMembership>({
+    return transport.request<TeamMemberAddResponse>({
       method: "POST",
       path: "/team/member_add",
       body: req,
@@ -509,7 +542,7 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
     });
   },
   updateMember(req) {
-    return transport.request<TeamMembership>({
+    return transport.request<TeamMemberUpdateResponse>({
       method: "POST",
       path: "/team/member_update",
       body: req,

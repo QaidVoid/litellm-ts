@@ -45,7 +45,7 @@ e2eTest(
 );
 
 e2eTest(
-  "responses stored lifecycle: retrieve / list / listInputItems / compact / cancel / delete",
+  "responses stored lifecycle: retrieve / listInputItems / compact / cancel / delete",
   async ({ client, models }) => {
     // Persist the response so the storage-dependent endpoints have
     // something to operate on.
@@ -76,11 +76,6 @@ e2eTest(
       const got = await client.responses.retrieve(responseId);
       if (tolerate("retrieve", got) && got.ok) {
         assertStrictEquals(got.value.id, responseId);
-      }
-
-      const listed = await client.responses.list({ limit: 5 });
-      if (tolerate("list", listed) && listed.ok) {
-        assert(Array.isArray(listed.value.data));
       }
 
       const inputItems = await client.responses.listInputItems(responseId, { limit: 5 });

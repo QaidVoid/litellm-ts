@@ -59,18 +59,3 @@ Deno.test("fineTuning.cancel POSTs to /v1/fine_tuning/jobs/{id}/cancel", async (
   assertStrictEquals(calls[0]?.input, "https://api.test/v1/fine_tuning/jobs/ftjob-1/cancel");
   assertStrictEquals(calls[0]?.init?.method, "POST");
 });
-
-Deno.test("fineTuning.events GETs the events sub-resource", async () => {
-  const { fetch, calls } = recordingFetch([
-    () =>
-      new Response(JSON.stringify({ object: "list", data: [], has_more: false }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      }),
-  ]);
-  const client = baseClient(fetch);
-  await client.fineTuning.events("ftjob-1", { limit: 50 });
-  const url = new URL(calls[0]?.input as string);
-  assertStrictEquals(url.pathname, "/v1/fine_tuning/jobs/ftjob-1/events");
-  assertStrictEquals(url.searchParams.get("limit"), "50");
-});

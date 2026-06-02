@@ -189,6 +189,17 @@ const mapResponseError = async (res: Response): Promise<ApiError> => {
 const isFormData = (v: unknown): v is FormData =>
   typeof FormData !== "undefined" && v instanceof FormData;
 
+const isUrlEncoded = (v: unknown): v is URLSearchParams =>
+  typeof URLSearchParams !== "undefined" && v instanceof URLSearchParams;
+
+/**
+ * Bodies the runtime serializes itself. `fetch` sets the matching
+ * `content-type` (multipart boundary for `FormData`,
+ * `application/x-www-form-urlencoded` for `URLSearchParams`), so the transport
+ * must not force `application/json` or `JSON.stringify` these.
+ */
+const isRawBody = (v: unknown): v is FormData | URLSearchParams => isFormData(v) || isUrlEncoded(v);
+
 const buildHeaders = (
   config: TransportConfig,
   opts: RequestOptions,
@@ -216,12 +227,12 @@ const buildRequestInit = (
   overrides?: Readonly<Record<string, string>>,
 ): Result<RequestInit, ApiError> => {
   const hasBody = opts.body !== undefined;
-  const formBody = hasBody && isFormData(opts.body);
-  const headers = buildHeaders(config, opts, hasBody && !formBody, overrides);
+  const rawBody = hasBody && isRawBody(opts.body);
+  const headers = buildHeaders(config, opts, hasBody && !rawBody, overrides);
   const init: RequestInit = { method: opts.method, headers };
   if (hasBody) {
-    if (formBody) {
-      init.body = opts.body as FormData;
+    if (rawBody) {
+      init.body = opts.body as FormData | URLSearchParams;
     } else {
       const serialized = trySync(() => JSON.stringify(opts.body));
       if (!serialized.ok) {

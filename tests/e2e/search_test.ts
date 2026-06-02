@@ -79,10 +79,7 @@ e2eTest(
 
 e2eTest("search.tools.testConnection probes a tool", async ({ client }) => {
   const result = await client.search.tools.testConnection({
-    search_tool: {
-      search_tool_name: "probe",
-      litellm_params: { search_provider: "perplexity", api_key: "fake-key" },
-    },
+    litellm_params: { search_provider: "perplexity", api_key: "fake-key" },
   });
   tolerantUpstream(result);
 });

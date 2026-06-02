@@ -26,6 +26,9 @@ const sampleModel: ProxyModel = {
   model_id: "m-1",
   model_name: "gpt-4o",
   litellm_params: { model: "openai/gpt-4o" },
+  model_info: {},
+  created_by: "admin",
+  updated_by: "admin",
 };
 
 Deno.test("proxyModels.register posts the model definition to /model/new", async () => {

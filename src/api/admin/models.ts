@@ -51,16 +51,16 @@ export interface ProxyModel {
   readonly model_name: string;
   /** Stored LiteLLM routing parameters. */
   readonly litellm_params: LiteLLMParams;
-  /** Stored auxiliary metadata. */
-  readonly model_info?: ProxyModelInfo;
+  /** Stored auxiliary metadata. Always present (defaults to an empty record). */
+  readonly model_info: ProxyModelInfo;
   /** ISO-8601 creation timestamp. */
   readonly created_at?: string;
   /** ISO-8601 last-update timestamp. */
   readonly updated_at?: string;
   /** Identifier of the creating user. */
-  readonly created_by?: string;
+  readonly created_by: string;
   /** Identifier of the last user to update. */
-  readonly updated_by?: string;
+  readonly updated_by: string;
 }
 
 /** Request body for `PATCH /model/{model_id}/update`. */

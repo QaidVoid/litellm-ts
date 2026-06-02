@@ -84,7 +84,7 @@ Deno.test("keys.list serializes pagination and filter query parameters", async (
 Deno.test("keys.delete accepts either keys or key_aliases", async () => {
   const { fetch, calls } = recordingFetch([
     () =>
-      new Response(JSON.stringify({ status: "success", deleted_keys: 2 }), {
+      new Response(JSON.stringify({ deleted_keys: ["sk-1", "sk-2"] }), {
         status: 200,
         headers: { "content-type": "application/json" },
       }),

@@ -253,11 +253,11 @@ export interface ScimNamespace {
   /** Service provider configuration discovery. */
   serviceProviderConfig(): Promise<Result<ScimServiceProviderConfig, ApiError>>;
   /** List supported resource types. */
-  resourceTypes(): Promise<Result<readonly ScimResourceType[], ApiError>>;
+  resourceTypes(): Promise<Result<ScimListResponse<ScimResourceType>, ApiError>>;
   /** Get a specific resource type by id. */
   resourceType(resourceTypeId: string): Promise<Result<ScimResourceType, ApiError>>;
   /** List supported schemas. */
-  schemas(): Promise<Result<readonly ScimSchema[], ApiError>>;
+  schemas(): Promise<Result<ScimListResponse<ScimSchema>, ApiError>>;
   /** Get a specific schema by id. */
   schema(schemaId: string): Promise<Result<ScimSchema, ApiError>>;
   /** Per-user provisioning sub-namespace. */
@@ -365,7 +365,7 @@ export const createScim = (transport: Transport): ScimNamespace => ({
     });
   },
   resourceTypes() {
-    return transport.request<readonly ScimResourceType[]>({
+    return transport.request<ScimListResponse<ScimResourceType>>({
       method: "GET",
       path: "/scim/v2/ResourceTypes",
     });
@@ -377,7 +377,7 @@ export const createScim = (transport: Transport): ScimNamespace => ({
     });
   },
   schemas() {
-    return transport.request<readonly ScimSchema[]>({
+    return transport.request<ScimListResponse<ScimSchema>>({
       method: "GET",
       path: "/scim/v2/Schemas",
     });

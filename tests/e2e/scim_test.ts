@@ -31,7 +31,7 @@ e2eTest("admin.scim.resourceTypes lists SCIM resource types", async ({ client })
     tolerantScim(result);
     return;
   }
-  assert(Array.isArray(result.value));
+  assert(Array.isArray(result.value.Resources));
 });
 
 e2eTest("admin.scim.resourceType retrieves a single resource type", async ({ client }) => {
@@ -45,7 +45,7 @@ e2eTest("admin.scim.schemas lists SCIM schemas", async ({ client }) => {
     tolerantScim(result);
     return;
   }
-  assert(Array.isArray(result.value));
+  assert(Array.isArray(result.value.Resources));
 });
 
 e2eTest("admin.scim.schema retrieves a single schema", async ({ client }) => {

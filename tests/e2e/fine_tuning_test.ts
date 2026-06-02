@@ -55,11 +55,3 @@ e2eTest("fineTuning.cancel routes to POST /v1/fine_tuning/jobs/{id}/cancel", asy
   assert(!result.ok, "expected an error");
   assertStrictEquals(result.error.kind, "http");
 });
-
-e2eTest("fineTuning.events routes to GET /v1/fine_tuning/jobs/{id}/events", async ({ client }) => {
-  const result = await client.fineTuning.events("ftjob-not-real", { limit: 10 });
-  // Either premium-gate 500 or unknown-id 404. Either way the call shape
-  // worked.
-  assert(!result.ok, "expected an error");
-  assertStrictEquals(result.error.kind, "http");
-});

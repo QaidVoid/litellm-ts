@@ -258,11 +258,8 @@ export interface AgentsNamespace {
   patch(agentId: string, req: PatchAgentRequest): Promise<Result<Agent, ApiError>>;
   /** Delete an agent by id. */
   delete(agentId: string): Promise<Result<unknown, ApiError>>;
-  /** Mark a specific agent as public. */
-  makePublic(
-    agentId: string,
-    req: MakeAgentsPublicRequest,
-  ): Promise<Result<MakeAgentsPublicResponse, ApiError>>;
+  /** Mark a specific agent as public. The agent id comes from the path; no body is sent. */
+  makePublic(agentId: string): Promise<Result<MakeAgentsPublicResponse, ApiError>>;
   /** Mark the supplied set of agents as public. */
   makePublicBulk(
     req: MakeAgentsPublicRequest,
@@ -345,11 +342,10 @@ export const createAgents = (transport: Transport): AgentsNamespace => ({
       path: `/v1/agents/${encode(agentId)}`,
     });
   },
-  makePublic(agentId, req) {
+  makePublic(agentId) {
     return transport.request<MakeAgentsPublicResponse>({
       method: "POST",
       path: `/v1/agents/${encode(agentId)}/make_public`,
-      body: req,
     });
   },
   makePublicBulk(req) {

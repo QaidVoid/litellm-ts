@@ -582,13 +582,28 @@ export interface McpNamespace {
 }
 
 /** Body submitted to `POST /v1/mcp/oauth/authorize` after the consent screen. */
+/**
+ * Form fields for `POST /v1/mcp/oauth/authorize` (form-encoded by the proxy).
+ *
+ * This is the BYOK API-key submission step of the interactive browser OAuth
+ * flow: the proxy stores a short-lived authorization code and replies with a
+ * 302 redirect back to `redirect_uri` carrying `?code=...&state=...`.
+ */
 export interface McpOAuthAuthorizeSubmit {
-  /** Authorization code returned by the upstream MCP server. */
-  readonly code?: string;
-  /** Opaque state token from the original authorize request. */
+  /** Redirect URI matching the original authorize request. */
+  readonly redirect_uri: string;
+  /** PKCE code challenge. */
+  readonly code_challenge: string;
+  /** BYOK API key the user is authorizing. */
+  readonly api_key: string;
+  /** OAuth2 client identifier. */
+  readonly client_id?: string;
+  /** Code challenge method (`"S256"` by default). */
+  readonly code_challenge_method?: "S256";
+  /** Opaque state echoed back on the redirect. */
   readonly state?: string;
-  /** Provider-specific extras. */
-  readonly [key: string]: unknown;
+  /** Target MCP server id. */
+  readonly server_id?: string;
 }
 
 /** Query parameters for `GET /mcp-rest/tools/list`. */
@@ -628,6 +643,19 @@ export interface McpRestNamespace {
 }
 
 const encode = (s: string) => encodeURIComponent(s);
+
+/**
+ * Serialize a plain object as `application/x-www-form-urlencoded`, skipping
+ * `undefined`/`null`. The OAuth endpoints bind their inputs with FastAPI
+ * `Form(...)`, so they must be sent form-encoded rather than as JSON.
+ */
+const toFormBody = (obj: object): URLSearchParams => {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined && value !== null) params.set(key, String(value));
+  }
+  return params;
+};
 
 const filterUndefined = <T extends object>(
   q: T,
@@ -829,14 +857,14 @@ export const createMcp = (transport: Transport): McpNamespace => ({
     return transport.request<McpOAuthTokenResponse>({
       method: "POST",
       path: "/v1/mcp/oauth/token",
-      body: req,
+      body: toFormBody(req),
     });
   },
   oauthAuthorizeSubmit(req) {
     return transport.request<unknown>({
       method: "POST",
       path: "/v1/mcp/oauth/authorize",
-      body: req,
+      body: toFormBody(req),
     });
   },
   servers: createServers(transport),

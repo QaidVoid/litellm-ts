@@ -187,10 +187,8 @@ export type DeleteKeysRequest =
 
 /** Response from `/key/delete`. */
 export interface DeleteKeysResponse {
-  /** Status string, always `"success"`. */
-  readonly status: "success";
-  /** Number of keys removed. */
-  readonly deleted_keys: number;
+  /** The key values (or aliases) that were removed. */
+  readonly deleted_keys: readonly string[];
 }
 
 /** Single-key body for block/unblock and `/key/health`. */
@@ -240,11 +238,11 @@ export interface ListKeysResponse {
   /** Keys on the current page. */
   readonly keys: readonly KeyMetadata[];
   /** Total key count across all pages. */
-  readonly total_count: number;
-  /** Page number returned. */
-  readonly page: number;
-  /** Page size returned. */
-  readonly size: number;
+  readonly total_count?: number;
+  /** 1-based index of the page returned. */
+  readonly current_page?: number;
+  /** Total number of pages available. */
+  readonly total_pages?: number;
 }
 
 /** Request body for `POST /key/{key}/reset_spend`. */

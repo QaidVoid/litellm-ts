@@ -134,6 +134,47 @@ export interface OrganizationDailyActivityQuery {
 }
 
 /** Surface for organization administration on the `Client`. */
+/**
+ * Response from `/organization/member_add`: the affected user and membership
+ * rows, not a single member spec.
+ */
+export interface OrganizationMemberAddResponse {
+  /** Organization the members were added to. */
+  readonly organization_id: string;
+  /** User rows created or updated by the add. */
+  readonly updated_users: readonly Readonly<Record<string, unknown>>[];
+  /** Organization-membership rows created or updated by the add. */
+  readonly updated_organization_memberships: readonly Readonly<Record<string, unknown>>[];
+}
+
+/**
+ * A single organization-membership row, returned by `/organization/member_delete`
+ * and `/organization/member_update`. Note the role field is `user_role`, not
+ * `role`.
+ */
+export interface OrganizationMembership {
+  /** User identifier. */
+  readonly user_id: string;
+  /** Organization the membership belongs to. */
+  readonly organization_id: string;
+  /** Role within the organization (e.g. `"org_admin"`). */
+  readonly user_role?: string;
+  /** Accumulated spend in USD within the organization. */
+  readonly spend?: number;
+  /** Linked budget id, when one is attached. */
+  readonly budget_id?: string;
+  /** ISO-8601 creation timestamp. */
+  readonly created_at: string;
+  /** ISO-8601 last-update timestamp. */
+  readonly updated_at: string;
+  /** User email, when known. */
+  readonly user_email?: string;
+  /** Embedded user record, when expanded. */
+  readonly user?: Readonly<Record<string, unknown>>;
+  /** Embedded budget record, when attached. */
+  readonly litellm_budget_table?: Readonly<Record<string, unknown>>;
+}
+
 export interface OrganizationsNamespace {
   /** Create an organization. */
   create(req: CreateOrganizationRequest): Promise<Result<Organization, ApiError>>;
@@ -147,16 +188,18 @@ export interface OrganizationsNamespace {
   delete(
     req: DeleteOrganizationsRequest,
   ): Promise<Result<readonly Organization[], ApiError>>;
-  /** Add a member to an organization. */
-  addMember(req: AddOrganizationMemberRequest): Promise<Result<OrganizationMemberSpec, ApiError>>;
-  /** Remove a member from an organization. Returns the deleted member spec. */
+  /** Add a member to an organization. Returns the affected user/membership rows. */
+  addMember(
+    req: AddOrganizationMemberRequest,
+  ): Promise<Result<OrganizationMemberAddResponse, ApiError>>;
+  /** Remove a member from an organization. Returns the deleted membership row. */
   deleteMember(
     req: DeleteOrganizationMemberRequest,
-  ): Promise<Result<OrganizationMemberSpec, ApiError>>;
-  /** Update a member's role. */
+  ): Promise<Result<OrganizationMembership, ApiError>>;
+  /** Update a member's role. Returns the updated membership row. */
   updateMember(
     req: UpdateOrganizationMemberRequest,
-  ): Promise<Result<OrganizationMemberSpec, ApiError>>;
+  ): Promise<Result<OrganizationMembership, ApiError>>;
   /** Per-day spend / request counters for organizations. */
   dailyActivity(
     query?: OrganizationDailyActivityQuery,
@@ -210,21 +253,21 @@ export const createOrganizations = (transport: Transport): OrganizationsNamespac
     });
   },
   addMember(req) {
-    return transport.request<OrganizationMemberSpec>({
+    return transport.request<OrganizationMemberAddResponse>({
       method: "POST",
       path: "/organization/member_add",
       body: req,
     });
   },
   deleteMember(req) {
-    return transport.request<OrganizationMemberSpec>({
+    return transport.request<OrganizationMembership>({
       method: "DELETE",
       path: "/organization/member_delete",
       body: req,
     });
   },
   updateMember(req) {
-    return transport.request<OrganizationMemberSpec>({
+    return transport.request<OrganizationMembership>({
       method: "PATCH",
       path: "/organization/member_update",
       body: req,

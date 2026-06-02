@@ -187,30 +187,6 @@ export type ResponsesStreamEvent =
     readonly error: { readonly type: string; readonly message: string };
   };
 
-/** Query parameters for `GET /v1/responses`. */
-export interface ListResponsesQuery {
-  /** Cursor: return responses after this id. */
-  readonly after?: string;
-  /** Maximum records per page. */
-  readonly limit?: number;
-  /** Sort direction. */
-  readonly order?: "asc" | "desc";
-}
-
-/** Response from `GET /v1/responses`. */
-export interface ListResponsesResponse {
-  /** Discriminator, always `"list"`. */
-  readonly object: "list";
-  /** Responses on the current page. */
-  readonly data: readonly ResponsesResponse[];
-  /** Id of the first record on the page. */
-  readonly first_id?: string;
-  /** Id of the last record on the page. */
-  readonly last_id?: string;
-  /** True when more pages remain. */
-  readonly has_more: boolean;
-}
-
 /** Response from `DELETE /v1/responses/{id}`. */
 export interface DeleteResponseResponse {
   /** Id of the deleted response. */
@@ -302,8 +278,6 @@ export interface ResponsesNamespace {
   retrieve(responseId: string): Promise<Result<ResponsesResponse, ApiError>>;
   /** Cancel an in-progress response. */
   cancel(responseId: string): Promise<Result<ResponsesResponse, ApiError>>;
-  /** List previously stored responses. */
-  list(query?: ListResponsesQuery): Promise<Result<ListResponsesResponse, ApiError>>;
   /** List input items recorded for a stored response. */
   listInputItems(
     responseId: string,
@@ -314,16 +288,6 @@ export interface ResponsesNamespace {
   /** Delete a stored response. */
   delete(responseId: string): Promise<Result<DeleteResponseResponse, ApiError>>;
 }
-
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
 
 const isErrorFrame = (data: unknown): data is { readonly error: unknown } =>
   typeof data === "object" && data !== null && "error" in data &&
@@ -389,13 +353,6 @@ export const createResponses = (transport: Transport): ResponsesNamespace => ({
     return transport.request<ResponsesResponse>({
       method: "POST",
       path: `/v1/responses/${encodeURIComponent(responseId)}/cancel`,
-    });
-  },
-  list(query) {
-    return transport.request<ListResponsesResponse>({
-      method: "GET",
-      path: "/v1/responses",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
     });
   },
   listInputItems(responseId, query) {

@@ -16,8 +16,8 @@ export type FilePurpose =
   | "user_data"
   | "evals";
 
-/** Lifecycle status of an uploaded file. */
-export type FileStatus = "uploaded" | "processed" | "error";
+/** Lifecycle status of an uploaded file. (`"pending"` may appear briefly after upload, e.g. on Azure.) */
+export type FileStatus = "uploaded" | "processed" | "error" | "pending";
 
 /** A single file record. */
 export interface FileObject {

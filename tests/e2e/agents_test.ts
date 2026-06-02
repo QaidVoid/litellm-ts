@@ -91,7 +91,7 @@ const createThrowawayAgent = async (
 e2eTest("admin.agents.makePublic flags a single agent (tolerant)", async ({ client }) => {
   const agentId = await createThrowawayAgent(client, "mp");
   try {
-    const result = await client.agents.makePublic(agentId, { agent_ids: [agentId] });
+    const result = await client.agents.makePublic(agentId);
     // makePublic is admin-gated; tolerate 403 / 404 if the proxy build
     // doesn't expose the public-sharing feature.
     if (!result.ok) {

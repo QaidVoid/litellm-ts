@@ -85,10 +85,10 @@ export interface ContainerFile {
   readonly created_at: number;
   /** Reported size in bytes. */
   readonly bytes?: number;
-  /** Source path (when known). */
-  readonly path?: string;
-  /** Mime type of the file. */
-  readonly source?: string;
+  /** Path of the file within the container. */
+  readonly path: string;
+  /** Source the file originated from. */
+  readonly source: string;
 }
 
 /** Query parameters for `GET /v1/containers/{id}/files`. */

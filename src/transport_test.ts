@@ -283,6 +283,19 @@ Deno.test("FormData body is passed through without JSON serialization or content
   assertStrictEquals(headers.has("content-type"), false);
 });
 
+Deno.test("URLSearchParams body is passed through without JSON serialization or json content-type", async () => {
+  const { fetch, calls } = recordingFetch([() => json({})]);
+  const t = createTransport(baseConfig({ fetch }));
+  const form = new URLSearchParams({ grant_type: "authorization_code", code: "abc" });
+  await t.request({ method: "POST", path: "/v1/mcp/oauth/token", body: form });
+  const init = calls[0]?.init;
+  assertEquals(init?.body instanceof URLSearchParams, true);
+  // The transport must not force application/json; fetch sets the
+  // x-www-form-urlencoded content-type from the URLSearchParams body itself.
+  const headers = new Headers(init?.headers);
+  assertStrictEquals(headers.get("content-type"), null);
+});
+
 Deno.test("fetchRaw returns the raw Response without parsing", async () => {
   const { fetch } = recordingFetch([
     () =>
