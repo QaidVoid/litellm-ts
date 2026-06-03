@@ -59,3 +59,20 @@ Deno.test("fineTuning.cancel POSTs to /v1/fine_tuning/jobs/{id}/cancel", async (
   assertStrictEquals(calls[0]?.input, "https://api.test/v1/fine_tuning/jobs/ftjob-1/cancel");
   assertStrictEquals(calls[0]?.init?.method, "POST");
 });
+
+Deno.test("fineTuning.iterate auto-paginates across has_more pages", async () => {
+  const page1 = { object: "list", data: [{ ...sampleJob, id: "ft-1" }], has_more: true };
+  const page2 = { object: "list", data: [{ ...sampleJob, id: "ft-2" }], has_more: false };
+  const { fetch, calls } = recordingFetch([
+    () => new Response(JSON.stringify(page1), { headers: { "content-type": "application/json" } }),
+    () => new Response(JSON.stringify(page2), { headers: { "content-type": "application/json" } }),
+  ]);
+  const client = baseClient(fetch);
+  const ids: string[] = [];
+  for await (const r of client.fineTuning.iterate({ limit: 1 })) {
+    if (r.ok) ids.push(r.value.id);
+  }
+  assertStrictEquals(ids.join(","), "ft-1,ft-2");
+  assertStrictEquals(calls.length, 2);
+  assertStrictEquals(new URL(calls[1]?.input as string).searchParams.get("after"), "ft-1");
+});

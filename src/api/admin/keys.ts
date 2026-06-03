@@ -1,4 +1,5 @@
 import type { ApiError } from "../../error.ts";
+import { paginate } from "../../pagination.ts";
 import type { Result } from "../../result.ts";
 import type { Transport } from "../../transport.ts";
 
@@ -372,6 +373,8 @@ export interface KeysNamespace {
   info(key?: string): Promise<Result<KeyInfoResponse, ApiError>>;
   /** List keys with optional filters and pagination. */
   list(query?: ListKeysQuery): Promise<Result<ListKeysResponse, ApiError>>;
+  /** Auto-paginate keys, yielding one key at a time across pages. */
+  iterate(query?: ListKeysQuery): AsyncIterable<Result<KeyMetadata, ApiError>>;
   /** Partially update a key. */
   update(req: UpdateKeyRequest): Promise<Result<KeyMetadata, ApiError>>;
   /** Rotate a key, optionally keeping the old value live for `grace_period`. */
@@ -464,6 +467,19 @@ export const createKeys = (transport: Transport): KeysNamespace => ({
       method: "GET",
       path: "/key/list",
       ...(query === undefined ? {} : { query: toQuery(query) }),
+    });
+  },
+  iterate(query) {
+    return paginate<KeyMetadata, number>(query?.page ?? 1, async (page) => {
+      const p = page ?? 1;
+      const res = await this.list({ ...query, page: p });
+      if (!res.ok) return res;
+      const current = res.value.current_page ?? p;
+      const total = res.value.total_pages ?? current;
+      return {
+        ok: true,
+        value: { items: res.value.keys, next: current < total ? current + 1 : undefined },
+      };
     });
   },
   update(req) {

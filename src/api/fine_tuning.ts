@@ -1,4 +1,5 @@
 import type { ApiError } from "../error.ts";
+import { paginate } from "../pagination.ts";
 import type { Result } from "../result.ts";
 import type { Transport } from "../transport.ts";
 
@@ -132,6 +133,8 @@ export interface FineTuningNamespace {
   retrieve(jobId: string): Promise<Result<FineTuningJob, ApiError>>;
   /** Page through fine-tuning jobs. */
   list(query?: ListFineTuningJobsQuery): Promise<Result<ListFineTuningJobsResponse, ApiError>>;
+  /** Auto-paginate fine-tuning jobs, yielding one job at a time across pages. */
+  iterate(query?: ListFineTuningJobsQuery): AsyncIterable<Result<FineTuningJob, ApiError>>;
   /** Cancel a running fine-tuning job. */
   cancel(jobId: string): Promise<Result<FineTuningJob, ApiError>>;
 }
@@ -156,6 +159,18 @@ export const createFineTuning = (transport: Transport): FineTuningNamespace => (
       method: "GET",
       path: "/v1/fine_tuning/jobs",
       ...(query === undefined ? {} : { query }),
+    });
+  },
+  iterate(query) {
+    return paginate<FineTuningJob, string>(query?.after, async (after) => {
+      const page = await this.list({ ...query, ...(after === undefined ? {} : { after }) });
+      if (!page.ok) return page;
+      const jobs = page.value.data;
+      const last = jobs[jobs.length - 1];
+      return {
+        ok: true,
+        value: { items: jobs, next: page.value.has_more && last ? last.id : undefined },
+      };
     });
   },
   cancel(jobId) {

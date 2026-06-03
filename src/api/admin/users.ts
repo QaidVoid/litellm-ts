@@ -1,4 +1,5 @@
 import type { ApiError } from "../../error.ts";
+import { paginate } from "../../pagination.ts";
 import type { Result } from "../../result.ts";
 import type { SpendAnalyticsPaginatedResponse } from "../_spend_analytics.ts";
 import type { Transport } from "../../transport.ts";
@@ -308,6 +309,8 @@ export interface UsersNamespace {
   ): Promise<Result<UserInfoResponse, ApiError>>;
   /** List internal users. */
   list(query?: ListUsersQuery): Promise<Result<ListUsersResponse, ApiError>>;
+  /** Auto-paginate users, yielding one user at a time across pages. */
+  iterate(query?: ListUsersQuery): AsyncIterable<Result<User, ApiError>>;
   /** Partially update a user. */
   update(req: UpdateUserRequest): Promise<Result<User, ApiError>>;
   /** Delete one or more users. Returns the number of users removed. */
@@ -349,6 +352,19 @@ export const createUsers = (transport: Transport): UsersNamespace => ({
       method: "GET",
       path: "/user/list",
       ...(query === undefined ? {} : { query }),
+    });
+  },
+  iterate(query) {
+    return paginate<User, number>(query?.page ?? 1, async (page) => {
+      const p = page ?? 1;
+      const res = await this.list({ ...query, page: p });
+      if (!res.ok) return res;
+      const users = res.value.users;
+      const current = res.value.page ?? p;
+      const size = res.value.page_size ?? users.length;
+      const total = res.value.total ?? 0;
+      const hasMore = users.length > 0 && current * size < total;
+      return { ok: true, value: { items: users, next: hasMore ? current + 1 : undefined } };
     });
   },
   update(req) {

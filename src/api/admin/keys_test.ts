@@ -94,3 +94,20 @@ Deno.test("keys.delete accepts either keys or key_aliases", async () => {
   const body = JSON.parse(calls[0]?.init?.body as string);
   assertEquals(body, { keys: ["sk-1", "sk-2"] });
 });
+
+Deno.test("keys.iterate auto-paginates by page until total_pages", async () => {
+  const page1 = { keys: [{ token: "sk-1" }], total_count: 2, current_page: 1, total_pages: 2 };
+  const page2 = { keys: [{ token: "sk-2" }], total_count: 2, current_page: 2, total_pages: 2 };
+  const { fetch, calls } = recordingFetch([
+    () => new Response(JSON.stringify(page1), { headers: { "content-type": "application/json" } }),
+    () => new Response(JSON.stringify(page2), { headers: { "content-type": "application/json" } }),
+  ]);
+  const client = baseClient(fetch);
+  let count = 0;
+  for await (const r of client.keys.iterate({ size: 1 })) {
+    if (r.ok) count++;
+  }
+  assertStrictEquals(count, 2);
+  assertStrictEquals(calls.length, 2);
+  assertStrictEquals(new URL(calls[1]?.input as string).searchParams.get("page"), "2");
+});
