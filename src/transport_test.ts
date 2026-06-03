@@ -246,6 +246,59 @@ Deno.test("retries once on 5xx then succeeds", async () => {
   }
 });
 
+Deno.test("does not retry a POST on 5xx (non-idempotent)", async () => {
+  const { fetch, calls } = recordingFetch([
+    () => new Response("oops", { status: 500 }),
+    () => json({ done: true }),
+  ]);
+  const t = createTransport(baseConfig({ fetch, maxRetries: 3 }));
+  const result = await t.request({ method: "POST", path: "/key/generate", body: {} });
+  assertEquals(result.ok, false);
+  assertEquals(calls.length, 1);
+});
+
+Deno.test("retries a PUT on 5xx (idempotent)", async () => {
+  const time = new FakeTime();
+  try {
+    const { fetch, calls } = recordingFetch([
+      () => new Response("oops", { status: 500 }),
+      () => json({ done: true }),
+    ]);
+    const t = createTransport(baseConfig({ fetch, maxRetries: 1 }));
+    const promise = t.request<{ done: boolean }>({ method: "PUT", path: "/x", body: {} });
+    await time.runMicrotasks();
+    await time.runAllAsync();
+    const result = await promise;
+    assertEquals(result, { ok: true, value: { done: true } });
+    assertEquals(calls.length, 2);
+  } finally {
+    time.restore();
+  }
+});
+
+Deno.test("retries a POST on 429 (rejected before processing)", async () => {
+  const time = new FakeTime();
+  try {
+    const { fetch, calls } = recordingFetch([
+      () => new Response("slow down", { status: 429 }),
+      () => json({ done: true }),
+    ]);
+    const t = createTransport(baseConfig({ fetch, maxRetries: 1 }));
+    const promise = t.request<{ done: boolean }>({
+      method: "POST",
+      path: "/key/generate",
+      body: {},
+    });
+    await time.runMicrotasks();
+    await time.runAllAsync();
+    const result = await promise;
+    assertEquals(result, { ok: true, value: { done: true } });
+    assertEquals(calls.length, 2);
+  } finally {
+    time.restore();
+  }
+});
+
 Deno.test("does not retry on non-retryable 400", async () => {
   const { fetch, calls } = recordingFetch([
     () => new Response("bad", { status: 400, statusText: "Bad Request" }),

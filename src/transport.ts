@@ -66,7 +66,11 @@ export interface TransportConfig {
   readonly defaultHeaders?: Readonly<Record<string, string>>;
   /** Per-request timeout in milliseconds. Defaults to 60000. */
   readonly timeoutMs?: number;
-  /** Number of additional attempts on retryable failures. Defaults to 1. */
+  /**
+   * Number of additional attempts on retryable failures. Defaults to 1.
+   * `429`s retry regardless of method; `network`/`5xx` failures retry only for
+   * idempotent methods (GET/PUT/DELETE) so a `POST`/`PATCH` is never replayed.
+   */
   readonly maxRetries?: number;
   /**
    * Wait time before the next retry. Defaults to full-jitter exponential
@@ -124,10 +128,24 @@ export interface Transport {
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_RETRIES = 1;
 
-const isRetryable = (e: ApiError): boolean =>
-  e.kind === "network" ||
-  e.kind === "rate-limited" ||
-  (e.kind === "http" && e.status >= 500 && e.status < 600);
+/** Methods safe to replay: a retried request cannot create a second side effect. */
+const IDEMPOTENT_METHODS: ReadonlySet<HttpMethod> = new Set(["GET", "PUT", "DELETE"]);
+
+/**
+ * Decide whether a failed attempt may be retried.
+ *
+ * A `429` is always retryable: the server rejected the request before acting on
+ * it. A `network` failure or `5xx` may have been processed server-side, so those
+ * retry only for idempotent methods, to avoid duplicating a non-idempotent side
+ * effect (a second key, a second team, a double charge) from a `POST`/`PATCH`.
+ */
+const isRetryable = (e: ApiError, method: HttpMethod): boolean => {
+  if (e.kind === "rate-limited") return true;
+  if (e.kind === "network" || (e.kind === "http" && e.status >= 500 && e.status < 600)) {
+    return IDEMPOTENT_METHODS.has(method);
+  }
+  return false;
+};
 
 const computeBackoffMs = (attempt: number, error: ApiError): number => {
   if (error.kind === "rate-limited" && error.retryAfterMs !== undefined) {
@@ -348,7 +366,7 @@ export const createTransport = (config: TransportConfig): Transport => {
       }
       await safeHook(hooks?.onError, ctx, result.error);
       if (attempt > maxRetries) return result;
-      if (!isRetryable(result.error)) return result;
+      if (!isRetryable(result.error, opts.method)) return result;
       await sleep(backoff(attempt, result.error));
       attempt++;
     }
