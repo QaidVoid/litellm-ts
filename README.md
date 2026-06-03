@@ -259,8 +259,33 @@ Then run:
 deno task test:e2e
 ```
 
-The default `deno task test` suite only runs `src/` and never hits the
-network, so e2e stays opt-in.
+The default `deno task test` suite only runs `src/` and `scripts/` and never
+hits the network, so e2e stays opt-in.
+
+## Route drift check
+
+The SDK is hand-written, so a method can call a route the proxy does not serve.
+`scripts/check-routes.ts` guards against that: it compares every request the
+SDK makes against `scripts/litellm-routes.json`, a pinned snapshot of the
+routes a given LiteLLM version registers. It runs offline as part of
+`deno task check`, or on its own:
+
+```bash
+deno task check:routes
+```
+
+The snapshot is built from the LiteLLM source rather than a running proxy,
+because `openapi.json` omits the `include_in_schema=False` management routes
+and `/routes` omits the mounted sub-apps. When bumping the supported LiteLLM
+version, regenerate it from a checkout at the matching tag (a `git worktree` at
+the tag works well):
+
+```bash
+LITELLM_SRC=/path/to/litellm LITELLM_VERSION=v1.87.0 deno task snapshot:routes
+```
+
+`deno task check:routes` then flags any route the SDK calls that the new
+version no longer serves, including paths that exist only as a WebSocket.
 
 ## Contributing
 
