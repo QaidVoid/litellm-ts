@@ -1,5 +1,6 @@
 import type { ApiError } from "../../error.ts";
 import type { Result } from "../../result.ts";
+import type { SpendAnalyticsPaginatedResponse } from "../_spend_analytics.ts";
 import type { Transport } from "../../transport.ts";
 
 /** Role of a team member. */
@@ -462,7 +463,9 @@ export interface TeamsNamespace {
     req: BulkUpdateTeamMemberPermissionsRequest,
   ): Promise<Result<BulkUpdateTeamMemberPermissionsResponse, ApiError>>;
   /** Per-day spend / request counters for a team. */
-  dailyActivity(query?: TeamDailyActivityQuery): Promise<Result<unknown, ApiError>>;
+  dailyActivity(
+    query?: TeamDailyActivityQuery,
+  ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
   /**
    * Paginated team listing with rich filtering (`GET /v2/team/list`).
    * Distinct from `list`, which returns every accessible team without
@@ -611,7 +614,7 @@ export const createTeams = (transport: Transport): TeamsNamespace => ({
     });
   },
   dailyActivity(query) {
-    return transport.request<unknown>({
+    return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/team/daily/activity",
       ...(query === undefined ? {} : {

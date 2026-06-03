@@ -102,14 +102,30 @@ export interface BudgetSettingsField {
 /** Response from `GET /budget/settings`. */
 export type BudgetSettingsResponse = readonly BudgetSettingsField[];
 
+/** Budget configuration and current spend for a single provider. */
+export interface ProviderBudgetEntry {
+  /** Budget limit in USD for the time period. */
+  readonly budget_limit?: number | null;
+  /** Time period for the budget (e.g. `"1d"`, `"30d"`, `"1mo"`). */
+  readonly time_period?: string | null;
+  /** Current spend for this provider in the period. */
+  readonly spend?: number;
+  /** ISO-8601 timestamp when the current budget period resets. */
+  readonly budget_reset_at?: string | null;
+}
+
+/** Response from `GET /provider/budgets`: provider name -> budget config. */
+export interface ProviderBudgetResponse {
+  readonly providers: Readonly<Record<string, ProviderBudgetEntry>>;
+}
+
 /** Surface for budget administration on the `Client`. */
 export interface BudgetsNamespace {
   /**
    * Read provider-level budget routing state (per-provider budget, current
-   * spend, and reset timestamp). Returned as `unknown` since the shape can
-   * be extended by enterprise builds.
+   * spend, and reset timestamp).
    */
-  providerBudgets(): Promise<Result<unknown, ApiError>>;
+  providerBudgets(): Promise<Result<ProviderBudgetResponse, ApiError>>;
   /** Create a new budget. */
   create(req: CreateBudgetRequest): Promise<Result<Budget, ApiError>>;
   /** Retrieve a budget by id. */
@@ -132,7 +148,7 @@ export interface BudgetsNamespace {
 /** Bind a `BudgetsNamespace` to a constructed `Transport`. */
 export const createBudgets = (transport: Transport): BudgetsNamespace => ({
   providerBudgets() {
-    return transport.request<unknown>({ method: "GET", path: "/provider/budgets" });
+    return transport.request<ProviderBudgetResponse>({ method: "GET", path: "/provider/budgets" });
   },
   create(req) {
     return transport.request<Budget>({ method: "POST", path: "/budget/new", body: req });

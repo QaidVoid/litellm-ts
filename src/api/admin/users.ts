@@ -1,5 +1,6 @@
 import type { ApiError } from "../../error.ts";
 import type { Result } from "../../result.ts";
+import type { SpendAnalyticsPaginatedResponse } from "../_spend_analytics.ts";
 import type { Transport } from "../../transport.ts";
 
 /** Role granted to an internal user. */
@@ -120,6 +121,31 @@ export interface User {
   readonly key?: string;
   /** Expiry timestamp of the auto-created key. */
   readonly expires?: string;
+}
+
+/**
+ * Response from `GET /v2/user/info`: just the user row, without the eager-loaded
+ * keys and team objects the v1 endpoint carries. `teams` is a list of team ids.
+ */
+export interface UserInfoV2Response {
+  readonly user_id: string;
+  readonly user_email?: string;
+  readonly user_alias?: string;
+  readonly user_role?: UserRole;
+  /** Accumulated spend in USD. */
+  readonly spend: number;
+  readonly max_budget?: number;
+  /** Model allowlist. */
+  readonly models: readonly string[];
+  readonly budget_duration?: string;
+  /** ISO-8601 timestamp when the budget period resets. */
+  readonly budget_reset_at?: string;
+  readonly metadata?: Readonly<Record<string, unknown>>;
+  readonly created_at?: string;
+  readonly updated_at?: string;
+  readonly sso_user_id?: string;
+  /** Ids of teams the user belongs to. */
+  readonly teams: readonly string[];
 }
 
 /** Request body for `/user/update`. */
@@ -291,19 +317,19 @@ export interface UsersNamespace {
   /** Bulk-update users by id/email, or broadcast a payload to every user. */
   bulkUpdate(req: BulkUpdateUsersRequest): Promise<Result<BulkUpdateUsersResponse, ApiError>>;
   /** Per-day spend / request counters scoped to a user. */
-  dailyActivity(query: UserDailyActivityQuery): Promise<Result<unknown, ApiError>>;
+  dailyActivity(
+    query: UserDailyActivityQuery,
+  ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
   /** Aggregated per-day activity across all dates in the window. */
   dailyActivityAggregated(
     query: UserDailyActivityAggregatedQuery,
-  ): Promise<Result<unknown, ApiError>>;
+  ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
   /**
    * Lightweight user lookup (`GET /v2/user/info`). Returns only the user
    * row, without the eager-loaded keys and teams that the v1 endpoint
-   * carries. Omit `user_id` to look up the calling user. Returned as
-   * `unknown` because the proxy's `UserInfoV2Response` is a thin wrapper
-   * around the raw user table row.
+   * carries. Omit `user_id` to look up the calling user.
    */
-  infoV2(query?: { readonly user_id?: string }): Promise<Result<unknown, ApiError>>;
+  infoV2(query?: { readonly user_id?: string }): Promise<Result<UserInfoV2Response, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -359,21 +385,21 @@ export const createUsers = (transport: Transport): UsersNamespace => ({
     });
   },
   dailyActivity(query) {
-    return transport.request<unknown>({
+    return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/user/daily/activity",
       query: filterUndefined(query),
     });
   },
   dailyActivityAggregated(query) {
-    return transport.request<unknown>({
+    return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/user/daily/activity/aggregated",
       query: filterUndefined(query),
     });
   },
   infoV2(query) {
-    return transport.request<unknown>({
+    return transport.request<UserInfoV2Response>({
       method: "GET",
       path: "/v2/user/info",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),

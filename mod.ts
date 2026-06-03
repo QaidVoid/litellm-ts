@@ -407,6 +407,7 @@ export type {
   UserDailyActivityAggregatedQuery,
   UserDailyActivityQuery,
   UserInfoResponse,
+  UserInfoV2Response,
   UserRole,
   UsersNamespace,
   UserTeamMembership,
@@ -442,6 +443,8 @@ export type {
   DeleteBudgetRequest,
   ListBudgetsResponse,
   ModelBudget,
+  ProviderBudgetEntry,
+  ProviderBudgetResponse,
   UpdateBudgetRequest,
 } from "./src/api/admin/budgets.ts";
 
@@ -875,6 +878,17 @@ export type {
 } from "./src/api/agents.ts";
 
 export type {
+  BreakdownMetrics,
+  DailySpendData,
+  DailySpendMetadata,
+  KeyMetricWithMetadata,
+  MetricWithMetadata,
+  SpendAnalyticsPaginatedResponse,
+  SpendKeyMetadata,
+  SpendMetrics,
+} from "./src/api/_spend_analytics.ts";
+
+export type {
   AvailableSearchProvider,
   AvailableSearchProvidersResponse,
   CreateSearchToolRequest,
@@ -946,7 +960,19 @@ export type {
   UtilsNamespace,
 } from "./src/api/utils.ts";
 
-export type { PublicNamespace } from "./src/api/public.ts";
+export type {
+  AgentCreateInfo,
+  BlogPost,
+  BlogPostsResponse,
+  CredentialField,
+  EndpointProvider,
+  MCPPublicServer,
+  ProviderCreateInfo,
+  PublicModelHubInfo,
+  PublicNamespace,
+  SupportedEndpoint,
+  SupportedEndpointsResponse,
+} from "./src/api/public.ts";
 
 export type {
   CreateMemoryRequest,
@@ -1013,7 +1039,9 @@ export type {
   GuardrailLitellmParams,
   GuardrailMode,
   GuardrailsNamespace,
+  GuardrailSubmissionItem,
   GuardrailSubmissionsNamespace,
+  GuardrailSubmissionSummary,
   GuardrailUsageDetailResponse,
   GuardrailUsageLogEntry,
   GuardrailUsageLogsQuery,
@@ -1024,6 +1052,7 @@ export type {
   GuardrailUsageQuery,
   ListGuardrailsResponse,
   ListGuardrailSubmissionsQuery,
+  ListGuardrailSubmissionsResponse,
   PatchGuardrailRequest,
   RegisterGuardrailRequest,
   TestCustomCodeGuardrailRequest,

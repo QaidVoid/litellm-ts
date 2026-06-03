@@ -238,8 +238,8 @@ export interface ConfigPassThroughEndpointsNamespace {
   create(endpoint: PassThroughEndpoint): Promise<Result<unknown, ApiError>>;
   /** Update an existing pass-through endpoint by id. */
   update(endpointId: string, endpoint: PassThroughEndpoint): Promise<Result<unknown, ApiError>>;
-  /** Delete a pass-through endpoint by id. */
-  delete(endpointId: string): Promise<Result<unknown, ApiError>>;
+  /** Delete a pass-through endpoint by id. Returns the remaining endpoints. */
+  delete(endpointId: string): Promise<Result<ListPassThroughEndpointsResponse, ApiError>>;
 }
 
 /** Surface for global config administration. */
@@ -361,7 +361,7 @@ const createPassThroughEndpoints = (
     });
   },
   delete(endpointId) {
-    return transport.request<unknown>({
+    return transport.request<ListPassThroughEndpointsResponse>({
       method: "DELETE",
       path: "/config/pass_through_endpoint",
       query: { endpoint_id: endpointId },

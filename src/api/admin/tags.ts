@@ -1,5 +1,6 @@
 import type { ApiError } from "../../error.ts";
 import type { Result } from "../../result.ts";
+import type { SpendAnalyticsPaginatedResponse } from "../_spend_analytics.ts";
 import type { Transport } from "../../transport.ts";
 
 /** Request body for `/tag/new`. */
@@ -208,7 +209,9 @@ export interface PerUserAnalyticsResponse {
 /** Analytics sub-namespace exposed at `client.tags.analytics`. */
 export interface TagAnalyticsNamespace {
   /** Per-day spend / request counters for tags. */
-  dailyActivity(query?: TagDailyActivityQuery): Promise<Result<unknown, ApiError>>;
+  dailyActivity(
+    query?: TagDailyActivityQuery,
+  ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
   /** Daily Active Users by tag for the last 7 days. */
   dau(query?: TagActiveUsersQuery): Promise<Result<ActiveUsersAnalyticsResponse, ApiError>>;
   /** Weekly Active Users by tag for the last 7 weeks. */
@@ -299,7 +302,7 @@ export const createTags = (transport: Transport): TagsNamespace => ({
   },
   analytics: {
     dailyActivity(query) {
-      return transport.request<unknown>({
+      return transport.request<SpendAnalyticsPaginatedResponse>({
         method: "GET",
         path: "/tag/daily/activity",
         ...(query === undefined ? {} : { query: filterUndefined(query) }),

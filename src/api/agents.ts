@@ -1,5 +1,6 @@
 import type { ApiError } from "../error.ts";
 import type { Result } from "../result.ts";
+import type { SpendAnalyticsPaginatedResponse } from "./_spend_analytics.ts";
 import type { Transport } from "../transport.ts";
 
 /** Optional capabilities an A2A agent advertises in its agent card. */
@@ -289,7 +290,7 @@ export interface AgentsNamespace {
    */
   dailyActivity(
     query?: AgentDailyActivityQuery,
-  ): Promise<Result<unknown, ApiError>>;
+  ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
 }
 
 const encode = (s: string) => encodeURIComponent(s);
@@ -382,7 +383,7 @@ export const createAgents = (transport: Transport): AgentsNamespace => ({
     });
   },
   dailyActivity(query) {
-    return transport.request<unknown>({
+    return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/agent/daily/activity",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),

@@ -111,6 +111,39 @@ export interface ListGuardrailSubmissionsQuery {
   readonly search?: string;
 }
 
+/** A single guardrail submission awaiting or past review. */
+export interface GuardrailSubmissionItem {
+  readonly guardrail_id: string;
+  readonly guardrail_name: string;
+  /** Lifecycle status (`pending_review`, `active`, or `rejected`). */
+  readonly status: string;
+  readonly team_id?: string;
+  /** True when submitted via a team rather than as a regular guardrail. */
+  readonly team_guardrail: boolean;
+  readonly litellm_params?: Readonly<Record<string, unknown>>;
+  readonly guardrail_info?: Readonly<Record<string, unknown>>;
+  readonly submitted_by_user_id?: string;
+  readonly submitted_by_email?: string;
+  readonly submitted_at?: string;
+  readonly reviewed_at?: string;
+  readonly created_at?: string;
+  readonly updated_at?: string;
+}
+
+/** Submission counts grouped by status. */
+export interface GuardrailSubmissionSummary {
+  readonly total: number;
+  readonly pending_review: number;
+  readonly active: number;
+  readonly rejected: number;
+}
+
+/** Response from `GET /guardrails/submissions`. */
+export interface ListGuardrailSubmissionsResponse {
+  readonly submissions: readonly GuardrailSubmissionItem[];
+  readonly summary: GuardrailSubmissionSummary;
+}
+
 /** Request body for `POST /apply_guardrail`. */
 export interface ApplyGuardrailRequest {
   /** Configured guardrail name to invoke. */
@@ -300,7 +333,9 @@ export interface GuardrailUsageLogsResponse {
 /** Submissions sub-namespace under `client.guardrails.submissions`. */
 export interface GuardrailSubmissionsNamespace {
   /** List submissions filtered by status / team / search term. */
-  list(query?: ListGuardrailSubmissionsQuery): Promise<Result<unknown, ApiError>>;
+  list(
+    query?: ListGuardrailSubmissionsQuery,
+  ): Promise<Result<ListGuardrailSubmissionsResponse, ApiError>>;
   /** Retrieve a single submission by id. */
   get(guardrailId: string): Promise<Result<Guardrail, ApiError>>;
   /** Approve a pending submission (admin). */
@@ -389,7 +424,7 @@ const filterUndefined = <T extends object>(
 
 const createSubmissions = (transport: Transport): GuardrailSubmissionsNamespace => ({
   list(query) {
-    return transport.request<unknown>({
+    return transport.request<ListGuardrailSubmissionsResponse>({
       method: "GET",
       path: "/guardrails/submissions",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),

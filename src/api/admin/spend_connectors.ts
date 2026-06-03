@@ -75,7 +75,7 @@ export interface VantageNamespace {
   /** Read masked Vantage settings. */
   settings(): Promise<Result<VantageSettingsView, ApiError>>;
   /** Update Vantage settings. */
-  updateSettings(req: VantageSettingsUpdate): Promise<Result<unknown, ApiError>>;
+  updateSettings(req: VantageSettingsUpdate): Promise<Result<VantageInitResponse, ApiError>>;
   /** Initialize Vantage settings from scratch. */
   init(req: VantageInitRequest): Promise<Result<VantageInitResponse, ApiError>>;
   /** Capped preview of what `export` would send. */
@@ -83,7 +83,7 @@ export interface VantageNamespace {
   /** Push cost data to Vantage. */
   export(req: VantageExportRequest): Promise<Result<VantageExportResponse, ApiError>>;
   /** Remove stored Vantage settings. */
-  delete(): Promise<Result<unknown, ApiError>>;
+  delete(): Promise<Result<VantageInitResponse, ApiError>>;
 }
 
 /** Request body for `POST /cloudzero/init`. */
@@ -157,7 +157,7 @@ export interface CloudZeroNamespace {
   /** Read masked CloudZero settings. */
   settings(): Promise<Result<CloudZeroSettingsView, ApiError>>;
   /** Update CloudZero settings. */
-  updateSettings(req: CloudZeroSettingsUpdate): Promise<Result<unknown, ApiError>>;
+  updateSettings(req: CloudZeroSettingsUpdate): Promise<Result<CloudZeroInitResponse, ApiError>>;
   /** Initialize CloudZero settings from scratch. */
   init(req: CloudZeroInitRequest): Promise<Result<CloudZeroInitResponse, ApiError>>;
   /** Capped preview of what `export` would send. */
@@ -165,7 +165,7 @@ export interface CloudZeroNamespace {
   /** Push cost data to CloudZero. */
   export(req: CloudZeroExportRequest): Promise<Result<CloudZeroExportResponse, ApiError>>;
   /** Remove stored CloudZero settings. */
-  delete(): Promise<Result<unknown, ApiError>>;
+  delete(): Promise<Result<CloudZeroInitResponse, ApiError>>;
 }
 
 /** Surface for spend-connector administration on the `Client`. */
@@ -184,7 +184,7 @@ const createVantage = (transport: Transport): VantageNamespace => ({
     });
   },
   updateSettings(req) {
-    return transport.request<unknown>({
+    return transport.request<VantageInitResponse>({
       method: "PUT",
       path: "/vantage/settings",
       body: req,
@@ -212,7 +212,7 @@ const createVantage = (transport: Transport): VantageNamespace => ({
     });
   },
   delete() {
-    return transport.request<unknown>({
+    return transport.request<VantageInitResponse>({
       method: "DELETE",
       path: "/vantage/delete",
     });
@@ -227,7 +227,7 @@ const createCloudZero = (transport: Transport): CloudZeroNamespace => ({
     });
   },
   updateSettings(req) {
-    return transport.request<unknown>({
+    return transport.request<CloudZeroInitResponse>({
       method: "PUT",
       path: "/cloudzero/settings",
       body: req,
@@ -255,7 +255,7 @@ const createCloudZero = (transport: Transport): CloudZeroNamespace => ({
     });
   },
   delete() {
-    return transport.request<unknown>({
+    return transport.request<CloudZeroInitResponse>({
       method: "DELETE",
       path: "/cloudzero/delete",
     });

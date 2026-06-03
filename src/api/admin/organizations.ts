@@ -1,5 +1,6 @@
 import type { ApiError } from "../../error.ts";
 import type { Result } from "../../result.ts";
+import type { SpendAnalyticsPaginatedResponse } from "../_spend_analytics.ts";
 import type { Transport } from "../../transport.ts";
 
 /** Role of a member within an organization. */
@@ -203,7 +204,7 @@ export interface OrganizationsNamespace {
   /** Per-day spend / request counters for organizations. */
   dailyActivity(
     query?: OrganizationDailyActivityQuery,
-  ): Promise<Result<unknown, ApiError>>;
+  ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -274,7 +275,7 @@ export const createOrganizations = (transport: Transport): OrganizationsNamespac
     });
   },
   dailyActivity(query) {
-    return transport.request<unknown>({
+    return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/organization/daily/activity",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),

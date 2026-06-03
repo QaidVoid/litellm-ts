@@ -1,5 +1,6 @@
 import type { ApiError } from "../../error.ts";
 import type { Result } from "../../result.ts";
+import type { SpendAnalyticsPaginatedResponse } from "../_spend_analytics.ts";
 import type { Transport } from "../../transport.ts";
 
 /** Restrict a customer's traffic to models in this region. */
@@ -183,7 +184,9 @@ export interface CustomersNamespace {
   /** Lift a previous block. */
   unblock(req: BlockCustomersRequest): Promise<Result<UnblockCustomersResponse, ApiError>>;
   /** Per-day spend / request counters for customers (end users). */
-  dailyActivity(query?: CustomerDailyActivityQuery): Promise<Result<unknown, ApiError>>;
+  dailyActivity(
+    query?: CustomerDailyActivityQuery,
+  ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
 }
 
 const filterUndefined = <T extends object>(
@@ -236,7 +239,7 @@ export const createCustomers = (transport: Transport): CustomersNamespace => ({
     });
   },
   dailyActivity(query) {
-    return transport.request<unknown>({
+    return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/customer/daily/activity",
       ...(query === undefined ? {} : { query: filterUndefined(query) }),
