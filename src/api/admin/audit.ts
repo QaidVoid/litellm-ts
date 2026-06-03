@@ -70,21 +70,13 @@ export interface AuditNamespace {
   get(id: string): Promise<Result<AuditLogEntry, ApiError>>;
 }
 
-const toQuery = (q: ListAuditLogsQuery): Readonly<Record<string, string | number>> => {
-  const out: Record<string, string | number> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number;
-  }
-  return out;
-};
-
 /** Bind an `AuditNamespace` to a constructed `Transport`. */
 export const createAudit = (transport: Transport): AuditNamespace => ({
   list(query) {
     return transport.request<ListAuditLogsResponse>({
       method: "GET",
       path: "/audit",
-      ...(query === undefined ? {} : { query: toQuery(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(id) {

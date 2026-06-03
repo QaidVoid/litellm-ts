@@ -429,14 +429,6 @@ export interface KeyInfoBatchRequest {
   readonly key_aliases?: readonly string[];
 }
 
-const toQuery = (q: ListKeysQuery): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const encode = (s: string) => encodeURIComponent(s);
 
 /** Bind a `KeysNamespace` to a constructed `Transport`. */
@@ -466,7 +458,7 @@ export const createKeys = (transport: Transport): KeysNamespace => ({
     return transport.request<ListKeysResponse>({
       method: "GET",
       path: "/key/list",
-      ...(query === undefined ? {} : { query: toQuery(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   iterate(query) {
