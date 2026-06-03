@@ -167,16 +167,6 @@ export interface GoogleGenaiNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const streamGenerate = async function* (
   transport: Transport,
   model: ModelId,
@@ -222,7 +212,7 @@ const createGoogleAgents = (transport: Transport): GoogleAgentsNamespace => ({
     return transport.request<ListGoogleAgentsResponse>({
       method: "GET",
       path: "/v1beta/agents",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(name) {

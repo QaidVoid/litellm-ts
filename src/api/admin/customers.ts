@@ -189,16 +189,6 @@ export interface CustomersNamespace {
   ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `CustomersNamespace` to a constructed `Transport`. */
 export const createCustomers = (transport: Transport): CustomersNamespace => ({
   create(req) {
@@ -242,7 +232,7 @@ export const createCustomers = (transport: Transport): CustomersNamespace => ({
     return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/customer/daily/activity",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
 });

@@ -184,16 +184,6 @@ export interface WorkflowsNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `WorkflowsNamespace` to a constructed `Transport`. */
 export const createWorkflows = (transport: Transport): WorkflowsNamespace => ({
   create(req) {
@@ -207,7 +197,7 @@ export const createWorkflows = (transport: Transport): WorkflowsNamespace => ({
     return transport.request<ListWorkflowRunsResponse>({
       method: "GET",
       path: "/v1/workflows/runs",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(runId) {
@@ -234,7 +224,7 @@ export const createWorkflows = (transport: Transport): WorkflowsNamespace => ({
     return transport.request<ListWorkflowEventsResponse>({
       method: "GET",
       path: `/v1/workflows/runs/${encode(runId)}/events`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   appendMessage(runId, req) {
@@ -248,7 +238,7 @@ export const createWorkflows = (transport: Transport): WorkflowsNamespace => ({
     return transport.request<ListWorkflowMessagesResponse>({
       method: "GET",
       path: `/v1/workflows/runs/${encode(runId)}/messages`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
 });

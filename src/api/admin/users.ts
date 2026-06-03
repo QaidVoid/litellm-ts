@@ -332,16 +332,6 @@ export interface UsersNamespace {
   infoV2(query?: { readonly user_id?: string }): Promise<Result<UserInfoV2Response, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `UsersNamespace` to a constructed `Transport`. */
 export const createUsers = (transport: Transport): UsersNamespace => ({
   create(req) {
@@ -351,14 +341,14 @@ export const createUsers = (transport: Transport): UsersNamespace => ({
     return transport.request<UserInfoResponse>({
       method: "GET",
       path: "/user/info",
-      query: filterUndefined(query),
+      query,
     });
   },
   list(query) {
     return transport.request<ListUsersResponse>({
       method: "GET",
       path: "/user/list",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   update(req) {
@@ -388,21 +378,21 @@ export const createUsers = (transport: Transport): UsersNamespace => ({
     return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/user/daily/activity",
-      query: filterUndefined(query),
+      query,
     });
   },
   dailyActivityAggregated(query) {
     return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/user/daily/activity/aggregated",
-      query: filterUndefined(query),
+      query,
     });
   },
   infoV2(query) {
     return transport.request<UserInfoV2Response>({
       method: "GET",
       path: "/v2/user/info",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
 });

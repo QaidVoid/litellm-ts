@@ -436,16 +436,6 @@ const toQuery = (q: ListKeysQuery): Readonly<Record<string, string | number | bo
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `KeysNamespace` to a constructed `Transport`. */
 export const createKeys = (transport: Transport): KeysNamespace => ({
   generate(req = {}) {
@@ -508,7 +498,7 @@ export const createKeys = (transport: Transport): KeysNamespace => ({
     return transport.request<ListKeyAliasesResponse>({
       method: "GET",
       path: "/key/aliases",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   bulkUpdate(req) {

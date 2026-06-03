@@ -212,16 +212,6 @@ export interface HealthNamespace {
   routes(): Promise<Result<unknown, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `HealthNamespace` to a constructed `Transport`. */
 export const createHealth = (transport: Transport): HealthNamespace => ({
   liveliness() {
@@ -250,14 +240,14 @@ export const createHealth = (transport: Transport): HealthNamespace => ({
     return transport.request<HealthCheckResponse>({
       method: "GET",
       path: "/health",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   services(query) {
     return transport.request<HealthServicesResponse>({
       method: "GET",
       path: "/health/services",
-      query: filterUndefined(query),
+      query,
     });
   },
   sharedStatus() {
@@ -282,7 +272,7 @@ export const createHealth = (transport: Transport): HealthNamespace => ({
     return transport.request<HealthHistoryResponse>({
       method: "GET",
       path: "/health/history",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   latest() {

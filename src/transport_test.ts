@@ -74,19 +74,21 @@ Deno.test("request normalizes baseUrl and path joining", async () => {
   }
 });
 
-Deno.test("request encodes query string entries, skipping undefined", async () => {
+Deno.test("request encodes query entries, skipping undefined/null and repeating arrays", async () => {
   const { fetch, calls } = recordingFetch([() => json({})]);
   const t = createTransport(baseConfig({ fetch }));
   await t.request({
     method: "GET",
     path: "/q",
-    query: { a: "1", b: 2, c: true, d: undefined },
+    query: { a: "1", b: 2, c: true, d: undefined, e: null, f: ["x", "y"] },
   });
   const url = new URL(calls[0]?.input as string);
   assertStrictEquals(url.searchParams.get("a"), "1");
   assertStrictEquals(url.searchParams.get("b"), "2");
   assertStrictEquals(url.searchParams.get("c"), "true");
   assertStrictEquals(url.searchParams.has("d"), false);
+  assertStrictEquals(url.searchParams.has("e"), false);
+  assertEquals(url.searchParams.getAll("f"), ["x", "y"]);
 });
 
 Deno.test("401 maps to auth error with reason 'invalid' and preserves the body", async () => {

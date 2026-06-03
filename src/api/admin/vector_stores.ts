@@ -156,16 +156,6 @@ export interface VectorStoresAdminNamespace {
   ): Promise<Result<DeleteManagedVectorStoreResponse, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `VectorStoresAdminNamespace` to a constructed `Transport`. */
 export const createVectorStoresAdmin = (
   transport: Transport,
@@ -181,14 +171,14 @@ export const createVectorStoresAdmin = (
     return transport.request<ListManagedVectorStoresResponse>({
       method: "GET",
       path: "/vector_store/list",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   listV1(query) {
     return transport.request<ListManagedVectorStoresResponse>({
       method: "GET",
       path: "/v1/vector_store/list",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   info(req) {

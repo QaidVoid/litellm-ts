@@ -268,22 +268,12 @@ export interface ScimNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const createUsers = (transport: Transport): ScimUsersNamespace => ({
   list(query) {
     return transport.request<ScimListResponse<ScimUser>>({
       method: "GET",
       path: "/scim/v2/Users",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(userId) {
@@ -322,7 +312,7 @@ const createGroups = (transport: Transport): ScimGroupsNamespace => ({
     return transport.request<ScimListResponse<ScimGroup>>({
       method: "GET",
       path: "/scim/v2/Groups",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(groupId) {

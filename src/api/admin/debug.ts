@@ -37,16 +37,6 @@ export interface DebugNamespace {
   otelSpans(): Promise<Result<unknown, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `DebugNamespace` to a constructed `Transport`. */
 export const createDebug = (transport: Transport): DebugNamespace => ({
   asyncioTasks() {
@@ -74,7 +64,7 @@ export const createDebug = (transport: Transport): DebugNamespace => ({
     return transport.request<unknown>({
       method: "POST",
       path: "/debug/memory/gc/configure",
-      ...(req === undefined ? {} : { query: filterUndefined(req) }),
+      ...(req === undefined ? {} : { query: req }),
     });
   },
   otelSpans() {

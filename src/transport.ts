@@ -83,14 +83,22 @@ export interface TransportConfig {
   readonly fetch?: typeof fetch;
 }
 
+/** A single query value the transport knows how to serialize. */
+export type QueryValue = string | number | boolean | readonly (string | number | boolean)[];
+
 /** Options accepted by both `request` and `stream`. */
 export interface RequestOptions {
   readonly method: HttpMethod;
   readonly path: string;
   readonly body?: unknown;
-  readonly query?: Readonly<
-    Record<string, string | number | boolean | readonly (string | number | boolean)[] | undefined>
-  >;
+  /**
+   * Query parameters. Each value is serialized (`String`, with arrays repeating
+   * the key); `undefined` and `null` entries are skipped. Typed as `object` so
+   * the SDK's typed `*Query` interfaces can be passed directly without
+   * pre-filtering. Values should be {@link QueryValue}s; nested objects are not
+   * supported.
+   */
+  readonly query?: object;
   readonly headers?: Readonly<Record<string, string>>;
   readonly signal?: AbortSignal;
 }
@@ -140,7 +148,7 @@ const buildUrl = (
   const url = new URL(normalizedPath, normalizedBase);
   if (query !== undefined) {
     for (const [k, v] of Object.entries(query)) {
-      if (v === undefined) continue;
+      if (v === undefined || v === null) continue;
       if (Array.isArray(v)) {
         for (const item of v) url.searchParams.append(k, String(item));
       } else {

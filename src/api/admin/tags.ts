@@ -244,33 +244,6 @@ export interface TagsNamespace {
   readonly analytics: TagAnalyticsNamespace;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
-const filterUndefinedWithArrays = <T extends object>(
-  q: T,
-): Readonly<
-  Record<string, string | number | boolean | readonly (string | number | boolean)[]>
-> => {
-  const out: Record<
-    string,
-    string | number | boolean | readonly (string | number | boolean)[]
-  > = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) {
-      out[k] = v as string | number | boolean | readonly (string | number | boolean)[];
-    }
-  }
-  return out;
-};
-
 /** Bind a `TagsNamespace` to a constructed `Transport`. */
 export const createTags = (transport: Transport): TagsNamespace => ({
   create(req) {
@@ -290,7 +263,7 @@ export const createTags = (transport: Transport): TagsNamespace => ({
     return transport.request<readonly TagConfig[]>({
       method: "GET",
       path: "/tag/list",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   delete(req) {
@@ -305,28 +278,28 @@ export const createTags = (transport: Transport): TagsNamespace => ({
       return transport.request<SpendAnalyticsPaginatedResponse>({
         method: "GET",
         path: "/tag/daily/activity",
-        ...(query === undefined ? {} : { query: filterUndefined(query) }),
+        ...(query === undefined ? {} : { query }),
       });
     },
     dau(query) {
       return transport.request<ActiveUsersAnalyticsResponse>({
         method: "GET",
         path: "/tag/dau",
-        ...(query === undefined ? {} : { query: filterUndefinedWithArrays(query) }),
+        ...(query === undefined ? {} : { query }),
       });
     },
     wau(query) {
       return transport.request<ActiveUsersAnalyticsResponse>({
         method: "GET",
         path: "/tag/wau",
-        ...(query === undefined ? {} : { query: filterUndefinedWithArrays(query) }),
+        ...(query === undefined ? {} : { query }),
       });
     },
     mau(query) {
       return transport.request<ActiveUsersAnalyticsResponse>({
         method: "GET",
         path: "/tag/mau",
-        ...(query === undefined ? {} : { query: filterUndefinedWithArrays(query) }),
+        ...(query === undefined ? {} : { query }),
       });
     },
     distinct() {
@@ -339,14 +312,14 @@ export const createTags = (transport: Transport): TagsNamespace => ({
       return transport.request<TagSummaryResponse>({
         method: "GET",
         path: "/tag/summary",
-        query: filterUndefinedWithArrays(query),
+        query,
       });
     },
     perUserAnalytics(query) {
       return transport.request<PerUserAnalyticsResponse>({
         method: "GET",
         path: "/tag/user-agent/per-user-analytics",
-        ...(query === undefined ? {} : { query: filterUndefinedWithArrays(query) }),
+        ...(query === undefined ? {} : { query }),
       });
     },
   },

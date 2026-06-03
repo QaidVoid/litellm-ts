@@ -657,22 +657,12 @@ const toFormBody = (obj: object): URLSearchParams => {
   return params;
 };
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean | readonly string[]>> => {
-  const out: Record<string, string | number | boolean | readonly string[]> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean | readonly string[];
-  }
-  return out;
-};
-
 const createServers = (transport: Transport): McpServersNamespace => ({
   list(query) {
     return transport.request<readonly McpServer[]>({
       method: "GET",
       path: "/v1/mcp/server",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(serverId) {
@@ -697,7 +687,7 @@ const createServers = (transport: Transport): McpServersNamespace => ({
     return transport.request<readonly McpServerHealthRow[]>({
       method: "GET",
       path: "/v1/mcp/server/health",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   register(req) {
@@ -780,7 +770,7 @@ export const createMcp = (transport: Transport): McpNamespace => ({
     return transport.request<McpDiscoverResponse>({
       method: "GET",
       path: "/v1/mcp/discover",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   makePublic(req) {
@@ -850,7 +840,7 @@ export const createMcp = (transport: Transport): McpNamespace => ({
     return transport.request<unknown>({
       method: "GET",
       path: "/v1/mcp/oauth/authorize",
-      query: filterUndefined(query),
+      query,
     });
   },
   oauthToken(req) {
@@ -872,22 +862,12 @@ export const createMcp = (transport: Transport): McpNamespace => ({
   rest: createRest(transport),
 });
 
-const filterUndefinedScalar = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const createRest = (transport: Transport): McpRestNamespace => ({
   toolsList(query) {
     return transport.request<McpRestToolsListResponse>({
       method: "GET",
       path: "/mcp-rest/tools/list",
-      ...(query === undefined ? {} : { query: filterUndefinedScalar(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   toolsCall(req) {

@@ -307,16 +307,6 @@ export interface SpendNamespace {
   ): Promise<Result<CostEstimateResponse, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `SpendNamespace` to a constructed `Transport`. */
 export const createSpend = (transport: Transport): SpendNamespace => ({
   calculate(req) {
@@ -330,14 +320,14 @@ export const createSpend = (transport: Transport): SpendNamespace => ({
     return transport.request<SpendTagsResponse>({
       method: "GET",
       path: "/spend/tags",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   logs(query) {
     return transport.request<SpendLogsResponse>({
       method: "GET",
       path: "/spend/logs",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   keys() {
@@ -350,14 +340,14 @@ export const createSpend = (transport: Transport): SpendNamespace => ({
     return transport.request<readonly SpendUserRow[]>({
       method: "GET",
       path: "/spend/users",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   logsV2(query) {
     return transport.request<SpendLogsV2Response>({
       method: "GET",
       path: "/spend/logs/v2",
-      query: filterUndefined(query),
+      query,
     });
   },
   costEstimate(req) {

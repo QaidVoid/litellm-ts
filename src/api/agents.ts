@@ -295,23 +295,13 @@ export interface AgentsNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind an `AgentsNamespace` to a constructed `Transport`. */
 export const createAgents = (transport: Transport): AgentsNamespace => ({
   list(query) {
     return transport.request<readonly Agent[]>({
       method: "GET",
       path: "/v1/agents",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(agentId) {
@@ -386,7 +376,7 @@ export const createAgents = (transport: Transport): AgentsNamespace => ({
     return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/agent/daily/activity",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
 });

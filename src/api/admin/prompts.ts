@@ -176,16 +176,6 @@ export interface PromptsNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const toBlob = (input: DotpromptFileInput): Blob =>
   input instanceof Blob ? input : new Blob([input as BlobPart]);
 
@@ -195,21 +185,21 @@ export const createPrompts = (transport: Transport): PromptsNamespace => ({
     return transport.request<ListPromptsResponse>({
       method: "GET",
       path: "/prompts/list",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(promptId, query) {
     return transport.request<PromptInfoResponse>({
       method: "GET",
       path: `/prompts/${encode(promptId)}`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   versions(promptId, query) {
     return transport.request<PromptVersionsResponse>({
       method: "GET",
       path: `/prompts/${encode(promptId)}/versions`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   create(req) {
@@ -231,14 +221,14 @@ export const createPrompts = (transport: Transport): PromptsNamespace => ({
       method: "PATCH",
       path: `/prompts/${encode(promptId)}`,
       body: req,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   delete(promptId, query) {
     return transport.request<unknown>({
       method: "DELETE",
       path: `/prompts/${encode(promptId)}`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   test(req) {

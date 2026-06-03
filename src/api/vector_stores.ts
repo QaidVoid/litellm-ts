@@ -356,16 +356,6 @@ export interface CreateIndexRequest {
   readonly index_info?: Readonly<Record<string, unknown>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const enc = (s: string): string => encodeURIComponent(s);
 
 /** Bind a `VectorStoresNamespace` to a constructed `Transport`. */
@@ -394,7 +384,7 @@ export const createVectorStores = (transport: Transport): VectorStoresNamespace 
     return transport.request<ListVectorStoresResponse>({
       method: "GET",
       path: "/v1/vector_stores",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   iterate(query) {
@@ -431,7 +421,7 @@ export const createVectorStores = (transport: Transport): VectorStoresNamespace 
     return transport.request<ListVectorStoreFilesResponse>({
       method: "GET",
       path: `/v1/vector_stores/${enc(vectorStoreId)}/files`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   iterateFiles(vectorStoreId, query) {

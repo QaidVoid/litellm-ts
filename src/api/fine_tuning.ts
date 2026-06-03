@@ -136,16 +136,6 @@ export interface FineTuningNamespace {
   cancel(jobId: string): Promise<Result<FineTuningJob, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `FineTuningNamespace` to a constructed `Transport`. */
 export const createFineTuning = (transport: Transport): FineTuningNamespace => ({
   create(req) {
@@ -165,7 +155,7 @@ export const createFineTuning = (transport: Transport): FineTuningNamespace => (
     return transport.request<ListFineTuningJobsResponse>({
       method: "GET",
       path: "/v1/fine_tuning/jobs",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   cancel(jobId) {

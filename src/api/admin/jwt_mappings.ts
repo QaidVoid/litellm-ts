@@ -88,16 +88,6 @@ export interface JwtMappingsNamespace {
   info(id: string): Promise<Result<JwtMapping, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `JwtMappingsNamespace` to a constructed `Transport`. */
 export const createJwtMappings = (transport: Transport): JwtMappingsNamespace => ({
   create(req) {
@@ -125,7 +115,7 @@ export const createJwtMappings = (transport: Transport): JwtMappingsNamespace =>
     return transport.request<ListJwtMappingsResponse>({
       method: "GET",
       path: "/jwt/key/mapping/list",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   info(id) {

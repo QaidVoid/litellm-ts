@@ -270,16 +270,6 @@ export interface EvalsNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const createRuns = (transport: Transport): EvalRunsNamespace => ({
   create(evalId, req) {
     return transport.request<EvalRun>({
@@ -292,7 +282,7 @@ const createRuns = (transport: Transport): EvalRunsNamespace => ({
     return transport.request<ListEvalRunsResponse>({
       method: "GET",
       path: `/v1/evals/${encode(evalId)}/runs`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   retrieve(evalId, runId) {
@@ -325,7 +315,7 @@ export const createEvals = (transport: Transport): EvalsNamespace => ({
     return transport.request<ListEvalsResponse>({
       method: "GET",
       path: "/v1/evals",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   retrieve(evalId) {

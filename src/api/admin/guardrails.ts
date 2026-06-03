@@ -412,22 +412,12 @@ export interface GuardrailsNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const createSubmissions = (transport: Transport): GuardrailSubmissionsNamespace => ({
   list(query) {
     return transport.request<ListGuardrailSubmissionsResponse>({
       method: "GET",
       path: "/guardrails/submissions",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(guardrailId) {
@@ -455,28 +445,28 @@ const createUsage = (transport: Transport): GuardrailUsageNamespace => ({
     return transport.request<GuardrailUsageOverviewResponse>({
       method: "GET",
       path: "/guardrails/usage/overview",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   detail(guardrailId, query) {
     return transport.request<GuardrailUsageDetailResponse>({
       method: "GET",
       path: `/guardrails/usage/detail/${encode(guardrailId)}`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   logs(query) {
     return transport.request<GuardrailUsageLogsResponse>({
       method: "GET",
       path: "/guardrails/usage/logs",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   policiesOverview(query) {
     return transport.request<GuardrailUsageOverviewResponse>({
       method: "GET",
       path: "/policies/usage/overview",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
 });

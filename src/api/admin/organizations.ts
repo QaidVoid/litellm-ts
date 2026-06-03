@@ -134,7 +134,6 @@ export interface OrganizationDailyActivityQuery {
   readonly exclude_organization_ids?: string;
 }
 
-/** Surface for organization administration on the `Client`. */
 /**
  * Response from `/organization/member_add`: the affected user and membership
  * rows, not a single member spec.
@@ -176,6 +175,7 @@ export interface OrganizationMembership {
   readonly litellm_budget_table?: Readonly<Record<string, unknown>>;
 }
 
+/** Surface for organization administration on the `Client`. */
 export interface OrganizationsNamespace {
   /** Create an organization. */
   create(req: CreateOrganizationRequest): Promise<Result<Organization, ApiError>>;
@@ -206,16 +206,6 @@ export interface OrganizationsNamespace {
     query?: OrganizationDailyActivityQuery,
   ): Promise<Result<SpendAnalyticsPaginatedResponse, ApiError>>;
 }
-
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
 
 /** Bind an `OrganizationsNamespace` to a constructed `Transport`. */
 export const createOrganizations = (transport: Transport): OrganizationsNamespace => ({
@@ -278,7 +268,7 @@ export const createOrganizations = (transport: Transport): OrganizationsNamespac
     return transport.request<SpendAnalyticsPaginatedResponse>({
       method: "GET",
       path: "/organization/daily/activity",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
 });

@@ -312,16 +312,6 @@ export interface PoliciesNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const createAttachments = (transport: Transport): PolicyAttachmentsNamespace => ({
   list() {
     return transport.request<ListPolicyAttachmentsResponse>({
@@ -385,7 +375,7 @@ export const createPolicies = (transport: Transport): PoliciesNamespace => ({
     return transport.request<ListPoliciesResponse>({
       method: "GET",
       path: "/policies/list",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(policyId) {
@@ -446,7 +436,7 @@ export const createPolicies = (transport: Transport): PoliciesNamespace => ({
       method: "POST",
       path: "/policies/resolve",
       body: req,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   versions: createVersions(transport),

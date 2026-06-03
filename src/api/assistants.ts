@@ -266,22 +266,12 @@ export interface ThreadsNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const createMessages = (transport: Transport): ThreadMessagesNamespace => ({
   list(threadId, query) {
     return transport.request<ListResponse<ThreadMessage>>({
       method: "GET",
       path: `/v1/threads/${encode(threadId)}/messages`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   create(threadId, req) {
@@ -309,7 +299,7 @@ export const createAssistants = (transport: Transport): AssistantsNamespace => (
     return transport.request<ListResponse<Assistant>>({
       method: "GET",
       path: "/v1/assistants",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   create(req) {

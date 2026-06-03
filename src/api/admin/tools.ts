@@ -208,16 +208,6 @@ export interface ToolsNamespace {
   ): Promise<Result<{ readonly deleted: boolean; readonly tool_name: string }, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const encode = (s: string) => encodeURIComponent(s);
 
 /** Bind a `ToolsNamespace` to a constructed `Transport`. */
@@ -232,7 +222,7 @@ export const createTools = (transport: Transport): ToolsNamespace => ({
     return transport.request<ToolListResponse>({
       method: "GET",
       path: "/v1/tool/list",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(toolName) {
@@ -251,7 +241,7 @@ export const createTools = (transport: Transport): ToolsNamespace => ({
     return transport.request<ToolUsageLogsResponse>({
       method: "GET",
       path: `/v1/tool/${encode(toolName)}/logs`,
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   updatePolicy(req) {
@@ -265,7 +255,7 @@ export const createTools = (transport: Transport): ToolsNamespace => ({
     return transport.request<{ readonly deleted: boolean; readonly tool_name: string }>({
       method: "DELETE",
       path: `/v1/tool/${encode(toolName)}/overrides`,
-      query: filterUndefined(scope),
+      query: scope,
     });
   },
 });

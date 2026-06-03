@@ -340,16 +340,6 @@ export interface ProxyModelsNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 const createModelGroup = (transport: Transport): ModelGroupNamespace => ({
   info(modelGroupName) {
     return transport.request<unknown>({
@@ -431,7 +421,7 @@ export const createProxyModels = (transport: Transport): ProxyModelsNamespace =>
     return transport.request<ListOpenAIModelsResponse>({
       method: "GET",
       path: "/models",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   retrieveOpenAI(modelId) {
@@ -444,28 +434,28 @@ export const createProxyModels = (transport: Transport): ProxyModelsNamespace =>
     return transport.request<ModelMetricsResponse>({
       method: "GET",
       path: "/model/metrics",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   metricsExceptions(query) {
     return transport.request<ModelExceptionsResponse>({
       method: "GET",
       path: "/model/metrics/exceptions",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   metricsSlowResponses(query) {
     return transport.request<ModelSlowResponsesResponse>({
       method: "GET",
       path: "/model/metrics/slow_responses",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   streamingMetrics(query) {
     return transport.request<ModelStreamingMetricsResponse>({
       method: "GET",
       path: "/model/streaming_metrics",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   settings() {
@@ -485,7 +475,7 @@ export const createProxyModels = (transport: Transport): ProxyModelsNamespace =>
     return transport.request<unknown>({
       method: "GET",
       path: "/v2/model/info",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
 });

@@ -102,16 +102,6 @@ export interface MemoryNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `MemoryNamespace` to a constructed `Transport`. */
 export const createMemory = (transport: Transport): MemoryNamespace => ({
   create(req) {
@@ -125,7 +115,7 @@ export const createMemory = (transport: Transport): MemoryNamespace => ({
     return transport.request<ListMemoryResponse>({
       method: "GET",
       path: "/v1/memory",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   get(key) {

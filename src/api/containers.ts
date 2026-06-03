@@ -180,16 +180,6 @@ export interface ContainersNamespace {
 
 const encode = (s: string) => encodeURIComponent(s);
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `ContainersNamespace` to a constructed `Transport`. */
 export const createContainers = (transport: Transport): ContainersNamespace => ({
   create(req) {
@@ -203,7 +193,7 @@ export const createContainers = (transport: Transport): ContainersNamespace => (
     return transport.request<ListContainersResponse>({
       method: "GET",
       path: "/v1/containers",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   retrieve(containerId) {
@@ -233,7 +223,7 @@ export const createContainers = (transport: Transport): ContainersNamespace => (
       return transport.request<ListContainerFilesResponse>({
         method: "GET",
         path: `/v1/containers/${encode(containerId)}/files`,
-        ...(query === undefined ? {} : { query: filterUndefined(query) }),
+        ...(query === undefined ? {} : { query }),
       });
     },
     retrieve(containerId, fileId) {

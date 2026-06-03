@@ -109,16 +109,6 @@ export interface GlobalSpendNamespace {
   reset(): Promise<Result<unknown, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `GlobalSpendNamespace` to a constructed `Transport`. */
 export const createGlobalSpend = (transport: Transport): GlobalSpendNamespace => ({
   spend() {
@@ -128,21 +118,21 @@ export const createGlobalSpend = (transport: Transport): GlobalSpendNamespace =>
     return transport.request<unknown>({
       method: "GET",
       path: "/global/spend/keys",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   logs(query) {
     return transport.request<unknown>({
       method: "GET",
       path: "/global/spend/logs",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   models(query) {
     return transport.request<unknown>({
       method: "GET",
       path: "/global/spend/models",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   teams() {
@@ -152,21 +142,21 @@ export const createGlobalSpend = (transport: Transport): GlobalSpendNamespace =>
     return transport.request<unknown>({
       method: "GET",
       path: "/global/spend/tags",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   provider(query) {
     return transport.request<unknown>({
       method: "GET",
       path: "/global/spend/provider",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   report(query) {
     return transport.request<unknown>({
       method: "GET",
       path: "/global/spend/report",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   allTagNames() {
@@ -192,35 +182,35 @@ export const createGlobalSpend = (transport: Transport): GlobalSpendNamespace =>
     return transport.request<unknown>({
       method: "GET",
       path: "/global/activity",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   activityExceptions(query) {
     return transport.request<unknown>({
       method: "GET",
       path: "/global/activity/exceptions",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   activityExceptionsDeployment(query) {
     return transport.request<unknown>({
       method: "GET",
       path: "/global/activity/exceptions/deployment",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   activityModel(query) {
     return transport.request<unknown>({
       method: "GET",
       path: "/global/activity/model",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   activityCacheHits(query) {
     return transport.request<unknown>({
       method: "GET",
       path: "/global/activity/cache_hits",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   refresh() {

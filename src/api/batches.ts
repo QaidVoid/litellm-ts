@@ -144,16 +144,6 @@ export interface BatchesNamespace {
   cancel(batchId: string): Promise<Result<Batch, ApiError>>;
 }
 
-const filterUndefined = <T extends object>(
-  q: T,
-): Readonly<Record<string, string | number | boolean>> => {
-  const out: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(q)) {
-    if (v !== undefined) out[k] = v as string | number | boolean;
-  }
-  return out;
-};
-
 /** Bind a `BatchesNamespace` to a constructed `Transport`. */
 export const createBatches = (transport: Transport): BatchesNamespace => ({
   create(req) {
@@ -169,7 +159,7 @@ export const createBatches = (transport: Transport): BatchesNamespace => ({
     return transport.request<ListBatchesResponse>({
       method: "GET",
       path: "/v1/batches",
-      ...(query === undefined ? {} : { query: filterUndefined(query) }),
+      ...(query === undefined ? {} : { query }),
     });
   },
   iterate(query) {
