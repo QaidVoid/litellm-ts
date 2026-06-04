@@ -1,3 +1,30 @@
+## v1.0.0 — 2026-06-04
+
+### Bug Fixes
+
+- Only retry idempotent methods on network/5xx failures
+- Align SDK with LiteLLM stable v1.87.0 API
+
+### Documentation
+
+- Add JSR and npm badges to README
+
+### Features
+
+- Add iterate() auto-pagination to fine_tuning, keys, and users
+- Type daily-activity, public hub, and management responses
+- Add route drift check against pinned LiteLLM snapshot
+
+### Refactor
+
+- Remove the leftover toQuery query helpers
+- Collapse the mod.ts barrel to export type *
+- Drop per-module query filters; let the transport skip undefined
+
+### Tests
+
+- Add offline request-shaping unit tests for core API modules
+
 ## v0.2.0 — 2026-05-27
 
 ### Bug Fixes

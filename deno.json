@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json",
   "name": "@qaidvoid/litellm",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "exports": "./mod.ts",
   "license": "MIT",
   "tasks": {
@@ -20,9 +20,9 @@
     "npm/"
   ],
   "imports": {
-    "@deno/dnt": "jsr:@deno/dnt@^0.41",
-    "@std/assert": "jsr:@std/assert@1",
-    "@std/testing": "jsr:@std/testing@1"
+    "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "@std/testing": "jsr:@std/testing@^1.0.19"
   },
   "fmt": {
     "lineWidth": 100,
